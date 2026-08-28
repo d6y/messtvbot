@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodic trigger for masthead-refresh.service
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=2min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

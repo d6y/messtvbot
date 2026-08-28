@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Masthead Kiosk
+Comment=Launch the Masthead slideshow in kiosk mode
+Exec=__REPO_DIR__/kiosk/launch-kiosk-pi.sh
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

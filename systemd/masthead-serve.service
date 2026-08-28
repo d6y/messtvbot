@@ -1,0 +1,12 @@
+[Unit]
+Description=Masthead local web server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/masthead/bin/masthead-serve.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
