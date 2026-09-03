@@ -14,6 +14,9 @@ fi
 echo "==> Installing packages (poppler)"
 brew install poppler
 
+echo "==> Installing Python dependencies"
+pip3 install --user --break-system-packages -r "$REPO_DIR/requirements.txt"
+
 echo "==> Making scripts executable"
 chmod +x "$REPO_DIR"/bin/*.sh "$REPO_DIR"/kiosk/*.sh
 

@@ -47,6 +47,14 @@ and web server run in the background the same way they do on the Pi
 (you'll be prompted; say no if you'd rather just run things manually
 while developing).
 
+Both scripts also run `pip3 install --user --break-system-packages -r
+requirements.txt`, which installs `dateparser` (used to parse the
+scheduling phrases in thread-reply commands, see below). The
+`--break-system-packages` flag is needed because newer Debian
+(Bookworm+) and macOS Python builds refuse `pip install` outside a
+virtualenv by default (PEP 668) -- `--user` keeps the install scoped to
+your account rather than touching the system Python.
+
 ## 4. Verify
 
 ```
@@ -79,15 +87,58 @@ Slides play in the order they were posted to the Slack channel
 (oldest first). A message remains in rotation for `MASTHEAD_SLACK_TTL_DAYS`
 (30 days by default), then automatically expires.
 
-To immediately remove a message from the rotation, reply to it in its
-thread with "cancel", "delete", or "undo". Multi-page PDFs expand into
+To remove a message from the rotation, reply to it in its thread with
+"cancel", "delete", "undo", or "remove". A bare command word (or one
+followed by "now") removes it immediately. Add a time phrase after the
+command word to schedule the removal instead:
+
+- `remove` / `remove now` -- remove immediately
+- `remove in 1 week` -- remove 7 days from now
+- `remove thursday` -- remove on the next Thursday
+- `remove 3 Sept` -- remove on that date
+- `remove 3 Sept 10am` -- remove at that date and time
+
+Time phrases are parsed with `dateparser`, so a fair amount of natural
+language works; if a phrase can't be parsed, the command falls back to
+an immediate removal rather than erroring. Multi-page PDFs expand into
 one slide per page, in page order, at the point the message was posted.
 
 The bot posts back to Slack so it's obvious what happened to a post:
 a thread reply when it's accepted onto the display, a thread reply
-when it's removed via a cancel/delete/undo reply, and a new top-level
-message when a post is auto-removed after its TTL expires (since the
-original thread may be long gone from anyone's view by then).
+when it's removed or scheduled for removal via a command reply, and a
+new top-level message when a post is auto-removed after its TTL (or a
+scheduled removal) expires (since the original thread may be long gone
+from anyone's view by then).
+
+## Admin page
+
+A no-authentication admin page is served at
+`http://<pi-or-mac-host>:<MASTHEAD_PORT>/admin/` (port 8420 by
+default) by `bin/masthead-admin-server.py`, which now replaces the
+plain `python -m http.server` that used to serve the kiosk page --
+`masthead-serve.sh` execs it directly, so no separate setup is needed.
+The page lists currently active entries (oldest first) and lets you
+remove one immediately, without needing to find and reply to its
+original Slack thread.
+
+There is **no authentication** on this page -- anyone who can reach
+`MASTHEAD_PORT` on the Pi or Mac's network interface can use it.
+Access control is entirely "who's on this network/host": the server
+binds to `127.0.0.1` by default (see the LAN-access note in
+Troubleshooting below), so in the default configuration it's only
+reachable from the device itself. Don't expose `MASTHEAD_PORT` to an
+untrusted network without adding your own access control in front of
+it.
+
+## Audit trail
+
+Every inbound Slack message the bot processes -- new posts, command
+replies (cancel/delete/undo/remove), and removals made via the admin
+page -- is appended as one JSON line to
+`$MASTHEAD_DIR/data/audit.jsonl`. It's an append-only log, so it's
+useful for answering "who removed this, and when" or for debugging
+unexpected behaviour after the fact; nothing in Masthead reads it back
+in normally.
 
 ## Troubleshooting
 

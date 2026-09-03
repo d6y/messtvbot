@@ -23,6 +23,9 @@ if ! command -v chromium >/dev/null 2>&1 && ! command -v chromium-browser >/dev/
   sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
 fi
 
+echo "==> Installing Python dependencies"
+pip3 install --user --break-system-packages -r "$REPO_DIR/requirements.txt"
+
 echo "==> Making scripts executable"
 chmod +x "$REPO_DIR"/bin/*.sh "$REPO_DIR"/kiosk/*.sh
 

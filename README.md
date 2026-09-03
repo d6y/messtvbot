@@ -24,7 +24,10 @@ Slack channel  --Web API poll-->  poller step  --downloads-->  source/  --pdftop
    pages (poppler's `pdftoppm`), and writes `manifest.json` listing
    every slide (images, PDF pages, and text messages) in post order.
    Run on a timer (systemd timer on the Pi, launchd or cron on Mac).
-2. **`bin/masthead-serve.sh`** serves that content over local HTTP.
+2. **`bin/masthead-serve.sh`** serves that content over local HTTP, via
+   **`bin/masthead-admin-server.py`** (which replaced a plain
+   `python -m http.server`) -- it also serves the no-auth admin page
+   at `/admin/` for removing entries without going through Slack.
 3. **`web/`** is a tiny vanilla-JS page that polls `manifest.json` and
    crossfades between slides -- images, PDF pages, and text cards
    alike.
@@ -34,14 +37,21 @@ Slack channel  --Web API poll-->  poller step  --downloads-->  source/  --pdftop
 
 Ordering slides: slides play oldest-posted-first. A message expires
 out of rotation automatically after `MASTHEAD_SLACK_TTL_DAYS` (30 by
-default), or immediately if someone replies "cancel", "delete", or
-"undo" in its thread.
+default), or when removed via a thread reply or the admin page. To
+remove a message, reply to it in its thread with "cancel", "delete",
+"undo", or "remove" -- a bare command word (or one followed by "now")
+removes it immediately, while a trailing time phrase schedules the
+removal instead: "remove in 1 week", "remove thursday", "remove 3
+Sept", "remove 3 Sept 10am". An unparseable time phrase falls back to
+an immediate removal. The admin page at `/admin/` lists active entries
+and can remove one immediately -- it has no authentication, so access
+control is whoever's on the same network/host.
 
 The bot also posts back to Slack so it's clear what happened to a
 post: a thread reply when a post is accepted onto the display, a
-thread reply when it's removed by a cancel/delete/undo reply, and a
-new top-level message ("I've removed: ... by ...") when a post expires
-via the TTL timeout.
+thread reply when it's removed or scheduled for removal by a command
+reply, and a new top-level message ("I've removed: ... by ...") when a
+post expires via the TTL timeout or a scheduled removal.
 
 ## Slack app setup (get your token and channel ID)
 
@@ -114,8 +124,8 @@ Full walkthrough, including troubleshooting, is in
 ## Repo layout
 
 ```
-bin/        masthead-refresh.py (Slack poll+render+manifest), masthead_slack.py (Slack ingestion), masthead-serve.sh
-web/        the kiosk webpage (index.html, style.css, app.js)
+bin/        masthead-refresh.py (Slack poll+render+manifest), masthead_slack.py (Slack ingestion), masthead-serve.sh, masthead-admin-server.py
+web/        the kiosk webpage (index.html, style.css, app.js), admin/ (no-auth admin page)
 kiosk/      browser launch scripts + Pi autostart entry
 systemd/    Pi: user service/timer units
 launchd/    Mac: optional background agents
