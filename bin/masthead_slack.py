@@ -142,6 +142,12 @@ def save_state(state: dict, path: Path) -> None:
             os.remove(tmp_name)
 
 
+def append_audit(path: Path, event: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a") as fh:
+        fh.write(json.dumps(event) + "\n")
+
+
 def sweep_expired(state: dict, now: datetime) -> list[str]:
     """Mark active entries whose remove_at has passed as 'expired' in place.
     Returns local_files paths whose entries just expired, for the
@@ -275,7 +281,8 @@ def _describe_entry(entry: dict) -> str:
     return "attachment"
 
 
-def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, api: SlackAPI) -> dict:
+def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, api: SlackAPI,
+                audit_path: Path) -> dict:
     """One polling tick: fetch new messages, ingest them, check active
     entries for cancel replies, sweep expirations. Mutates and returns
     `state`. Never raises on API failures -- logs and returns state
@@ -296,8 +303,14 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         if not ts or ts in state:
             continue
         kind = classify_message(msg, bot_user_id=cfg.bot_user_id)
+        author_for_audit = msg.get("user", "unknown")
         if kind == "ignored":
             log.info("Ignoring Slack message %s: no recognized content", ts)
+            append_audit(audit_path, {
+                "at": now.isoformat(timespec="seconds"), "ts": ts,
+                "author": author_for_audit, "kind": "ignored", "action": "ignored",
+                "summary": (msg.get("text") or "")[:80],
+            })
             continue
 
         posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
@@ -325,14 +338,19 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             except SlackAPIError as exc:
                 log.error("Failed to download Slack attachment for %s: %s", ts, exc)
                 entry["status"] = "failed"
-                state[ts] = entry
-                continue
-            entry["local_files"] = [str(dest)]
+            else:
+                entry["local_files"] = [str(dest)]
         else:
             entry["text"] = html.unescape(msg.get("text", ""))
 
         state[ts] = entry
-        _post_safe(api, cfg.channel, "Added to the display.", thread_ts=ts)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts, "author": entry["author"],
+            "kind": kind, "action": "ingested" if entry["status"] == "active" else entry["status"],
+            "summary": _describe_entry(entry),
+        })
+        if entry["status"] == "active":
+            _post_safe(api, cfg.channel, "Added to the display.", thread_ts=ts)
 
     for ts, entry in state.items():
         if entry["status"] != "active":
@@ -355,6 +373,11 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
 
         entry["remove_reason"] = "command"
         entry["remove_requested_by"] = requested_by
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts, "author": requested_by,
+            "kind": "command", "action": "removed" if command.remove_at <= now else "scheduled_removal",
+            "summary": f"remove -> {command.remove_at.isoformat(timespec='seconds')}",
+        })
         if command.remove_at <= now:
             entry["status"] = "cancelled"
             entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")

@@ -306,6 +306,28 @@ class FakeSlackAPI:
         return ""
 
 
+class AppendAuditTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_appends_one_json_line_per_call(self):
+        path = self.tmp_dir / "audit.jsonl"
+        ms.append_audit(path, {"a": 1})
+        ms.append_audit(path, {"a": 2})
+        lines = path.read_text().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(json.loads(lines[0]), {"a": 1})
+        self.assertEqual(json.loads(lines[1]), {"a": 2})
+
+    def test_creates_parent_directory(self):
+        path = self.tmp_dir / "nested" / "audit.jsonl"
+        ms.append_audit(path, {"a": 1})
+        self.assertTrue(path.exists())
+
+
 class PollSlackTests(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = Path(tempfile.mkdtemp())
@@ -313,6 +335,7 @@ class PollSlackTests(unittest.TestCase):
         self.source_dir.mkdir()
         self.now = datetime(2026, 8, 1, tzinfo=timezone.utc)
         self.cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30)
+        self.audit_path = self.tmp_dir / "audit.jsonl"
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
@@ -322,7 +345,7 @@ class PollSlackTests(unittest.TestCase):
             messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
             user_names={"U1": "Jane"},
         )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.1"]["kind"], "text")
         self.assertEqual(state["100.1"]["text"], "Pizza today!")
         self.assertEqual(state["100.1"]["author"], "Jane")
@@ -334,7 +357,7 @@ class PollSlackTests(unittest.TestCase):
                        "files": [{"filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"}]}],
             user_names={"U1": "Jane"},
         )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.2"]["kind"], "attachment")
         expected_path = str(self.source_dir / "slack-100.2.png")
         self.assertEqual(state["100.2"]["local_files"], [expected_path])
@@ -342,7 +365,7 @@ class PollSlackTests(unittest.TestCase):
 
     def test_ignored_message_is_not_added(self):
         api = FakeSlackAPI(messages=[{"ts": "100.3", "text": "", "user": "U1", "files": []}])
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state, {})
 
     def test_channel_join_message_is_not_added_or_acknowledged(self):
@@ -350,7 +373,7 @@ class PollSlackTests(unittest.TestCase):
             "ts": "100.8", "text": "<@U1> has joined the channel",
             "subtype": "channel_join", "user": "U1", "files": [],
         }])
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state, {})
         self.assertEqual(api.posted_messages, [])
 
@@ -359,7 +382,7 @@ class PollSlackTests(unittest.TestCase):
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
                                "local_files": [], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[{"ts": "100.1", "text": "new text!", "user": "U1", "files": []}])
-        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.1"]["text"], "old")
 
     def test_cancel_reply_marks_entry_cancelled_and_deletes_file(self):
@@ -370,7 +393,7 @@ class PollSlackTests(unittest.TestCase):
                                "remove_at": "2026-07-31T00:00:00+00:00", "remove_reason": "ttl",
                                "local_files": [str(local_file)]}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please cancel", "user": "U2"}]})
-        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.2"]["status"], "cancelled")
         self.assertFalse(local_file.exists())
 
@@ -380,7 +403,7 @@ class PollSlackTests(unittest.TestCase):
                                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
                                "local_files": []}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.1": [{"text": "nice!", "user": "U2"}]})
-        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.1"]["status"], "active")
 
     def test_remove_with_future_phrase_schedules_removal_without_cancelling(self):
@@ -389,7 +412,7 @@ class PollSlackTests(unittest.TestCase):
                                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
                                "local_files": []}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove in 1 week", "user": "U2"}]})
-        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.9"]["status"], "active")
         self.assertEqual(state["100.9"]["remove_at"], (self.now + timedelta(weeks=1)).isoformat(timespec="seconds"))
         self.assertEqual(state["100.9"]["remove_reason"], "command")
@@ -400,7 +423,7 @@ class PollSlackTests(unittest.TestCase):
                                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
                                "local_files": []}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove in 1 week", "user": "U2"}]})
-        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.9"]
         self.assertEqual(len(replies), 1)
         self.assertIn("Scheduled for removal", replies[0]["text"])
@@ -414,7 +437,7 @@ class PollSlackTests(unittest.TestCase):
             {"text": "remove in 1 week", "user": "U2"},
             {"text": "remove now", "user": "U3"},
         ]})
-        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.9"]["status"], "cancelled")
 
     def test_bot_own_reply_is_not_treated_as_a_command(self):
@@ -425,14 +448,14 @@ class PollSlackTests(unittest.TestCase):
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [
             {"text": "Added to the display.", "bot_id": "B1"},
         ]})
-        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.9"]["status"], "active")
 
     def test_bot_own_top_level_message_is_not_ingested(self):
         cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30, bot_user_id="UBOT1")
         api = FakeSlackAPI(messages=[{"ts": "200.1", "text": "I've removed: ... by Jane",
                                        "user": "UBOT1", "files": []}])
-        state = ms.poll_slack(cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state, {})
 
     def test_expired_entry_is_swept_and_file_deleted(self):
@@ -442,7 +465,7 @@ class PollSlackTests(unittest.TestCase):
                            "author": "Jane", "posted_at": "2020-01-01T00:00:00+00:00",
                            "local_files": [str(local_file)], "remove_at": "2020-01-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[])
-        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["1"]["status"], "expired")
         self.assertFalse(local_file.exists())
 
@@ -454,7 +477,8 @@ class PollSlackTests(unittest.TestCase):
         existing = {"1": {"status": "active", "kind": "text", "text": "hi",
                            "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
                            "local_files": [], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
-        state = ms.poll_slack(self.cfg, dict(existing), self.source_dir, self.now, FailingHistoryAPI())
+        state = ms.poll_slack(self.cfg, dict(existing), self.source_dir, self.now, FailingHistoryAPI(),
+                               audit_path=self.audit_path)
         self.assertEqual(state, existing)
 
     def test_user_name_failure_falls_back_and_does_not_raise(self):
@@ -465,7 +489,7 @@ class PollSlackTests(unittest.TestCase):
         api = FailingUserNameAPI(
             messages=[{"ts": "100.5", "text": "Pizza today!", "user": "U1", "files": []}],
         )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertIn("100.5", state)
         self.assertEqual(state["100.5"]["author"], "U1")
 
@@ -475,7 +499,7 @@ class PollSlackTests(unittest.TestCase):
                        "files": [{"filetype": "png", "url_private_download": "https://x/bad.png", "name": "bad.png"}]}],
             downloads_fail_for={"https://x/bad.png"},
         )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertIn("100.4", state)
         self.assertEqual(state["100.4"]["status"], "failed")
 
@@ -484,7 +508,7 @@ class PollSlackTests(unittest.TestCase):
             messages=[{"ts": "100.7", "text": "Coffee &amp; cake", "user": "U1", "files": []}],
             user_names={"U1": "Jane"},
         )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.7"]["text"], "Coffee & cake")
 
     def test_download_failure_records_ts_with_failed_status_and_excludes_from_rotation(self):
@@ -493,7 +517,7 @@ class PollSlackTests(unittest.TestCase):
                        "files": [{"filetype": "png", "url_private_download": "https://x/bad2.png", "name": "bad2.png"}]}],
             downloads_fail_for={"https://x/bad2.png"},
         )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertIn("100.6", state)
         self.assertEqual(state["100.6"]["status"], "failed")
         self.assertEqual(state["100.6"]["local_files"], [])
@@ -505,14 +529,14 @@ class PollSlackTests(unittest.TestCase):
             messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
             user_names={"U1": "Jane"},
         )
-        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
         self.assertEqual(len(replies), 1)
         self.assertEqual(replies[0]["channel"], "C1")
 
     def test_ignored_message_gets_no_reply(self):
         api = FakeSlackAPI(messages=[{"ts": "100.3", "text": "", "user": "U1", "files": []}])
-        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(api.posted_messages, [])
 
     def test_failed_download_gets_no_accepted_reply(self):
@@ -521,7 +545,7 @@ class PollSlackTests(unittest.TestCase):
                        "files": [{"filetype": "png", "url_private_download": "https://x/bad.png", "name": "bad.png"}]}],
             downloads_fail_for={"https://x/bad.png"},
         )
-        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(api.posted_messages, [])
 
     def test_cancel_reply_gets_thread_reply_confirming_removal(self):
@@ -531,7 +555,7 @@ class PollSlackTests(unittest.TestCase):
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
                                "local_files": [str(local_file)], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please cancel"}]})
-        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.2"]
         self.assertEqual(len(replies), 1)
 
@@ -542,7 +566,7 @@ class PollSlackTests(unittest.TestCase):
                            "author": "Jane", "posted_at": "2020-01-01T00:00:00+00:00",
                            "local_files": [], "remove_at": "2020-01-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[])
-        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         top_level = [p for p in api.posted_messages if p["thread_ts"] is None]
         self.assertEqual(len(top_level), 1)
         self.assertIn("Old announcement", top_level[0]["text"])
@@ -554,8 +578,83 @@ class PollSlackTests(unittest.TestCase):
             user_names={"U1": "Jane"},
             posts_fail=True,
         )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api)
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertIn("100.1", state)
+
+    def _audit_events(self):
+        if not self.audit_path.exists():
+            return []
+        return [json.loads(line) for line in self.audit_path.read_text().splitlines()]
+
+    def test_ingested_text_message_is_audited(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        events = self._audit_events()
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertEqual(event["ts"], "100.1")
+        self.assertEqual(event["author"], "Jane")
+        self.assertEqual(event["kind"], "text")
+        self.assertEqual(event["action"], "ingested")
+        self.assertEqual(event["summary"], "Pizza today!")
+        self.assertEqual(event["at"], self.now.isoformat(timespec="seconds"))
+
+    def test_ignored_message_is_audited(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.3", "text": "", "user": "U1", "files": []}])
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        events = self._audit_events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["ts"], "100.3")
+        self.assertEqual(events[0]["author"], "U1")
+        self.assertEqual(events[0]["kind"], "ignored")
+        self.assertEqual(events[0]["action"], "ignored")
+
+    def test_failed_download_is_audited_as_failed(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.4", "text": "", "user": "U1",
+                       "files": [{"filetype": "png", "url_private_download": "https://x/bad.png", "name": "bad.png"}]}],
+            downloads_fail_for={"https://x/bad.png"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        events = self._audit_events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["ts"], "100.4")
+        self.assertEqual(events[0]["kind"], "attachment")
+        self.assertEqual(events[0]["action"], "failed")
+
+    def test_cancel_command_is_audited_as_removed(self):
+        existing = {"100.2": {"status": "active", "kind": "attachment", "text": "",
+                               "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
+                               "remove_at": "2026-07-31T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please cancel", "user": "U2"}]})
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        events = self._audit_events()
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertEqual(event["ts"], "100.2")
+        self.assertEqual(event["author"], "U2")
+        self.assertEqual(event["kind"], "command")
+        self.assertEqual(event["action"], "removed")
+
+    def test_future_removal_command_is_audited_as_scheduled(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove in 1 week", "user": "U2"}]})
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        events = self._audit_events()
+        self.assertEqual(len(events), 1)
+        event = events[0]
+        self.assertEqual(event["ts"], "100.9")
+        self.assertEqual(event["author"], "U2")
+        self.assertEqual(event["kind"], "command")
+        self.assertEqual(event["action"], "scheduled_removal")
+        self.assertIn((self.now + timedelta(weeks=1)).isoformat(timespec="seconds"), event["summary"])
 
 
 if __name__ == "__main__":

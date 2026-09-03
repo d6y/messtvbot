@@ -288,7 +288,10 @@ def main(argv: list[str]) -> int:
                        "bot messages won't be excluded from ingestion this tick", exc)
             bot_user_id = ""
         slack_cfg = masthead_slack.SlackConfig(cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days, bot_user_id)
-        state = masthead_slack.poll_slack(slack_cfg, state, cfg.source_dir, datetime.now(timezone.utc), api)
+        state = masthead_slack.poll_slack(
+            slack_cfg, state, cfg.source_dir, datetime.now(timezone.utc), api,
+            audit_path=cfg.data_dir / "audit.jsonl",
+        )
         masthead_slack.save_state(state, state_path)
 
     active_entries = masthead_slack.sorted_active_entries(state)
