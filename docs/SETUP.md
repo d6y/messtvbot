@@ -133,8 +133,8 @@ it.
 ## Audit trail
 
 Every inbound Slack message the bot processes -- new posts, command
-replies (cancel/delete/undo/remove), and removals made via the admin
-page -- is appended as one JSON line to
+replies (cancel/delete/undo/remove), messages it ignores, and removals
+made via the admin page -- is appended as one JSON line to
 `$MASTHEAD_DIR/data/audit.jsonl`. It's an append-only log, so it's
 useful for answering "who removed this, and when" or for debugging
 unexpected behaviour after the fact; nothing in Masthead reads it back
@@ -163,6 +163,10 @@ in normally.
   the compositor rather than `xset`; check your desktop's power/screen
   settings if `launch-kiosk-pi.sh`'s `xset` calls don't stick.
 - **Want to see it from another device on your network** (debugging
-  only): `masthead-serve.sh` binds to `127.0.0.1` by default; change
-  the `--bind` argument if you need LAN access, but keep in mind it
-  then serves your Slack channel content to anyone on that network.
+  only): `masthead-serve.sh` execs `bin/masthead-admin-server.py`,
+  which hardcodes binding to `127.0.0.1` -- there's no `--bind` flag or
+  any argument parsing. LAN access means editing the `"127.0.0.1"` in
+  its `ThreadingHTTPServer((...))` call to `"0.0.0.0"`, but keep in
+  mind that then serves both your Slack channel content *and* the
+  no-auth admin API (which can remove entries) to anyone on that
+  network.
