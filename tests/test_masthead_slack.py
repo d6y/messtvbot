@@ -328,6 +328,27 @@ class AppendAuditTests(unittest.TestCase):
         self.assertTrue(path.exists())
 
 
+class StateLockTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_lock_is_reentrant_across_sequential_uses(self):
+        path = self.tmp_dir / "data" / "slack-state.json"
+        with ms.state_lock(path):
+            pass
+        with ms.state_lock(path):
+            pass  # would hang/deadlock if the first lock weren't released
+
+    def test_lock_creates_parent_directory(self):
+        path = self.tmp_dir / "nested" / "data" / "slack-state.json"
+        with ms.state_lock(path):
+            pass
+        self.assertTrue(path.parent.exists())
+
+
 class PollSlackTests(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = Path(tempfile.mkdtemp())

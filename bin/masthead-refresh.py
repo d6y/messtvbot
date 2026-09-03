@@ -275,10 +275,10 @@ def main(argv: list[str]) -> int:
     copy_site_assets(cfg.repo_dir, cfg.masthead_dir)
 
     state_path = cfg.data_dir / "slack-state.json"
-    state = masthead_slack.load_state(state_path)
 
     if cfg.skip_slack_poll:
         log.info("Skipping Slack poll (--skip-slack-poll / MASTHEAD_SKIP_SLACK_POLL=1)")
+        state = masthead_slack.load_state(state_path)
     else:
         api = masthead_slack.SlackWebAPI(cfg.slack_token)
         try:
@@ -288,11 +288,13 @@ def main(argv: list[str]) -> int:
                        "bot messages won't be excluded from ingestion this tick", exc)
             bot_user_id = ""
         slack_cfg = masthead_slack.SlackConfig(cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days, bot_user_id)
-        state = masthead_slack.poll_slack(
-            slack_cfg, state, cfg.source_dir, datetime.now(timezone.utc), api,
-            audit_path=cfg.data_dir / "audit.jsonl",
-        )
-        masthead_slack.save_state(state, state_path)
+        with masthead_slack.state_lock(state_path):
+            state = masthead_slack.load_state(state_path)
+            state = masthead_slack.poll_slack(
+                slack_cfg, state, cfg.source_dir, datetime.now(timezone.utc), api,
+                audit_path=cfg.data_dir / "audit.jsonl",
+            )
+            masthead_slack.save_state(state, state_path)
 
     active_entries = masthead_slack.sorted_active_entries(state)
     pdf_files = [

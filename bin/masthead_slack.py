@@ -8,6 +8,7 @@ client. Imported by masthead-refresh.py; also unit-tested directly.
 from __future__ import annotations
 
 import dateparser
+import fcntl
 import html
 import json
 import logging
@@ -17,6 +18,7 @@ import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -140,6 +142,21 @@ def save_state(state: dict, path: Path) -> None:
     finally:
         if os.path.exists(tmp_name):
             os.remove(tmp_name)
+
+
+@contextmanager
+def state_lock(path: Path):
+    """Exclusive lock guarding read-modify-write access to `path` (e.g.
+    slack-state.json) across the refresh tick and the admin server, which
+    run as separate processes and can both write it."""
+    lock_path = path.parent / (path.name + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(lock_path, "w") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 
 
 def append_audit(path: Path, event: dict) -> None:
