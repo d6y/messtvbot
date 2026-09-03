@@ -200,6 +200,14 @@ def copy_site_assets(repo_dir: Path, masthead_dir: Path) -> None:
         if src.exists():
             shutil.copyfile(src, masthead_dir / name)
 
+    admin_src = web_src / "admin"
+    if admin_src.exists():
+        admin_dest = masthead_dir / "admin"
+        admin_dest.mkdir(parents=True, exist_ok=True)
+        for item in admin_src.iterdir():
+            if item.is_file():
+                shutil.copyfile(item, admin_dest / item.name)
+
 
 def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[str, list[Path]],
                     masthead_dir: Path, slide_seconds: int, poll_seconds: int) -> dict:

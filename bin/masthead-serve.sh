@@ -13,5 +13,6 @@ MASTHEAD_PORT="${MASTHEAD_PORT:-8420}"
 
 mkdir -p "$MASTHEAD_DIR/data" "$MASTHEAD_DIR/source" "$MASTHEAD_DIR/rendered"
 
-echo "masthead-serve: serving $MASTHEAD_DIR on http://127.0.0.1:${MASTHEAD_PORT}/"
-exec python3 -m http.server "$MASTHEAD_PORT" --bind 127.0.0.1 --directory "$MASTHEAD_DIR"
+echo "masthead-serve: serving $MASTHEAD_DIR on http://127.0.0.1:${MASTHEAD_PORT}/ (admin at /admin/)"
+export MASTHEAD_DIR MASTHEAD_PORT
+exec python3 "$REPO_DIR/bin/masthead-admin-server.py"

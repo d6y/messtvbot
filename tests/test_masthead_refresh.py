@@ -1,5 +1,7 @@
 import os
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -35,6 +37,22 @@ class LoadConfigMastheadDirTests(unittest.TestCase):
     def test_default_masthead_dir_is_home(self):
         cfg = masthead_refresh.load_config(["masthead-refresh.py"])
         self.assertEqual(cfg.masthead_dir, Path.home() / "masthead-data")
+
+
+class CopySiteAssetsTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_copy_site_assets_copies_admin_page(self):
+        repo_dir = Path(__file__).resolve().parent.parent
+        masthead_dir = self.tmp_dir / "masthead-data"
+        masthead_dir.mkdir()
+        masthead_refresh.copy_site_assets(repo_dir, masthead_dir)
+        self.assertTrue((masthead_dir / "admin" / "index.html").exists())
+        self.assertTrue((masthead_dir / "admin" / "admin.js").exists())
 
 
 if __name__ == "__main__":
