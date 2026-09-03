@@ -44,8 +44,12 @@ def make_handler(masthead_dir: Path, state_path: Path, audit_path: Path):
 
         def do_GET(self):
             if self.path == "/api/entries":
-                with ms.state_lock(state_path):
-                    state = ms.load_state(state_path)
+                # Unlocked read: save_state writes atomically (temp file +
+                # os.replace), so a concurrent reader always sees either the
+                # whole old file or the whole new one, never a torn write.
+                # Taking the lock here would block this read behind the
+                # refresh tick's Slack network I/O.
+                state = ms.load_state(state_path)
                 entries = [
                     {
                         "ts": ts, "kind": entry["kind"], "author": entry["author"],

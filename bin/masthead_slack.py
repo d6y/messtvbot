@@ -298,12 +298,35 @@ def _describe_entry(entry: dict) -> str:
     return "attachment"
 
 
+def backfill_entries(state: dict, ttl_days: int) -> dict:
+    """Fill in fields added after an entry may have been written, so state
+    files from older versions don't crash this tick. Mutates and returns
+    `state`. Currently: remove_at/remove_reason (added alongside scheduled
+    removal); computed exactly as a freshly-ingested entry gets them."""
+    for ts, entry in state.items():
+        if "remove_at" in entry:
+            continue
+        posted_at = entry.get("posted_at")
+        if not posted_at:
+            continue
+        try:
+            posted_at_dt = datetime.fromisoformat(posted_at)
+        except ValueError:
+            log.error("Entry %s has an unparseable posted_at %r -- skipping backfill", ts, posted_at)
+            continue
+        entry["remove_at"] = (posted_at_dt + timedelta(days=ttl_days)).isoformat(timespec="seconds")
+        entry.setdefault("remove_reason", "ttl")
+    return state
+
+
 def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, api: SlackAPI,
                 audit_path: Path) -> dict:
     """One polling tick: fetch new messages, ingest them, check active
     entries for cancel replies, sweep expirations. Mutates and returns
     `state`. Never raises on API failures -- logs and returns state
     unchanged so a bad tick doesn't blank the display."""
+    backfill_entries(state, cfg.ttl_days)
+
     newest_ts = max((ts for ts in state), default=None)
     oldest = newest_ts if newest_ts else str((now - timedelta(days=cfg.ttl_days)).timestamp())
 
@@ -328,6 +351,13 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
                 "author": author_for_audit, "kind": "ignored", "action": "ignored",
                 "summary": (msg.get("text") or "")[:80],
             })
+            # Record a marker so this message isn't refetched and re-audited on
+            # every future tick. Never active, so it's invisible to the display,
+            # the sweep, and the admin UI.
+            state[ts] = {
+                "ts": ts, "status": "ignored",
+                "posted_at": datetime.fromtimestamp(float(ts), tz=timezone.utc).isoformat(timespec="seconds"),
+            }
             continue
 
         posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
@@ -379,17 +409,36 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             continue
         human_replies = [r for r in replies if not r.get("bot_id")]
         command = None
-        requested_by = None
+        command_ts = None
+        reply_user = None
         for reply in human_replies:  # last match wins
             parsed = parse_command(reply.get("text", ""), now)
             if parsed is not None:
                 command = parsed
-                requested_by = reply.get("user", "someone")
+                command_ts = reply.get("ts")
+                reply_user = reply.get("user")
         if command is None:
             continue
 
+        # A scheduled removal deliberately leaves the entry active, so the same
+        # reply is still there next tick. Applying it again would recompute a
+        # relative remove_at ("in 1 week") forward forever and re-post/re-audit
+        # every tick, so skip a reply we've already fully applied.
+        if command_ts is not None and entry.get("remove_command_ts") == command_ts:
+            continue
+
+        if reply_user:
+            try:
+                requested_by = api.user_name(reply_user)
+            except SlackAPIError as exc:
+                log.error("Failed to resolve Slack user name for %s: %s", reply_user, exc)
+                requested_by = reply_user
+        else:
+            requested_by = "someone"
+
         entry["remove_reason"] = "command"
         entry["remove_requested_by"] = requested_by
+        entry["remove_command_ts"] = command_ts
         append_audit(audit_path, {
             "at": now.isoformat(timespec="seconds"), "ts": ts, "author": requested_by,
             "kind": "command", "action": "removed" if command.remove_at <= now else "scheduled_removal",

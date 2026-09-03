@@ -384,10 +384,11 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(state["100.2"]["local_files"], [expected_path])
         self.assertTrue(Path(expected_path).exists())
 
-    def test_ignored_message_is_not_added(self):
+    def test_ignored_message_is_not_added_as_an_active_entry(self):
         api = FakeSlackAPI(messages=[{"ts": "100.3", "text": "", "user": "U1", "files": []}])
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
-        self.assertEqual(state, {})
+        self.assertEqual(state["100.3"]["status"], "ignored")
+        self.assertEqual(ms.sorted_active_entries(state), [])
 
     def test_channel_join_message_is_not_added_or_acknowledged(self):
         api = FakeSlackAPI(messages=[{
@@ -395,7 +396,7 @@ class PollSlackTests(unittest.TestCase):
             "subtype": "channel_join", "user": "U1", "files": [],
         }])
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
-        self.assertEqual(state, {})
+        self.assertEqual(ms.sorted_active_entries(state), [])
         self.assertEqual(api.posted_messages, [])
 
     def test_already_seen_message_is_not_reprocessed(self):
@@ -477,7 +478,8 @@ class PollSlackTests(unittest.TestCase):
         api = FakeSlackAPI(messages=[{"ts": "200.1", "text": "I've removed: ... by Jane",
                                        "user": "UBOT1", "files": []}])
         state = ms.poll_slack(cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
-        self.assertEqual(state, {})
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        self.assertEqual(state["200.1"]["status"], "ignored")
 
     def test_expired_entry_is_swept_and_file_deleted(self):
         local_file = self.source_dir / "slack-1.png"
@@ -676,6 +678,119 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(event["kind"], "command")
         self.assertEqual(event["action"], "scheduled_removal")
         self.assertIn((self.now + timedelta(weeks=1)).isoformat(timespec="seconds"), event["summary"])
+
+    # -- Finding 1: scheduled removals must be applied exactly once ---------
+
+    def test_scheduled_removal_is_applied_once_across_repeated_ticks(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [
+            {"ts": "200.1", "text": "remove in 1 week", "user": "U2"},
+        ]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api,
+                               audit_path=self.audit_path)
+        remove_at_after_first = state["100.9"]["remove_at"]
+
+        later = self.now + timedelta(minutes=2)
+        state = ms.poll_slack(self.cfg, state, self.source_dir, later, api,
+                               audit_path=self.audit_path)
+
+        # (a) remove_at is not recomputed/pushed forward by the second tick
+        self.assertEqual(state["100.9"]["remove_at"], remove_at_after_first)
+        self.assertEqual(remove_at_after_first,
+                          (self.now + timedelta(weeks=1)).isoformat(timespec="seconds"))
+        self.assertEqual(state["100.9"]["status"], "active")
+        # (b) only one Slack reply posted across both ticks
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.9"]
+        self.assertEqual(len(replies), 1)
+        # (c) only one audit line for the command
+        command_events = [e for e in self._audit_events() if e["kind"] == "command"]
+        self.assertEqual(len(command_events), 1)
+
+    def test_a_newer_reply_supersedes_an_already_applied_command(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [
+            {"ts": "200.1", "text": "remove in 1 week", "user": "U2"},
+        ]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api,
+                               audit_path=self.audit_path)
+        self.assertEqual(state["100.9"]["remove_command_ts"], "200.1")
+
+        api.replies_by_ts["100.9"].append({"ts": "200.2", "text": "remove now", "user": "U3"})
+        later = self.now + timedelta(minutes=2)
+        state = ms.poll_slack(self.cfg, state, self.source_dir, later, api,
+                               audit_path=self.audit_path)
+
+        self.assertEqual(state["100.9"]["status"], "cancelled")
+        self.assertEqual(state["100.9"]["remove_command_ts"], "200.2")
+        self.assertEqual(state["100.9"]["remove_at"], later.isoformat(timespec="seconds"))
+
+    # -- Finding 2: state written before remove_at existed -----------------
+
+    def test_legacy_entry_without_remove_at_is_backfilled_and_does_not_raise(self):
+        legacy = {"1": {"status": "active", "kind": "text", "text": "Old announcement",
+                         "author": "Jane", "posted_at": "2026-07-25T00:00:00+00:00",
+                         "local_files": []}}
+        api = FakeSlackAPI(messages=[])
+        state = ms.poll_slack(self.cfg, legacy, self.source_dir, self.now, api,
+                               audit_path=self.audit_path)
+        self.assertEqual(state["1"]["remove_reason"], "ttl")
+        self.assertEqual(state["1"]["remove_at"], "2026-08-24T00:00:00+00:00")
+        self.assertEqual(state["1"]["status"], "active")
+
+    def test_backfill_leaves_existing_remove_at_untouched(self):
+        state = {"1": _entry("active", "2026-07-25T00:00:00+00:00",
+                              remove_at="2026-07-26T00:00:00+00:00", remove_reason="command")}
+        ms.backfill_entries(state, ttl_days=30)
+        self.assertEqual(state["1"]["remove_at"], "2026-07-26T00:00:00+00:00")
+        self.assertEqual(state["1"]["remove_reason"], "command")
+
+    # -- Finding 3: ignored messages must not be re-audited every tick ------
+
+    def test_ignored_message_is_audited_only_once_across_ticks(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.3", "text": "", "user": "U1", "files": []}])
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        state = ms.poll_slack(self.cfg, state, self.source_dir, self.now + timedelta(minutes=2), api,
+                               audit_path=self.audit_path)
+        events = [e for e in self._audit_events() if e["ts"] == "100.3"]
+        self.assertEqual(len(events), 1)
+
+    # -- Finding 5: the requester's name is resolved, not a raw user ID -----
+
+    def test_remove_requested_by_is_a_resolved_display_name(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [
+            {"ts": "200.1", "text": "remove in 1 week", "user": "U2"},
+        ]}, user_names={"U2": "Priya"})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api,
+                               audit_path=self.audit_path)
+        self.assertEqual(state["100.9"]["remove_requested_by"], "Priya")
+        command_events = [e for e in self._audit_events() if e["kind"] == "command"]
+        self.assertEqual(command_events[0]["author"], "Priya")
+
+    def test_requested_by_falls_back_to_user_id_when_lookup_fails(self):
+        class FailingUserNameAPI(FakeSlackAPI):
+            def user_name(self, user_id):
+                raise ms.SlackAPIError("users.info boom")
+
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FailingUserNameAPI(messages=[], replies_by_ts={"100.9": [
+            {"ts": "200.1", "text": "remove in 1 week", "user": "U2"},
+        ]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api,
+                               audit_path=self.audit_path)
+        self.assertEqual(state["100.9"]["remove_requested_by"], "U2")
 
 
 if __name__ == "__main__":
