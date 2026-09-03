@@ -332,11 +332,32 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         except SlackAPIError as exc:
             log.error("Failed to fetch replies for %s: %s", ts, exc)
             continue
-        if any(is_cancel_reply(r.get("text", "")) for r in replies):
+        human_replies = [r for r in replies if not r.get("bot_id")]
+        command = None
+        requested_by = None
+        for reply in human_replies:  # last match wins
+            parsed = parse_command(reply.get("text", ""), now)
+            if parsed is not None:
+                command = parsed
+                requested_by = reply.get("user", "someone")
+        if command is None:
+            continue
+
+        entry["remove_reason"] = "command"
+        entry["remove_requested_by"] = requested_by
+        if command.remove_at <= now:
             entry["status"] = "cancelled"
+            entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
             for f in entry.get("local_files", []):
                 Path(f).unlink(missing_ok=True)
             _post_safe(api, cfg.channel, "Removed from the display.", thread_ts=ts)
+        else:
+            entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
+            _post_safe(
+                api, cfg.channel,
+                f"Scheduled for removal on {command.remove_at:%-d %b %Y %H:%M} UTC.",
+                thread_ts=ts,
+            )
 
     # Only sweep entries that existed before this tick: a message's `ts` is
     # its real Slack post time, but `history()` is queried with `oldest` set

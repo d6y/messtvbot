@@ -351,8 +351,9 @@ class PollSlackTests(unittest.TestCase):
         local_file.write_bytes(b"x")
         existing = {"100.2": {"status": "active", "kind": "attachment", "text": "",
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
-                               "local_files": [str(local_file)], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
-        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please cancel"}]})
+                               "remove_at": "2026-07-31T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": [str(local_file)]}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please cancel", "user": "U2"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         self.assertEqual(state["100.2"]["status"], "cancelled")
         self.assertFalse(local_file.exists())
@@ -360,10 +361,56 @@ class PollSlackTests(unittest.TestCase):
     def test_non_cancel_reply_leaves_entry_active(self):
         existing = {"100.1": {"status": "active", "kind": "text", "text": "hi",
                                "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
-                               "local_files": [], "remove_at": "2026-08-29T00:00:00+00:00", "remove_reason": "ttl"}}
-        api = FakeSlackAPI(messages=[], replies_by_ts={"100.1": [{"text": "nice!"}]})
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.1": [{"text": "nice!", "user": "U2"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         self.assertEqual(state["100.1"]["status"], "active")
+
+    def test_remove_with_future_phrase_schedules_removal_without_cancelling(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove in 1 week", "user": "U2"}]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        self.assertEqual(state["100.9"]["status"], "active")
+        self.assertEqual(state["100.9"]["remove_at"], (self.now + timedelta(weeks=1)).isoformat(timespec="seconds"))
+        self.assertEqual(state["100.9"]["remove_reason"], "command")
+
+    def test_scheduled_removal_reply_confirms_the_date(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove in 1 week", "user": "U2"}]})
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.9"]
+        self.assertEqual(len(replies), 1)
+        self.assertIn("Scheduled for removal", replies[0]["text"])
+
+    def test_most_recent_reply_wins_over_an_earlier_one(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [
+            {"text": "remove in 1 week", "user": "U2"},
+            {"text": "remove now", "user": "U3"},
+        ]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        self.assertEqual(state["100.9"]["status"], "cancelled")
+
+    def test_bot_own_reply_is_not_treated_as_a_command(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [
+            {"text": "Added to the display.", "bot_id": "B1"},
+        ]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
+        self.assertEqual(state["100.9"]["status"], "active")
 
     def test_expired_entry_is_swept_and_file_deleted(self):
         local_file = self.source_dir / "slack-1.png"
