@@ -44,6 +44,14 @@ class ClassifyMessageTests(unittest.TestCase):
         msg = {"text": "set the channel topic", "subtype": "channel_topic", "files": []}
         self.assertEqual(ms.classify_message(msg), "ignored")
 
+    def test_message_from_bot_user_id_is_ignored(self):
+        msg = {"text": "I've removed: ...", "files": [], "user": "UBOT1"}
+        self.assertEqual(ms.classify_message(msg, bot_user_id="UBOT1"), "ignored")
+
+    def test_message_with_bot_id_is_ignored_regardless_of_user(self):
+        msg = {"text": "I've removed: ...", "files": [], "bot_id": "B123"}
+        self.assertEqual(ms.classify_message(msg), "ignored")
+
 
 class ExtractAttachmentTests(unittest.TestCase):
     def test_returns_none_when_no_files(self):
@@ -194,6 +202,11 @@ class SlackWebAPICallTests(unittest.TestCase):
         self.assertNotIn("cursor", calls[0])
         self.assertEqual(calls[1]["cursor"], "abc")
 
+    def test_auth_test_returns_bot_user_id(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        with mock.patch.object(api, "_call", return_value={"ok": True, "user_id": "UBOT1"}):
+            self.assertEqual(api.auth_test(), "UBOT1")
+
 
 def _entry(status, posted_at, kind="text", local_files=None, remove_at=None, remove_reason="ttl"):
     return {"status": status, "kind": kind, "text": "x", "author": "A",
@@ -288,6 +301,9 @@ class FakeSlackAPI:
         if self.posts_fail:
             raise ms.SlackAPIError("chat.postMessage failed")
         self.posted_messages.append({"channel": channel, "text": text, "thread_ts": thread_ts})
+
+    def auth_test(self):
+        return ""
 
 
 class PollSlackTests(unittest.TestCase):
@@ -411,6 +427,13 @@ class PollSlackTests(unittest.TestCase):
         ]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         self.assertEqual(state["100.9"]["status"], "active")
+
+    def test_bot_own_top_level_message_is_not_ingested(self):
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30, bot_user_id="UBOT1")
+        api = FakeSlackAPI(messages=[{"ts": "200.1", "text": "I've removed: ... by Jane",
+                                       "user": "UBOT1", "files": []}])
+        state = ms.poll_slack(cfg, {}, self.source_dir, self.now, api)
+        self.assertEqual(state, {})
 
     def test_expired_entry_is_swept_and_file_deleted(self):
         local_file = self.source_dir / "slack-1.png"

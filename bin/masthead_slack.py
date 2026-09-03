@@ -51,8 +51,12 @@ class SlackAPIError(RuntimeError):
 # Pure helpers (no network) -- unit tested directly.
 # --------------------------------------------------------------------------
 
-def classify_message(msg: dict) -> str:
+def classify_message(msg: dict, bot_user_id: str = "") -> str:
     """Return 'attachment', 'text', or 'ignored' for a raw Slack message dict."""
+    if msg.get("bot_id"):
+        return "ignored"
+    if bot_user_id and msg.get("user") == bot_user_id:
+        return "ignored"
     if msg.get("subtype") in SYSTEM_SUBTYPES:
         return "ignored"
     if extract_attachment(msg) is not None:
@@ -169,6 +173,7 @@ class SlackConfig:
     token: str
     channel: str
     ttl_days: int
+    bot_user_id: str = ""
 
 
 class SlackAPI(Protocol):
@@ -177,6 +182,7 @@ class SlackAPI(Protocol):
     def user_name(self, user_id: str) -> str: ...
     def download(self, url: str, dest_path: Path) -> None: ...
     def post_message(self, channel: str, text: str, thread_ts: str | None = None) -> None: ...
+    def auth_test(self) -> str: ...
 
 
 class SlackWebAPI:
@@ -246,6 +252,10 @@ class SlackWebAPI:
             params["thread_ts"] = thread_ts
         self._call("chat.postMessage", params)
 
+    def auth_test(self) -> str:
+        payload = self._call("auth.test", {})
+        return payload.get("user_id", "")
+
 
 def _post_safe(api: SlackAPI, channel: str, text: str, thread_ts: str | None = None) -> None:
     """post_message wrapper that never raises -- a failed acknowledgement
@@ -285,7 +295,7 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         ts = msg.get("ts")
         if not ts or ts in state:
             continue
-        kind = classify_message(msg)
+        kind = classify_message(msg, bot_user_id=cfg.bot_user_id)
         if kind == "ignored":
             log.info("Ignoring Slack message %s: no recognized content", ts)
             continue

@@ -280,8 +280,14 @@ def main(argv: list[str]) -> int:
     if cfg.skip_slack_poll:
         log.info("Skipping Slack poll (--skip-slack-poll / MASTHEAD_SKIP_SLACK_POLL=1)")
     else:
-        slack_cfg = masthead_slack.SlackConfig(cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days)
         api = masthead_slack.SlackWebAPI(cfg.slack_token)
+        try:
+            bot_user_id = api.auth_test()
+        except masthead_slack.SlackAPIError as exc:
+            log.error("Failed to resolve bot's own user ID (auth.test): %s -- "
+                       "bot messages won't be excluded from ingestion this tick", exc)
+            bot_user_id = ""
+        slack_cfg = masthead_slack.SlackConfig(cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days, bot_user_id)
         state = masthead_slack.poll_slack(slack_cfg, state, cfg.source_dir, datetime.now(timezone.utc), api)
         masthead_slack.save_state(state, state_path)
 
