@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 import tempfile
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin"))
@@ -64,24 +64,58 @@ class ExtractAttachmentTests(unittest.TestCase):
         self.assertEqual(result["url"], "https://x/b.png")
 
 
-class CancelReplyTests(unittest.TestCase):
-    def test_cancel_word_matches(self):
-        self.assertTrue(ms.is_cancel_reply("please cancel this"))
+class ParseCommandTests(unittest.TestCase):
+    NOW = datetime(2026, 9, 3, 12, 0, tzinfo=timezone.utc)  # a Thursday
 
-    def test_delete_word_matches(self):
-        self.assertTrue(ms.is_cancel_reply("DELETE"))
+    def test_bare_cancel_means_now(self):
+        result = ms.parse_command("please cancel this", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW)
 
-    def test_undo_word_matches(self):
-        self.assertTrue(ms.is_cancel_reply("undo please"))
+    def test_bare_delete_means_now(self):
+        result = ms.parse_command("DELETE", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW)
+
+    def test_bare_undo_means_now(self):
+        result = ms.parse_command("undo please", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW)
+
+    def test_bare_remove_means_now(self):
+        result = ms.parse_command("remove", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW)
+
+    def test_remove_now_means_now(self):
+        result = ms.parse_command("remove now", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW)
+
+    def test_remove_in_one_week(self):
+        result = ms.parse_command("remove in 1 week", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW + timedelta(weeks=1))
+
+    def test_remove_next_thursday_resolves_to_the_future(self):
+        result = ms.parse_command("remove thursday", self.NOW)
+        self.assertGreater(result.remove_at, self.NOW)
+        self.assertEqual(result.remove_at.strftime("%A"), "Thursday")
+
+    def test_remove_with_explicit_date(self):
+        result = ms.parse_command("remove 10 Sept", self.NOW)
+        self.assertEqual(result.remove_at.date().isoformat(), "2026-09-10")
+
+    def test_remove_with_explicit_date_and_time(self):
+        result = ms.parse_command("remove 10 Sept 10am", self.NOW)
+        self.assertEqual(result.remove_at.isoformat(), "2026-09-10T10:00:00+00:00")
+
+    def test_remove_with_unparseable_phrase_falls_back_to_now(self):
+        result = ms.parse_command("remove pronto pronto pronto", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW)
 
     def test_unrelated_reply_does_not_match(self):
-        self.assertFalse(ms.is_cancel_reply("nice!"))
+        self.assertIsNone(ms.parse_command("nice!", self.NOW))
 
     def test_empty_reply_does_not_match(self):
-        self.assertFalse(ms.is_cancel_reply(""))
+        self.assertIsNone(ms.parse_command("", self.NOW))
 
     def test_none_reply_does_not_match(self):
-        self.assertFalse(ms.is_cancel_reply(None))
+        self.assertIsNone(ms.parse_command(None, self.NOW))
 
 
 class LocalFilenameTests(unittest.TestCase):

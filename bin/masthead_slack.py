@@ -7,10 +7,12 @@ client. Imported by masthead-refresh.py; also unit-tested directly.
 """
 from __future__ import annotations
 
+import dateparser
 import html
 import json
 import logging
 import os
+import re
 import tempfile
 import urllib.error
 import urllib.parse
@@ -24,7 +26,7 @@ log = logging.getLogger("masthead.slack")
 
 IMAGE_FILETYPES = {"jpg", "jpeg", "png", "gif", "webp", "bmp"}
 PDF_FILETYPE = "pdf"
-CANCEL_WORDS = ("cancel", "delete", "undo")
+COMMAND_WORDS = ("cancel", "delete", "undo", "remove")
 
 # Slack "subtype" values for channel housekeeping events (joins, topic
 # changes, pins, edits, ...) rather than actual posted content. These
@@ -74,9 +76,40 @@ def extract_attachment(msg: dict) -> dict | None:
     return None
 
 
-def is_cancel_reply(text: str) -> bool:
-    lowered = (text or "").lower()
-    return any(word in lowered for word in CANCEL_WORDS)
+@dataclass
+class RemovalCommand:
+    remove_at: datetime
+
+
+def parse_command(text: str, now: datetime) -> RemovalCommand | None:
+    """Return a RemovalCommand if `text` contains a removal trigger word,
+    else None. A trigger word with no (or an unparseable) time phrase
+    after it means "remove now"."""
+    if not text:
+        return None
+    lowered = text.lower()
+    match = None
+    for word in COMMAND_WORDS:
+        m = re.search(rf"\b{word}\b", lowered)
+        if m and (match is None or m.start() < match.start()):
+            match = m
+    if match is None:
+        return None
+
+    rest = (text[:match.start()] + text[match.end():]).strip()
+    if not rest:
+        return RemovalCommand(remove_at=now)
+
+    naive_now = now.replace(tzinfo=None)
+    parsed = dateparser.parse(rest, settings={
+        "PREFER_DATES_FROM": "future",
+        "RELATIVE_BASE": naive_now,
+    })
+    if parsed is None:
+        return RemovalCommand(remove_at=now)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return RemovalCommand(remove_at=parsed)
 
 
 def local_filename(ts: str, filetype: str) -> str:
