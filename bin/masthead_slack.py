@@ -105,17 +105,16 @@ def save_state(state: dict, path: Path) -> None:
             os.remove(tmp_name)
 
 
-def sweep_expired(state: dict, ttl_days: int, now: datetime) -> list[str]:
-    """Mark active entries older than ttl_days as 'expired' in place.
+def sweep_expired(state: dict, now: datetime) -> list[str]:
+    """Mark active entries whose remove_at has passed as 'expired' in place.
     Returns local_files paths whose entries just expired, for the
     caller to delete from disk."""
-    cutoff = now - timedelta(days=ttl_days)
     files_to_delete: list[str] = []
     for entry in state.values():
         if entry["status"] != "active":
             continue
-        posted_at = datetime.fromisoformat(entry["posted_at"])
-        if posted_at < cutoff:
+        remove_at = datetime.fromisoformat(entry["remove_at"])
+        if remove_at <= now:
             entry["status"] = "expired"
             files_to_delete.extend(entry.get("local_files", []))
     return files_to_delete
@@ -258,7 +257,8 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             log.info("Ignoring Slack message %s: no recognized content", ts)
             continue
 
-        posted_at = datetime.fromtimestamp(float(ts), tz=timezone.utc).isoformat(timespec="seconds")
+        posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+        posted_at = posted_at_dt.isoformat(timespec="seconds")
         if msg.get("user"):
             try:
                 author = api.user_name(msg["user"])
@@ -270,6 +270,8 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         entry = {
             "ts": ts, "posted_at": posted_at, "status": "active", "kind": kind,
             "text": "", "author": author, "local_files": [],
+            "remove_at": (posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
+            "remove_reason": "ttl",
         }
 
         if kind == "attachment":
@@ -311,17 +313,20 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
     # clock/timestamp mismatch.
     sweep_target = {ts: entry for ts, entry in state.items() if ts in pre_existing_ts}
     previously_active = {ts for ts, entry in sweep_target.items() if entry["status"] == "active"}
-    expired_files = sweep_expired(sweep_target, cfg.ttl_days, now)
+    expired_files = sweep_expired(sweep_target, now)
     for f in expired_files:
         Path(f).unlink(missing_ok=True)
     for ts in previously_active:
         entry = sweep_target[ts]
         if entry["status"] != "expired":
             continue
-        _post_safe(
-            api, cfg.channel,
-            f'I\'ve removed: "{_describe_entry(entry)}" by {entry["author"]} '
-            f"(expired after {cfg.ttl_days} days)",
-        )
+        if entry.get("remove_reason") == "command":
+            who = entry.get("remove_requested_by", entry["author"])
+            message = (f'I\'ve removed: "{_describe_entry(entry)}" by {entry["author"]} '
+                       f"(requested by {who})")
+        else:
+            message = (f'I\'ve removed: "{_describe_entry(entry)}" by {entry["author"]} '
+                       f"(expired after {cfg.ttl_days} days)")
+        _post_safe(api, cfg.channel, message)
 
     return state

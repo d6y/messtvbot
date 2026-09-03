@@ -103,7 +103,7 @@ class StateLoadSaveTests(unittest.TestCase):
     def test_save_then_load_round_trips(self):
         state = {"123.456": {"status": "active", "kind": "text", "text": "hi",
                               "author": "Jane", "posted_at": "2026-08-01T00:00:00+00:00",
-                              "local_files": []}}
+                              "local_files": [], "remove_at": "2026-08-01T00:00:00+00:00", "remove_reason": "ttl"}}
         path = self.tmp_dir / "data" / "slack-state.json"
         ms.save_state(state, path)
         self.assertEqual(ms.load_state(path), state)
@@ -161,42 +161,46 @@ class SlackWebAPICallTests(unittest.TestCase):
         self.assertEqual(calls[1]["cursor"], "abc")
 
 
-def _entry(status, posted_at, kind="text", local_files=None):
+def _entry(status, posted_at, kind="text", local_files=None, remove_at=None, remove_reason="ttl"):
     return {"status": status, "kind": kind, "text": "x", "author": "A",
-            "posted_at": posted_at, "local_files": local_files or []}
+            "posted_at": posted_at, "local_files": local_files or [],
+            "remove_at": remove_at or posted_at, "remove_reason": remove_reason}
 
 
 class SweepExpiredTests(unittest.TestCase):
-    def test_active_entry_older_than_ttl_is_expired(self):
-        state = {"1": _entry("active", "2026-01-01T00:00:00+00:00")}
+    def test_active_entry_past_remove_at_is_expired(self):
+        state = {"1": _entry("active", "2026-01-01T00:00:00+00:00",
+                              remove_at="2026-01-31T00:00:00+00:00")}
         now = datetime(2026, 8, 1, tzinfo=timezone.utc)
-        ms.sweep_expired(state, ttl_days=30, now=now)
+        ms.sweep_expired(state, now=now)
         self.assertEqual(state["1"]["status"], "expired")
 
-    def test_active_entry_within_ttl_stays_active(self):
-        state = {"1": _entry("active", "2026-07-30T00:00:00+00:00")}
+    def test_active_entry_before_remove_at_stays_active(self):
+        state = {"1": _entry("active", "2026-07-30T00:00:00+00:00",
+                              remove_at="2026-08-29T00:00:00+00:00")}
         now = datetime(2026, 8, 1, tzinfo=timezone.utc)
-        ms.sweep_expired(state, ttl_days=30, now=now)
+        ms.sweep_expired(state, now=now)
         self.assertEqual(state["1"]["status"], "active")
 
     def test_already_cancelled_entry_is_left_alone(self):
-        state = {"1": _entry("cancelled", "2020-01-01T00:00:00+00:00")}
+        state = {"1": _entry("cancelled", "2020-01-01T00:00:00+00:00",
+                              remove_at="2020-01-31T00:00:00+00:00")}
         now = datetime(2026, 8, 1, tzinfo=timezone.utc)
-        ms.sweep_expired(state, ttl_days=30, now=now)
+        ms.sweep_expired(state, now=now)
         self.assertEqual(state["1"]["status"], "cancelled")
 
     def test_returns_local_files_of_newly_expired_entries(self):
         state = {"1": _entry("active", "2020-01-01T00:00:00+00:00", kind="attachment",
-                              local_files=["/tmp/a.png"])}
+                              local_files=["/tmp/a.png"], remove_at="2020-01-31T00:00:00+00:00")}
         now = datetime(2026, 8, 1, tzinfo=timezone.utc)
-        result = ms.sweep_expired(state, ttl_days=30, now=now)
+        result = ms.sweep_expired(state, now=now)
         self.assertEqual(result, ["/tmp/a.png"])
 
     def test_does_not_return_files_for_entries_still_active(self):
         state = {"1": _entry("active", "2026-07-30T00:00:00+00:00", kind="attachment",
-                              local_files=["/tmp/a.png"])}
+                              local_files=["/tmp/a.png"], remove_at="2026-08-29T00:00:00+00:00")}
         now = datetime(2026, 8, 1, tzinfo=timezone.utc)
-        result = ms.sweep_expired(state, ttl_days=30, now=now)
+        result = ms.sweep_expired(state, now=now)
         self.assertEqual(result, [])
 
 
@@ -303,7 +307,7 @@ class PollSlackTests(unittest.TestCase):
     def test_already_seen_message_is_not_reprocessed(self):
         existing = {"100.1": {"status": "active", "kind": "text", "text": "old",
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
-                               "local_files": []}}
+                               "local_files": [], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[{"ts": "100.1", "text": "new text!", "user": "U1", "files": []}])
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         self.assertEqual(state["100.1"]["text"], "old")
@@ -313,7 +317,7 @@ class PollSlackTests(unittest.TestCase):
         local_file.write_bytes(b"x")
         existing = {"100.2": {"status": "active", "kind": "attachment", "text": "",
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
-                               "local_files": [str(local_file)]}}
+                               "local_files": [str(local_file)], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please cancel"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         self.assertEqual(state["100.2"]["status"], "cancelled")
@@ -322,7 +326,7 @@ class PollSlackTests(unittest.TestCase):
     def test_non_cancel_reply_leaves_entry_active(self):
         existing = {"100.1": {"status": "active", "kind": "text", "text": "hi",
                                "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
-                               "local_files": []}}
+                               "local_files": [], "remove_at": "2026-08-29T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.1": [{"text": "nice!"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         self.assertEqual(state["100.1"]["status"], "active")
@@ -332,7 +336,7 @@ class PollSlackTests(unittest.TestCase):
         local_file.write_bytes(b"x")
         existing = {"1": {"status": "active", "kind": "attachment", "text": "",
                            "author": "Jane", "posted_at": "2020-01-01T00:00:00+00:00",
-                           "local_files": [str(local_file)]}}
+                           "local_files": [str(local_file)], "remove_at": "2020-01-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[])
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         self.assertEqual(state["1"]["status"], "expired")
@@ -345,7 +349,7 @@ class PollSlackTests(unittest.TestCase):
 
         existing = {"1": {"status": "active", "kind": "text", "text": "hi",
                            "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
-                           "local_files": []}}
+                           "local_files": [], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
         state = ms.poll_slack(self.cfg, dict(existing), self.source_dir, self.now, FailingHistoryAPI())
         self.assertEqual(state, existing)
 
@@ -421,7 +425,7 @@ class PollSlackTests(unittest.TestCase):
         local_file.write_bytes(b"x")
         existing = {"100.2": {"status": "active", "kind": "attachment", "text": "",
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
-                               "local_files": [str(local_file)]}}
+                               "local_files": [str(local_file)], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please cancel"}]})
         ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.2"]
@@ -432,7 +436,7 @@ class PollSlackTests(unittest.TestCase):
         local_file.write_bytes(b"x")
         existing = {"1": {"status": "active", "kind": "text", "text": "Old announcement",
                            "author": "Jane", "posted_at": "2020-01-01T00:00:00+00:00",
-                           "local_files": []}}
+                           "local_files": [], "remove_at": "2020-01-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[])
         ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api)
         top_level = [p for p in api.posted_messages if p["thread_ts"] is None]
