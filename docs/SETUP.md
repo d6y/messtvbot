@@ -1,70 +1,53 @@
 # Masthead setup walkthrough
 
-## 1. Create the Dropbox folder
+## 1. Create a Slack app
 
-Make (or pick) a folder in Dropbox that the people updating signage will
-have access to, e.g. `Masthead`. Anything they drop in there (images or
-PDFs) becomes a slide; anything they remove drops out of rotation.
+In your Slack workspace, create a new app (api.slack.com/apps →
+"Create New App" → "From scratch"). Under **OAuth & Permissions**, add
+these Bot Token Scopes:
+- `channels:history` (or `groups:history` if the channel is private)
+- `files:read`
+- `users:read`
+- `chat:write` (so it can reply in-thread when accepting/removing a
+  post, and announce expirations)
 
-## 2. Connect rclone to Dropbox
+Install the app to your workspace, then copy the **Bot User OAuth
+Token** (starts `xoxb-`) -- this is `MASTHEAD_SLACK_TOKEN`.
 
-rclone needs its own OAuth token -- run this once per machine (Pi and
-Mac each need their own, or you can copy `~/.config/rclone/rclone.conf`
-between them):
+Invite the bot to the channel people will post signage content to
+(`/invite @YourAppName` in that channel), then find the channel's ID
+(right-click the channel → "View channel details" → the ID is at the
+bottom, or use the Slack API's `conversations.list`) -- this is
+`MASTHEAD_SLACK_CHANNEL`.
 
-```
-rclone config
-```
-
-Walk through the prompts:
-- `n` for a new remote
-- name it (e.g. `dropbox`) -- this is what goes before the `:` in
-  `MASTHEAD_REMOTE`
-- storage type: `dropbox`
-- leave client_id/client_secret blank to use rclone's default app
-  (fine for personal use; register your own Dropbox app if you want
-  Masthead's access scoped down further)
-- it'll open a browser to authorize -- if you're on a headless Pi,
-  either run `rclone config` from a machine with a browser and copy
-  the resulting `rclone.conf` over, or use `rclone authorize` per
-  rclone's headless-auth instructions
-- confirm, and you should see your remote listed in `rclone listremotes`
-
-Sanity-check it can see your folder:
-
-```
-rclone lsf dropbox:Masthead
-```
-
-## 3. Configure Masthead
+## 2. Configure Masthead
 
 ```
 cp config/masthead.env.example config/masthead.env
 ```
 
 Edit `config/masthead.env`:
-- `MASTHEAD_REMOTE=dropbox:Masthead` -- match the remote name from step 2
-  and the folder path
+- `MASTHEAD_SLACK_TOKEN` and `MASTHEAD_SLACK_CHANNEL` -- from step 1
 - everything else has a reasonable default; see the comments in the
   file for what each one does
 
-## 4. Install
+## 3. Install
 
-**Pi:** `./install/install-pi.sh` -- installs `rclone`/`poppler-utils`/
+**Pi:** `./install/install-pi.sh` -- installs `poppler-utils`/
 `chromium`/`unclutter`, sets up two systemd **user** services
 (`masthead-serve`, always running the web server) and a timer
-(`masthead-refresh`, syncing/rendering every 2 minutes by default), and
+(`masthead-refresh`, polling/rendering every 2 minutes by default), and
 adds a kiosk autostart entry so Chromium launches full-screen after
 login. It also enables "linger" so those services keep running even
 without an active graphical login.
 
-**Mac:** `./install/install-mac.sh` -- installs `rclone`/`poppler` via
+**Mac:** `./install/install-mac.sh` -- installs `poppler` via
 Homebrew, and optionally installs `launchd` agents so the refresh loop
 and web server run in the background the same way they do on the Pi
 (you'll be prompted; say no if you'd rather just run things manually
 while developing).
 
-## 5. Verify
+## 4. Verify
 
 ```
 systemctl --user status masthead-refresh.service   # Pi
@@ -72,7 +55,7 @@ cat ~/masthead-data/data/manifest.json
 curl http://127.0.0.1:8420/data/manifest.json
 ```
 
-Add a test image to your Dropbox folder, wait for the next refresh
+Post a message with an image or some text in your Slack channel, wait for the next refresh
 interval (or force one -- see below), and confirm it shows up in
 `manifest.json`.
 
@@ -82,7 +65,7 @@ systemctl --user start masthead-refresh.service   # Pi
 python3 bin/masthead-refresh.py config/masthead.env   # Mac / manual
 ```
 
-## 6. See it full-screen
+## 5. See it full-screen
 
 **Pi:** reboot, or run `kiosk/launch-kiosk-pi.sh` directly to test
 without rebooting.
@@ -90,23 +73,29 @@ without rebooting.
 **Mac:** `kiosk/launch-kiosk-mac.sh` (Cmd+Q to quit -- this is a
 preview, not a real lockdown).
 
-## Ordering and naming content
+## Ordering and removing content
 
-Slides play in filename order. Prefix files to control sequence:
-`01-welcome.jpg`, `02-monthly-flyer.pdf`, `03-photo.png`. A multi-page
-PDF expands into one slide per page, in page order, at the point its
-filename sorts.
+Slides play in the order they were posted to the Slack channel
+(oldest first). A message remains in rotation for `MASTHEAD_SLACK_TTL_DAYS`
+(30 days by default), then automatically expires.
 
-Hidden files (dotfiles, e.g. `.DS_Store`) and anything that isn't a
-recognized image type or `.pdf` are ignored.
+To immediately remove a message from the rotation, reply to it in its
+thread with "cancel", "delete", or "undo". Multi-page PDFs expand into
+one slide per page, in page order, at the point the message was posted.
+
+The bot posts back to Slack so it's obvious what happened to a post:
+a thread reply when it's accepted onto the display, a thread reply
+when it's removed via a cancel/delete/undo reply, and a new top-level
+message when a post is auto-removed after its TTL expires (since the
+original thread may be long gone from anyone's view by then).
 
 ## Troubleshooting
 
 - **Nothing shows up / stuck on "Waiting for content"**: check
   `systemctl --user status masthead-refresh.service` (Pi) or
-  `/tmp/masthead-refresh.log` (Mac) for sync errors -- most commonly a
-  stale/missing rclone token (`rclone config reconnect dropbox:`) or a
-  typo in `MASTHEAD_REMOTE`.
+  `/tmp/masthead-refresh.log` (Mac) for poll errors -- most commonly an
+  invalid/revoked `MASTHEAD_SLACK_TOKEN`, the bot not being invited to
+  `MASTHEAD_SLACK_CHANNEL`, or a typo in the channel ID.
 - **PDFs don't render**: confirm `pdftoppm -v` works; it comes from
   `poppler-utils` (Pi/apt) or `poppler` (Mac/brew).
   `install-pi.sh`/`install-mac.sh` install it, but double-check if you
@@ -125,4 +114,4 @@ recognized image type or `.pdf` are ignored.
 - **Want to see it from another device on your network** (debugging
   only): `masthead-serve.sh` binds to `127.0.0.1` by default; change
   the `--bind` argument if you need LAN access, but keep in mind it
-  then serves your Dropbox content to anyone on that network.
+  then serves your Slack channel content to anyone on that network.

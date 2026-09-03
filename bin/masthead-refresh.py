@@ -4,14 +4,15 @@ masthead-refresh.py
 
 One "tick" of Masthead's content pipeline:
 
-  1. rclone-sync a Dropbox folder down to a local "source" directory.
+  1. Poll a Slack channel for new/edited/deleted messages, downloading any
+     attachments into a local "source" directory (see masthead_slack.py).
   2. Render any PDFs in that folder to PNG pages (poppler's pdftoppm),
      caching renders so unchanged PDFs aren't re-rendered every run.
-  3. Write a manifest.json listing every slide (plain images + PDF pages)
-     in display order, for the kiosk webpage to poll.
+  3. Write a manifest.json listing every slide (text posts, plain images,
+     and PDF pages) in display order, for the kiosk webpage to poll.
 
 Designed to be invoked repeatedly (systemd timer on the Pi, launchd or
-cron on macOS, or just by hand). It never raises on a bad sync or a
+cron on macOS, or just by hand). It never raises on a bad poll or a
 missing tool -- it logs and leaves the previous manifest in place, so a
 flaky network never blanks the display.
 
@@ -34,6 +35,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+import masthead_slack
+
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 PDF_EXT = ".pdf"
 
@@ -46,13 +49,15 @@ log = logging.getLogger("masthead")
 
 @dataclass
 class Config:
-    remote: str
+    slack_token: str
+    slack_channel: str
+    slack_ttl_days: int
     masthead_dir: Path
     repo_dir: Path
     render_width: int
     slide_seconds: int
     poll_seconds: int
-    skip_sync: bool
+    skip_slack_poll: bool
 
     @property
     def source_dir(self) -> Path:
@@ -85,26 +90,29 @@ def load_config(argv: list[str]) -> Config:
     if len(argv) > 1 and not argv[1].startswith("--"):
         load_env_file(Path(argv[1]).expanduser())
 
-    remote = os.environ.get("MASTHEAD_REMOTE", "").strip()
-    if not remote:
+    slack_token = os.environ.get("MASTHEAD_SLACK_TOKEN", "").strip()
+    slack_channel = os.environ.get("MASTHEAD_SLACK_CHANNEL", "").strip()
+    if not slack_token or not slack_channel:
         log.error(
-            "MASTHEAD_REMOTE is not set (e.g. 'dropbox:Masthead'). "
-            "Set it in config/masthead.env."
+            "MASTHEAD_SLACK_TOKEN and MASTHEAD_SLACK_CHANNEL must both be set. "
+            "Set them in config/masthead.env."
         )
         sys.exit(2)
 
-    masthead_dir = Path(os.environ.get("MASTHEAD_DIR", "~/masthead-data")).expanduser()
+    masthead_dir = Path(os.path.expandvars(os.environ.get("MASTHEAD_DIR", "~/masthead-data"))).expanduser()
     # This file lives at <repo>/bin/masthead-refresh.py
     repo_dir = Path(os.environ.get("MASTHEAD_REPO", str(Path(__file__).resolve().parent.parent)))
 
     return Config(
-        remote=remote,
+        slack_token=slack_token,
+        slack_channel=slack_channel,
+        slack_ttl_days=int(os.environ.get("MASTHEAD_SLACK_TTL_DAYS", "30")),
         masthead_dir=masthead_dir,
         repo_dir=repo_dir,
         render_width=int(os.environ.get("MASTHEAD_RENDER_WIDTH", "1920")),
         slide_seconds=int(os.environ.get("MASTHEAD_SLIDE_SECONDS", "8")),
         poll_seconds=int(os.environ.get("MASTHEAD_POLL_SECONDS", "30")),
-        skip_sync=("--skip-sync" in argv) or os.environ.get("MASTHEAD_SKIP_SYNC") == "1",
+        skip_slack_poll=("--skip-slack-poll" in argv) or os.environ.get("MASTHEAD_SKIP_SLACK_POLL") == "1",
     )
 
 
@@ -115,47 +123,6 @@ def load_config(argv: list[str]) -> Config:
 def ensure_dirs(cfg: Config) -> None:
     for d in (cfg.source_dir, cfg.rendered_dir, cfg.data_dir):
         d.mkdir(parents=True, exist_ok=True)
-
-
-def sync_from_dropbox(cfg: Config) -> bool:
-    if cfg.skip_sync:
-        log.info("Skipping rclone sync (--skip-sync / MASTHEAD_SKIP_SYNC=1)")
-        return True
-
-    if shutil.which("rclone") is None:
-        log.error("rclone not found on PATH; install it (see docs/SETUP.md)")
-        return False
-
-    cmd = [
-        "rclone", "sync", cfg.remote, str(cfg.source_dir),
-        "--delete-during",
-        "--min-age", "30s",       # don't grab files still mid-upload
-        "--fast-list",
-        "--stats=0",
-    ]
-    log.info("Syncing %s -> %s", cfg.remote, cfg.source_dir)
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-    except subprocess.TimeoutExpired:
-        log.error("rclone sync timed out")
-        return False
-    except OSError as exc:
-        log.error("Failed to run rclone: %s", exc)
-        return False
-
-    if result.returncode != 0:
-        log.error("rclone sync failed (exit %s): %s", result.returncode, result.stderr.strip())
-        return False
-    return True
-
-
-def list_source_files(source_dir: Path) -> list[Path]:
-    files = [
-        p for p in source_dir.iterdir()
-        if p.is_file() and not p.name.startswith(".")
-    ]
-    files = [p for p in files if p.suffix.lower() in IMAGE_EXTS | {PDF_EXT}]
-    return sorted(files, key=lambda p: p.name.lower())
 
 
 _PAGE_NUM_RE = re.compile(r"-(\d+)\.png$")
@@ -234,22 +201,45 @@ def copy_site_assets(repo_dir: Path, masthead_dir: Path) -> None:
             shutil.copyfile(src, masthead_dir / name)
 
 
-def build_manifest(source_files: list[Path], rendered_pages: dict[str, list[Path]],
+def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[str, list[Path]],
                     masthead_dir: Path, slide_seconds: int, poll_seconds: int) -> dict:
     items = []
-    for f in source_files:
-        if f.suffix.lower() in IMAGE_EXTS:
-            rel = f.relative_to(masthead_dir).as_posix()
-            items.append({"kind": "image", "name": f.name, "src": rel})
-        elif f.suffix.lower() == PDF_EXT:
-            pages = rendered_pages.get(f.stem, [])
-            total = len(pages)
-            for i, page_path in enumerate(pages, start=1):
-                rel = page_path.relative_to(masthead_dir).as_posix()
-                items.append({
-                    "kind": "pdf-page", "name": f.name, "src": rel,
-                    "page": i, "pages": total,
-                })
+    for _ts, entry in active_entries:
+        if entry["kind"] == "text":
+            items.append({
+                "kind": "text",
+                "text": entry["text"],
+                "author": entry["author"],
+                "posted_at": entry["posted_at"],
+            })
+        elif entry["kind"] == "attachment" and entry.get("local_files"):
+            file_path = Path(entry["local_files"][0])
+            if file_path.suffix.lower() == PDF_EXT:
+                pages = rendered_pages.get(file_path.stem, [])
+                total = len(pages)
+                for i, page_path in enumerate(pages, start=1):
+                    try:
+                        rel = page_path.relative_to(masthead_dir).as_posix()
+                    except ValueError:
+                        log.warning(
+                            "Skipping manifest item for %s (ts=%s): rendered page %s is not "
+                            "under masthead_dir %s", file_path.name, entry.get("ts"), page_path, masthead_dir,
+                        )
+                        continue
+                    items.append({
+                        "kind": "pdf-page", "name": file_path.name, "src": rel,
+                        "page": i, "pages": total,
+                    })
+            else:
+                try:
+                    rel = file_path.relative_to(masthead_dir).as_posix()
+                except ValueError:
+                    log.warning(
+                        "Skipping manifest item for %s (ts=%s): file %s is not under masthead_dir %s",
+                        file_path.name, entry.get("ts"), file_path, masthead_dir,
+                    )
+                    continue
+                items.append({"kind": "image", "name": file_path.name, "src": rel})
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -282,27 +272,35 @@ def main(argv: list[str]) -> int:
     )
     cfg = load_config(argv)
     ensure_dirs(cfg)
-
-    sync_ok = sync_from_dropbox(cfg)
-    if not sync_ok:
-        log.warning("Sync failed this run; leaving existing content/manifest untouched")
-        return 1
-
     copy_site_assets(cfg.repo_dir, cfg.masthead_dir)
 
-    source_files = list_source_files(cfg.source_dir)
-    pdf_files = [f for f in source_files if f.suffix.lower() == PDF_EXT]
+    state_path = cfg.data_dir / "slack-state.json"
+    state = masthead_slack.load_state(state_path)
+
+    if cfg.skip_slack_poll:
+        log.info("Skipping Slack poll (--skip-slack-poll / MASTHEAD_SKIP_SLACK_POLL=1)")
+    else:
+        slack_cfg = masthead_slack.SlackConfig(cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days)
+        api = masthead_slack.SlackWebAPI(cfg.slack_token)
+        state = masthead_slack.poll_slack(slack_cfg, state, cfg.source_dir, datetime.now(timezone.utc), api)
+        masthead_slack.save_state(state, state_path)
+
+    active_entries = masthead_slack.sorted_active_entries(state)
+    pdf_files = [
+        Path(entry["local_files"][0])
+        for _ts, entry in active_entries
+        if entry["kind"] == "attachment" and entry.get("local_files")
+        and Path(entry["local_files"][0]).suffix.lower() == PDF_EXT
+    ]
 
     rendered_pages = render_pdfs(pdf_files, cfg.rendered_dir, cfg.render_width)
     cleanup_stale_renders({f.stem for f in pdf_files}, cfg.rendered_dir)
 
-    manifest = build_manifest(
-        source_files, rendered_pages, cfg.masthead_dir, cfg.slide_seconds, cfg.poll_seconds
-    )
+    manifest = build_manifest(active_entries, rendered_pages, cfg.masthead_dir, cfg.slide_seconds, cfg.poll_seconds)
     write_manifest(manifest, cfg.data_dir)
 
-    log.info("Refresh complete: %d slide(s) from %d source file(s)",
-              len(manifest["items"]), len(source_files))
+    log.info("Refresh complete: %d slide(s) from %d active Slack message(s)",
+              len(manifest["items"]), len(active_entries))
     return 0
 
 

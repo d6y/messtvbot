@@ -16,14 +16,11 @@ if [ "$REPO_DIR" != "$HOME/masthead" ]; then
   [ "$ans" = "y" ] || [ "$ans" = "Y" ] || exit 1
 fi
 
-echo "==> Installing packages (rclone, poppler-utils, chromium, unclutter)"
+echo "==> Installing packages (poppler-utils, chromium, unclutter)"
 sudo apt-get update
 sudo apt-get install -y poppler-utils unclutter curl
 if ! command -v chromium >/dev/null 2>&1 && ! command -v chromium-browser >/dev/null 2>&1; then
   sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
-fi
-if ! command -v rclone >/dev/null 2>&1; then
-  curl -fsSL https://rclone.org/install.sh | sudo bash
 fi
 
 echo "==> Making scripts executable"
@@ -31,13 +28,7 @@ chmod +x "$REPO_DIR"/bin/*.sh "$REPO_DIR"/kiosk/*.sh
 
 if [ ! -f "$REPO_DIR/config/masthead.env" ]; then
   cp "$REPO_DIR/config/masthead.env.example" "$REPO_DIR/config/masthead.env"
-  echo "==> Created config/masthead.env -- edit MASTHEAD_REMOTE before continuing!"
-fi
-
-if [ ! -f "$HOME/.config/rclone/rclone.conf" ]; then
-  echo "==> No rclone config found yet."
-  echo "    Run 'rclone config' now to connect your Dropbox account, then re-run this script."
-  echo "    (See docs/SETUP.md for the exact steps.)"
+  echo "==> Created config/masthead.env -- edit MASTHEAD_SLACK_TOKEN and MASTHEAD_SLACK_CHANNEL before continuing!"
 fi
 
 echo "==> Installing systemd user units"
@@ -63,7 +54,8 @@ cat <<EOF
 ==> Done.
 
 Next steps:
-  1. If you haven't yet, run 'rclone config' to connect Dropbox, then:
+  1. If you haven't yet, create a Slack app and fill in MASTHEAD_SLACK_TOKEN
+     and MASTHEAD_SLACK_CHANNEL in config/masthead.env (see docs/SETUP.md):
        systemctl --user restart masthead-refresh.timer
   2. Check it worked:
        systemctl --user status masthead-refresh.service

@@ -1,0 +1,3 @@
+config/masthead.env
+__pycache__/
+*.pyc

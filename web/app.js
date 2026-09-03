@@ -3,6 +3,9 @@
 
   const layerA = document.getElementById("layer-a");
   const layerB = document.getElementById("layer-b");
+  const textCard = document.getElementById("text-card");
+  const textMessage = document.getElementById("text-message");
+  const textAuthor = document.getElementById("text-author");
   const emptyState = document.getElementById("empty-state");
 
   const DEFAULT_SLIDE_MS = 8000;
@@ -19,7 +22,7 @@
 
   function cacheBustedUrl(src) {
     // Prevent the browser from serving a stale cached image after a
-    // Dropbox update replaces a file with the same name.
+    // Slack re-poll replaces a file with the same name.
     return src + (src.includes("?") ? "&" : "?") + "t=" + Date.now();
   }
 
@@ -35,6 +38,17 @@
   async function showSlide(index) {
     if (items.length === 0) return;
     const item = items[index];
+
+    if (item.kind === "text") {
+      textMessage.textContent = item.text || "";
+      textAuthor.textContent = item.author ? "— " + item.author : "";
+      textCard.classList.add("visible");
+      frontLayer.classList.remove("visible");
+      backLayer.classList.remove("visible");
+      currentIndex = index;
+      return;
+    }
+
     try {
       const url = await preload(item.src);
       backLayer.src = url;
@@ -44,6 +58,7 @@
       backLayer.offsetHeight;
       backLayer.classList.add("visible");
       frontLayer.classList.remove("visible");
+      textCard.classList.remove("visible");
       [frontLayer, backLayer] = [backLayer, frontLayer];
       currentIndex = index;
     } catch (err) {
@@ -74,6 +89,7 @@
       emptyState.classList.add("visible");
       frontLayer.classList.remove("visible");
       backLayer.classList.remove("visible");
+      textCard.classList.remove("visible");
       clearTimeout(slideTimer);
       currentIndex = -1;
       return;
@@ -93,7 +109,7 @@
     }
     // If the list changed but we're mid-cycle, just let the running
     // timer pick up the new list on its next advance() call -- avoids
-    // restarting the slideshow every time someone edits Dropbox.
+    // restarting the slideshow every time someone posts to Slack.
   }
 
   async function pollManifest() {

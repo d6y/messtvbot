@@ -1,5 +1,5 @@
 [Unit]
-Description=Masthead: sync Dropbox content and rebuild slideshow manifest
+Description=Masthead: poll Slack for content and rebuild slideshow manifest
 Wants=network-online.target
 After=network-online.target
 

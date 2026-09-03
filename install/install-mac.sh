@@ -11,21 +11,15 @@ if ! command -v brew >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "==> Installing packages (rclone, poppler)"
-brew install rclone poppler
+echo "==> Installing packages (poppler)"
+brew install poppler
 
 echo "==> Making scripts executable"
 chmod +x "$REPO_DIR"/bin/*.sh "$REPO_DIR"/kiosk/*.sh
 
 if [ ! -f "$REPO_DIR/config/masthead.env" ]; then
   cp "$REPO_DIR/config/masthead.env.example" "$REPO_DIR/config/masthead.env"
-  echo "==> Created config/masthead.env -- edit MASTHEAD_REMOTE before continuing!"
-fi
-
-if [ ! -f "$HOME/.config/rclone/rclone.conf" ]; then
-  echo "==> No rclone config found yet."
-  echo "    Run 'rclone config' now to connect your Dropbox account (can use the"
-  echo "    SAME remote name/token as the Pi, or a separate one -- see docs/SETUP.md)."
+  echo "==> Created config/masthead.env -- edit MASTHEAD_SLACK_TOKEN and MASTHEAD_SLACK_CHANNEL before continuing!"
 fi
 
 read -r -p "Install launchd agents to run refresh+server automatically in the background? [y/N] " ans
