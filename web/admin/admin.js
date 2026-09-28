@@ -5,6 +5,21 @@
   const empty = document.getElementById("empty");
   const POLL_MS = 5000;
 
+  const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+
+  // "2026-09-28T12:34:56+00:00" -> "2026-09-28 12:34" (London time).
+  function formatDate(iso) {
+    if (!iso) return "";
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    const parts = Object.fromEntries(dateFormatter.formatToParts(date).map(p => [p.type, p.value]));
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+  }
+
   async function loadEntries() {
     try {
       const res = await fetch("/api/entries");
@@ -12,7 +27,7 @@
       const entries = await res.json();
       render(entries);
     } catch (err) {
-      console.warn("Masthead admin: failed to load entries", err);
+      console.warn("Mess TV Bot admin: failed to load entries", err);
     } finally {
       setTimeout(loadEntries, POLL_MS);
     }
@@ -24,14 +39,23 @@
     for (const entry of entries) {
       const row = document.createElement("tr");
 
+      const thumbCell = document.createElement("td");
+      if (entry.thumb) {
+        const img = document.createElement("img");
+        img.className = "thumb";
+        img.src = "/" + entry.thumb;
+        img.alt = "";
+        thumbCell.appendChild(img);
+      }
+
       const author = document.createElement("td");
       author.textContent = entry.author;
       const summary = document.createElement("td");
       summary.textContent = entry.summary;
       const posted = document.createElement("td");
-      posted.textContent = entry.posted_at;
+      posted.textContent = formatDate(entry.posted_at);
       const removeAt = document.createElement("td");
-      removeAt.textContent = entry.remove_at || "";
+      removeAt.textContent = formatDate(entry.remove_at);
 
       const actionCell = document.createElement("td");
       const button = document.createElement("button");
@@ -39,7 +63,7 @@
       button.addEventListener("click", () => removeEntry(entry.ts));
       actionCell.appendChild(button);
 
-      row.append(author, summary, posted, removeAt, actionCell);
+      row.append(thumbCell, author, summary, posted, removeAt, actionCell);
       tbody.appendChild(row);
     }
   }
@@ -50,7 +74,7 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       loadEntries();
     } catch (err) {
-      console.warn("Masthead admin: failed to remove entry", ts, err);
+      console.warn("Mess TV Bot admin: failed to remove entry", ts, err);
     }
   }
 

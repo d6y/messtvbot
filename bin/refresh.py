@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-masthead-refresh.py
+refresh.py
 
-One "tick" of Masthead's content pipeline:
+One "tick" of Mess TV Bot's content pipeline:
 
   1. Poll a Slack channel for new/edited/deleted messages, downloading any
-     attachments into a local "source" directory (see masthead_slack.py).
+     attachments into a local "source" directory (see slack_source.py).
   2. Render any PDFs in that folder to PNG pages (poppler's pdftoppm),
      caching renders so unchanged PDFs aren't re-rendered every run.
   3. Write a manifest.json listing every slide (text posts, plain images,
@@ -16,7 +16,7 @@ cron on macOS, or just by hand). It never raises on a bad poll or a
 missing tool -- it logs and leaves the previous manifest in place, so a
 flaky network never blanks the display.
 
-Config comes from environment variables (see config/masthead.env.example).
+Config comes from environment variables (see config/kiosk.env.example).
 If a path is given as argv[1], it's loaded as a simple KEY=VALUE file
 first (handy for manual runs; systemd/launchd normally inject the env
 directly).
@@ -28,6 +28,7 @@ import logging
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -35,12 +36,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-import masthead_slack
+import slack_source
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 PDF_EXT = ".pdf"
 
-log = logging.getLogger("masthead")
+log = logging.getLogger("kiosk")
 
 
 # --------------------------------------------------------------------------
@@ -52,24 +53,26 @@ class Config:
     slack_token: str
     slack_channel: str
     slack_ttl_days: int
-    masthead_dir: Path
+    kiosk_dir: Path
     repo_dir: Path
     render_width: int
     slide_seconds: int
     poll_seconds: int
     skip_slack_poll: bool
+    server_url: str
+    admin_contact: str
 
     @property
     def source_dir(self) -> Path:
-        return self.masthead_dir / "source"
+        return self.kiosk_dir / "source"
 
     @property
     def rendered_dir(self) -> Path:
-        return self.masthead_dir / "rendered"
+        return self.kiosk_dir / "rendered"
 
     @property
     def data_dir(self) -> Path:
-        return self.masthead_dir / "data"
+        return self.kiosk_dir / "data"
 
 
 def load_env_file(path: Path) -> None:
@@ -90,29 +93,35 @@ def load_config(argv: list[str]) -> Config:
     if len(argv) > 1 and not argv[1].startswith("--"):
         load_env_file(Path(argv[1]).expanduser())
 
-    slack_token = os.environ.get("MASTHEAD_SLACK_TOKEN", "").strip()
-    slack_channel = os.environ.get("MASTHEAD_SLACK_CHANNEL", "").strip()
+    slack_token = os.environ.get("KIOSK_SLACK_TOKEN", "").strip()
+    slack_channel = os.environ.get("KIOSK_SLACK_CHANNEL", "").strip()
     if not slack_token or not slack_channel:
         log.error(
-            "MASTHEAD_SLACK_TOKEN and MASTHEAD_SLACK_CHANNEL must both be set. "
-            "Set them in config/masthead.env."
+            "KIOSK_SLACK_TOKEN and KIOSK_SLACK_CHANNEL must both be set. "
+            "Set them in config/kiosk.env."
         )
         sys.exit(2)
 
-    masthead_dir = Path(os.path.expandvars(os.environ.get("MASTHEAD_DIR", "~/masthead-data"))).expanduser()
-    # This file lives at <repo>/bin/masthead-refresh.py
-    repo_dir = Path(os.environ.get("MASTHEAD_REPO", str(Path(__file__).resolve().parent.parent)))
+    kiosk_dir = Path(os.path.expandvars(os.environ.get("KIOSK_DIR", "~/kiosk-data"))).expanduser()
+    # This file lives at <repo>/bin/refresh.py
+    repo_dir = Path(os.environ.get("KIOSK_REPO", str(Path(__file__).resolve().parent.parent)))
+
+    port = os.environ.get("KIOSK_PORT", "8420")
+    default_server_url = f"http://{socket.gethostname()}:{port}"
+    server_url = os.environ.get("KIOSK_SERVER_URL", "").strip() or default_server_url
 
     return Config(
         slack_token=slack_token,
         slack_channel=slack_channel,
-        slack_ttl_days=int(os.environ.get("MASTHEAD_SLACK_TTL_DAYS", "30")),
-        masthead_dir=masthead_dir,
+        slack_ttl_days=int(os.environ.get("KIOSK_SLACK_TTL_DAYS", "30")),
+        kiosk_dir=kiosk_dir,
         repo_dir=repo_dir,
-        render_width=int(os.environ.get("MASTHEAD_RENDER_WIDTH", "1920")),
-        slide_seconds=int(os.environ.get("MASTHEAD_SLIDE_SECONDS", "8")),
-        poll_seconds=int(os.environ.get("MASTHEAD_POLL_SECONDS", "30")),
-        skip_slack_poll=("--skip-slack-poll" in argv) or os.environ.get("MASTHEAD_SKIP_SLACK_POLL") == "1",
+        render_width=int(os.environ.get("KIOSK_RENDER_WIDTH", "1920")),
+        slide_seconds=int(os.environ.get("KIOSK_SLIDE_SECONDS", "8")),
+        poll_seconds=int(os.environ.get("KIOSK_POLL_SECONDS", "30")),
+        skip_slack_poll=("--skip-slack-poll" in argv) or os.environ.get("KIOSK_SKIP_SLACK_POLL") == "1",
+        server_url=server_url,
+        admin_contact=os.environ.get("KIOSK_ADMIN_CONTACT", "@richard").strip(),
     )
 
 
@@ -190,7 +199,7 @@ def cleanup_stale_renders(current_pdf_stems: set[str], rendered_dir: Path) -> No
             shutil.rmtree(entry, ignore_errors=True)
 
 
-def copy_site_assets(repo_dir: Path, masthead_dir: Path) -> None:
+def copy_site_assets(repo_dir: Path, kiosk_dir: Path) -> None:
     web_src = repo_dir / "web"
     if not web_src.exists():
         log.warning("No web/ assets found at %s", web_src)
@@ -198,11 +207,11 @@ def copy_site_assets(repo_dir: Path, masthead_dir: Path) -> None:
     for name in ("index.html", "style.css", "app.js"):
         src = web_src / name
         if src.exists():
-            shutil.copyfile(src, masthead_dir / name)
+            shutil.copyfile(src, kiosk_dir / name)
 
     admin_src = web_src / "admin"
     if admin_src.exists():
-        admin_dest = masthead_dir / "admin"
+        admin_dest = kiosk_dir / "admin"
         admin_dest.mkdir(parents=True, exist_ok=True)
         for item in admin_src.iterdir():
             if item.is_file():
@@ -210,7 +219,7 @@ def copy_site_assets(repo_dir: Path, masthead_dir: Path) -> None:
 
 
 def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[str, list[Path]],
-                    masthead_dir: Path, slide_seconds: int, poll_seconds: int) -> dict:
+                    kiosk_dir: Path, slide_seconds: int, poll_seconds: int) -> dict:
     items = []
     for _ts, entry in active_entries:
         if entry["kind"] == "text":
@@ -221,33 +230,53 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                 "posted_at": entry["posted_at"],
             })
         elif entry["kind"] == "attachment" and entry.get("local_files"):
-            file_path = Path(entry["local_files"][0])
+            local_files = [Path(f) for f in entry["local_files"]]
+            file_path = local_files[0]
             if file_path.suffix.lower() == PDF_EXT:
                 pages = rendered_pages.get(file_path.stem, [])
                 total = len(pages)
                 for i, page_path in enumerate(pages, start=1):
                     try:
-                        rel = page_path.relative_to(masthead_dir).as_posix()
+                        rel = page_path.relative_to(kiosk_dir).as_posix()
                     except ValueError:
                         log.warning(
                             "Skipping manifest item for %s (ts=%s): rendered page %s is not "
-                            "under masthead_dir %s", file_path.name, entry.get("ts"), page_path, masthead_dir,
+                            "under kiosk_dir %s", file_path.name, entry.get("ts"), page_path, kiosk_dir,
                         )
                         continue
                     items.append({
                         "kind": "pdf-page", "name": file_path.name, "src": rel,
                         "page": i, "pages": total,
                     })
+            elif len(local_files) > 1:
+                regions = []
+                if entry.get("text"):
+                    regions.append({"kind": "text", "text": entry["text"]})
+                for img_path in local_files:
+                    try:
+                        rel = img_path.relative_to(kiosk_dir).as_posix()
+                    except ValueError:
+                        log.warning(
+                            "Skipping grid region for %s (ts=%s): file %s is not under kiosk_dir %s",
+                            img_path.name, entry.get("ts"), img_path, kiosk_dir,
+                        )
+                        continue
+                    regions.append({"kind": "image", "src": rel, "name": img_path.name})
+                if regions:
+                    items.append({"kind": "grid", "regions": regions})
             else:
                 try:
-                    rel = file_path.relative_to(masthead_dir).as_posix()
+                    rel = file_path.relative_to(kiosk_dir).as_posix()
                 except ValueError:
                     log.warning(
-                        "Skipping manifest item for %s (ts=%s): file %s is not under masthead_dir %s",
-                        file_path.name, entry.get("ts"), file_path, masthead_dir,
+                        "Skipping manifest item for %s (ts=%s): file %s is not under kiosk_dir %s",
+                        file_path.name, entry.get("ts"), file_path, kiosk_dir,
                     )
                     continue
-                items.append({"kind": "image", "name": file_path.name, "src": rel})
+                item = {"kind": "image", "name": file_path.name, "src": rel}
+                if entry.get("text"):
+                    item["caption"] = entry["text"]
+                items.append(item)
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -275,36 +304,39 @@ def write_manifest(manifest: dict, data_dir: Path) -> None:
 
 def main(argv: list[str]) -> int:
     logging.basicConfig(
-        level=os.environ.get("MASTHEAD_LOG_LEVEL", "INFO"),
-        format="%(asctime)s masthead %(levelname)s: %(message)s",
+        level=os.environ.get("KIOSK_LOG_LEVEL", "INFO"),
+        format="%(asctime)s kiosk %(levelname)s: %(message)s",
     )
     cfg = load_config(argv)
     ensure_dirs(cfg)
-    copy_site_assets(cfg.repo_dir, cfg.masthead_dir)
+    copy_site_assets(cfg.repo_dir, cfg.kiosk_dir)
 
     state_path = cfg.data_dir / "slack-state.json"
 
     if cfg.skip_slack_poll:
-        log.info("Skipping Slack poll (--skip-slack-poll / MASTHEAD_SKIP_SLACK_POLL=1)")
-        state = masthead_slack.load_state(state_path)
+        log.info("Skipping Slack poll (--skip-slack-poll / KIOSK_SKIP_SLACK_POLL=1)")
+        state = slack_source.load_state(state_path)
     else:
-        api = masthead_slack.SlackWebAPI(cfg.slack_token)
+        api = slack_source.SlackWebAPI(cfg.slack_token)
         try:
             bot_user_id = api.auth_test()
-        except masthead_slack.SlackAPIError as exc:
+        except slack_source.SlackAPIError as exc:
             log.error("Failed to resolve bot's own user ID (auth.test): %s -- "
                        "bot messages won't be excluded from ingestion this tick", exc)
             bot_user_id = ""
-        slack_cfg = masthead_slack.SlackConfig(cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days, bot_user_id)
-        with masthead_slack.state_lock(state_path):
-            state = masthead_slack.load_state(state_path)
-            state = masthead_slack.poll_slack(
+        slack_cfg = slack_source.SlackConfig(
+            cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days, bot_user_id,
+            server_url=cfg.server_url, admin_contact=cfg.admin_contact,
+        )
+        with slack_source.state_lock(state_path):
+            state = slack_source.load_state(state_path)
+            state = slack_source.poll_slack(
                 slack_cfg, state, cfg.source_dir, datetime.now(timezone.utc), api,
                 audit_path=cfg.data_dir / "audit.jsonl",
             )
-            masthead_slack.save_state(state, state_path)
+            slack_source.save_state(state, state_path)
 
-    active_entries = masthead_slack.sorted_active_entries(state)
+    active_entries = slack_source.sorted_active_entries(state)
     pdf_files = [
         Path(entry["local_files"][0])
         for _ts, entry in active_entries
@@ -315,7 +347,7 @@ def main(argv: list[str]) -> int:
     rendered_pages = render_pdfs(pdf_files, cfg.rendered_dir, cfg.render_width)
     cleanup_stale_renders({f.stem for f in pdf_files}, cfg.rendered_dir)
 
-    manifest = build_manifest(active_entries, rendered_pages, cfg.masthead_dir, cfg.slide_seconds, cfg.poll_seconds)
+    manifest = build_manifest(active_entries, rendered_pages, cfg.kiosk_dir, cfg.slide_seconds, cfg.poll_seconds)
     write_manifest(manifest, cfg.data_dir)
 
     log.info("Refresh complete: %d slide(s) from %d active Slack message(s)",

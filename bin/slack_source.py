@@ -1,13 +1,14 @@
 """
-masthead_slack.py
+slack_source.py
 
-Slack ingestion for Masthead: pure message-classification and
+Slack ingestion for Mess TV Bot: pure message-classification and
 state-management helpers, plus a thin urllib-based Slack Web API
-client. Imported by masthead-refresh.py; also unit-tested directly.
+client. Imported by refresh.py; also unit-tested directly.
 """
 from __future__ import annotations
 
 import dateparser
+import emoji
 import fcntl
 import html
 import json
@@ -23,12 +24,24 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Protocol
+from zoneinfo import ZoneInfo
 
-log = logging.getLogger("masthead.slack")
+log = logging.getLogger("kiosk.slack")
 
 IMAGE_FILETYPES = {"jpg", "jpeg", "png", "gif", "webp", "bmp"}
 PDF_FILETYPE = "pdf"
 COMMAND_WORDS = ("cancel", "delete", "undo", "remove")
+
+# A short new top-level message starting with "help" or "remove" is almost
+# certainly someone testing the bot or confused about how to remove a post,
+# not content meant for the display -- see is_help_trigger().
+HELP_TRIGGER_RE = re.compile(r"^(help|remove)\b", re.IGNORECASE)
+HELP_TRIGGER_MAX_LEN = 30
+
+# Dates/times shown to humans (Slack messages) are always in this zone,
+# switching between GMT/BST automatically -- everything is still stored
+# internally as UTC-aware datetimes/ISO strings.
+LOCAL_TZ = ZoneInfo("Europe/London")
 
 # Slack "subtype" values for channel housekeeping events (joins, topic
 # changes, pins, edits, ...) rather than actual posted content. These
@@ -71,15 +84,23 @@ def classify_message(msg: dict, bot_user_id: str = "") -> str:
 def extract_attachment(msg: dict) -> dict | None:
     """Return {'url', 'filetype', 'name'} for the first image/PDF file on
     the message, or None if it has no recognized attachment."""
+    attachments = extract_attachments(msg)
+    return attachments[0] if attachments else None
+
+
+def extract_attachments(msg: dict) -> list[dict]:
+    """Return {'url', 'filetype', 'name'} for every image/PDF file on the
+    message, in Slack's own order. Empty list if it has none."""
+    attachments = []
     for f in msg.get("files", []) or []:
         filetype = (f.get("filetype") or "").lower()
         if filetype in IMAGE_FILETYPES or filetype == PDF_FILETYPE:
-            return {
+            attachments.append({
                 "url": f.get("url_private_download") or f.get("url_private"),
                 "filetype": filetype,
                 "name": f.get("name", "file"),
-            }
-    return None
+            })
+    return attachments
 
 
 @dataclass
@@ -106,20 +127,70 @@ def parse_command(text: str, now: datetime) -> RemovalCommand | None:
     if not rest:
         return RemovalCommand(remove_at=now)
 
-    naive_now = now.replace(tzinfo=None)
+    # Replies name dates/times with no timezone, and mean London time when
+    # they do -- parse relative to (and localize into) LOCAL_TZ rather than
+    # UTC, so "remove 10am" means 10am in London, not 10am UTC.
+    naive_local_now = now.astimezone(LOCAL_TZ).replace(tzinfo=None)
     parsed = dateparser.parse(rest, settings={
         "PREFER_DATES_FROM": "future",
-        "RELATIVE_BASE": naive_now,
+        "RELATIVE_BASE": naive_local_now,
     })
     if parsed is None:
         return RemovalCommand(remove_at=now)
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return RemovalCommand(remove_at=parsed)
+        parsed = parsed.replace(tzinfo=LOCAL_TZ)
+    # Stored/compared as UTC like every other timestamp in this app --
+    # LOCAL_TZ only decides how bare text like "10am" is interpreted.
+    return RemovalCommand(remove_at=parsed.astimezone(timezone.utc))
 
 
-def local_filename(ts: str, filetype: str) -> str:
-    return f"slack-{ts}.{filetype}"
+def is_help_trigger(text: str) -> bool:
+    """True for a short new message that starts with 'help' or 'remove' --
+    almost certainly someone testing the bot or trying (in the wrong
+    place) to remove a post, not real signage content. A longer message
+    that happens to start with one of these words is left alone."""
+    stripped = (text or "").strip()
+    if not stripped or len(stripped) > HELP_TRIGGER_MAX_LEN:
+        return False
+    return bool(HELP_TRIGGER_RE.match(stripped))
+
+
+def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
+    interval = "1 day" if cfg.ttl_days == 1 else f"{cfg.ttl_days} days"
+    example_remove_at = (posted_at_dt + timedelta(days=7)).astimezone(LOCAL_TZ)
+    return (
+        "Messages posted here appear on the Mess TV. You can send text, "
+        "images or a combination of both.\n\n"
+        f"Each notice is shown for {interval}. To remove sooner or later, "
+        f"reply to the notice with `remove now` or `remove {example_remove_at:%-d %b %Y}`.\n\n"
+        f"There's also a simple admin interface at {cfg.server_url}/admin.\n\n"
+        f"If I'm broken, please contact `{cfg.admin_contact}`."
+    )
+
+
+def local_filename(ts: str, filetype: str, index: int | None = None) -> str:
+    if index is None:
+        return f"slack-{ts}.{filetype}"
+    return f"slack-{ts}-{index}.{filetype}"
+
+
+# Slack skin-tone shortcodes (":skin-tone-2:" through ":skin-tone-6:") are
+# sent as a separate code immediately after the base emoji's shortcode
+# rather than as part of one combined unicode sequence; `emoji` doesn't
+# know this Slack-specific convention, so it's applied as a second pass.
+_SKIN_TONE_MODIFIERS = {
+    "2": "\U0001f3fb", "3": "\U0001f3fc", "4": "\U0001f3fd",
+    "5": "\U0001f3fe", "6": "\U0001f3ff",
+}
+_SKIN_TONE_RE = re.compile(r":skin-tone-([2-6]):")
+
+
+def convert_emoji_shortcodes(text: str) -> str:
+    """Convert Slack-style `:shortcode:` emoji (including `:skin-tone-N:`
+    modifiers) into real unicode emoji. Unrecognized shortcodes are left
+    as-is rather than dropped."""
+    text = emoji.emojize(text, language="alias")
+    return _SKIN_TONE_RE.sub(lambda m: _SKIN_TONE_MODIFIERS[m.group(1)], text)
 
 
 def load_state(path: Path) -> dict:
@@ -197,6 +268,8 @@ class SlackConfig:
     channel: str
     ttl_days: int
     bot_user_id: str = ""
+    server_url: str = "http://localhost:8420"
+    admin_contact: str = "@richard"
 
 
 class SlackAPI(Protocol):
@@ -344,6 +417,9 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             continue
         kind = classify_message(msg, bot_user_id=cfg.bot_user_id)
         author_for_audit = msg.get("user", "unknown")
+        posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+        posted_at = posted_at_dt.isoformat(timespec="seconds")
+
         if kind == "ignored":
             log.info("Ignoring Slack message %s: no recognized content", ts)
             append_audit(audit_path, {
@@ -354,14 +430,21 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             # Record a marker so this message isn't refetched and re-audited on
             # every future tick. Never active, so it's invisible to the display,
             # the sweep, and the admin UI.
-            state[ts] = {
-                "ts": ts, "status": "ignored",
-                "posted_at": datetime.fromtimestamp(float(ts), tz=timezone.utc).isoformat(timespec="seconds"),
-            }
+            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
             continue
 
-        posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
-        posted_at = posted_at_dt.isoformat(timespec="seconds")
+        if kind == "text" and is_help_trigger(msg.get("text")):
+            log.info("Replying with help text for Slack message %s: looks like a help/remove request", ts)
+            _post_safe(api, cfg.channel, build_help_text(cfg, posted_at_dt), thread_ts=ts)
+            append_audit(audit_path, {
+                "at": now.isoformat(timespec="seconds"), "ts": ts,
+                "author": author_for_audit, "kind": "ignored", "action": "help_reply",
+                "summary": (msg.get("text") or "")[:80],
+            })
+            # Same marker pattern as the "ignored" branch above -- never
+            # active, never re-processed, never shown on the display.
+            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+            continue
         if msg.get("user"):
             try:
                 author = api.user_name(msg["user"])
@@ -377,18 +460,28 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             "remove_reason": "ttl",
         }
 
+        entry["text"] = convert_emoji_shortcodes(html.unescape(msg.get("text", "")))
         if kind == "attachment":
-            attachment = extract_attachment(msg)
-            dest = source_dir / local_filename(ts, attachment["filetype"])
-            try:
-                api.download(attachment["url"], dest)
-            except SlackAPIError as exc:
-                log.error("Failed to download Slack attachment for %s: %s", ts, exc)
+            attachments = extract_attachments(msg)
+            has_pdf = any(a["filetype"] == PDF_FILETYPE for a in attachments)
+            # PDF + multi-image mixing is out of scope -- fall back to the
+            # single-attachment behavior (first recognized file) whenever a
+            # PDF is involved.
+            to_download = attachments[:1] if has_pdf else attachments
+            multi = len(to_download) > 1
+            downloaded = []
+            for i, attachment in enumerate(to_download):
+                dest = source_dir / local_filename(ts, attachment["filetype"], i if multi else None)
+                try:
+                    api.download(attachment["url"], dest)
+                except SlackAPIError as exc:
+                    log.error("Failed to download Slack attachment for %s (%s): %s",
+                              ts, attachment["name"], exc)
+                else:
+                    downloaded.append(str(dest))
+            entry["local_files"] = downloaded
+            if not downloaded:
                 entry["status"] = "failed"
-            else:
-                entry["local_files"] = [str(dest)]
-        else:
-            entry["text"] = html.unescape(msg.get("text", ""))
 
         state[ts] = entry
         append_audit(audit_path, {
@@ -397,7 +490,14 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             "summary": _describe_entry(entry),
         })
         if entry["status"] == "active":
-            _post_safe(api, cfg.channel, "Added to the display.", thread_ts=ts)
+            remove_at_local = datetime.fromisoformat(entry["remove_at"]).astimezone(LOCAL_TZ)
+            example_remove_at_local = (posted_at_dt + timedelta(days=7)).astimezone(LOCAL_TZ)
+            _post_safe(
+                api, cfg.channel,
+                f"Added to the Skiff TV, until {remove_at_local:%-d %b %Y %H:%M}. "
+                f"To remove, reply with `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example",
+                thread_ts=ts,
+            )
 
     for ts, entry in state.items():
         if entry["status"] != "active":
@@ -452,9 +552,10 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             _post_safe(api, cfg.channel, "Removed from the display.", thread_ts=ts)
         else:
             entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
+            remove_at_local = command.remove_at.astimezone(LOCAL_TZ)
             _post_safe(
                 api, cfg.channel,
-                f"Scheduled for removal on {command.remove_at:%-d %b %Y %H:%M} UTC.",
+                f"Scheduled for removal on {remove_at_local:%-d %b %Y %H:%M}.",
                 thread_ts=ts,
             )
 

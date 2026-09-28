@@ -1,10 +1,10 @@
 [Unit]
-Description=Masthead local web server
+Description=Mess TV Bot local web server
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=%h/masthead/bin/masthead-serve.sh
+ExecStart=%h/messtvbot/bin/serve.sh
 Restart=always
 RestartSec=2
 

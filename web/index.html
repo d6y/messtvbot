@@ -2,20 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Masthead</title>
+  <title>Mess TV Bot</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="stage">
-    <img id="layer-a" class="layer visible" alt="">
-    <img id="layer-b" class="layer" alt="">
+    <img id="layer-a" class="layer image-layer visible" alt="">
+    <img id="layer-b" class="layer image-layer" alt="">
+    <div id="image-caption" class="caption-panel">
+      <p id="image-caption-text"></p>
+    </div>
     <div id="text-card" class="layer text-layer">
       <p id="text-message"></p>
       <p id="text-author"></p>
     </div>
+    <div id="grid-layer" class="layer grid-layer"></div>
     <div id="empty-state">
-      <p>Masthead</p>
+      <p>Mess TV Bot</p>
       <p class="sub">Waiting for content&hellip;</p>
     </div>
   </div>

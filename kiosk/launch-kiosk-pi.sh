@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launches Chromium in kiosk mode pointed at the local Masthead server,
+# Launches Chromium in kiosk mode pointed at the local Mess TV Bot server,
 # and relaunches it if it ever crashes or is closed. Intended to be run
 # from an XDG autostart entry (see install/install-pi.sh) inside the
 # Pi's graphical session -- it needs a display, so don't run it as a
@@ -9,10 +9,10 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # shellcheck disable=SC1090
-[ -f "$REPO_DIR/config/masthead.env" ] && source "$REPO_DIR/config/masthead.env"
+[ -f "$REPO_DIR/config/kiosk.env" ] && source "$REPO_DIR/config/kiosk.env"
 
-MASTHEAD_PORT="${MASTHEAD_PORT:-8420}"
-URL="http://127.0.0.1:${MASTHEAD_PORT}/"
+KIOSK_PORT="${KIOSK_PORT:-8420}"
+URL="http://127.0.0.1:${KIOSK_PORT}/"
 
 # Screen/cursor housekeeping -- best effort, don't fail the script if
 # these aren't available (e.g. running under Wayland/labwc instead of X).
@@ -30,12 +30,12 @@ for candidate in chromium chromium-browser; do
 done
 
 if [ -z "$BROWSER_BIN" ]; then
-  echo "masthead: no chromium binary found on PATH" >&2
+  echo "kiosk: no chromium binary found on PATH" >&2
   exit 1
 fi
 
 # Wait for the local server to actually be up before the first launch
-# (useful right after boot, when masthead-serve may still be starting).
+# (useful right after boot, when kiosk-serve may still be starting).
 for _ in $(seq 1 30); do
   curl -sf "$URL" >/dev/null 2>&1 && break
   sleep 1
@@ -53,6 +53,6 @@ while true; do
     --autoplay-policy=no-user-gesture-required \
     --check-for-update-interval=31536000 \
     || true
-  echo "masthead: browser exited, relaunching in 2s"
+  echo "kiosk: browser exited, relaunching in 2s"
   sleep 2
 done

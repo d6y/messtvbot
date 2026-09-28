@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin"))
-import masthead_slack as ms
+import slack_source as ms
 
 
 class ClassifyMessageTests(unittest.TestCase):
@@ -72,6 +72,103 @@ class ExtractAttachmentTests(unittest.TestCase):
         self.assertEqual(result["url"], "https://x/b.png")
 
 
+class ExtractAttachmentsTests(unittest.TestCase):
+    def test_returns_empty_list_when_no_files(self):
+        self.assertEqual(ms.extract_attachments({"files": []}), [])
+
+    def test_returns_empty_list_when_only_non_image_files(self):
+        msg = {"files": [{"filetype": "zip", "url_private_download": "https://x/a.zip", "name": "a.zip"}]}
+        self.assertEqual(ms.extract_attachments(msg), [])
+
+    def test_returns_all_recognized_files_in_order(self):
+        msg = {"files": [
+            {"filetype": "jpg", "url_private_download": "https://x/a.jpg", "name": "a.jpg"},
+            {"filetype": "zip", "url_private_download": "https://x/b.zip", "name": "b.zip"},
+            {"filetype": "png", "url_private_download": "https://x/c.png", "name": "c.png"},
+        ]}
+        result = ms.extract_attachments(msg)
+        self.assertEqual(result, [
+            {"url": "https://x/a.jpg", "filetype": "jpg", "name": "a.jpg"},
+            {"url": "https://x/c.png", "filetype": "png", "name": "c.png"},
+        ])
+
+    def test_falls_back_to_url_private_when_no_download_url(self):
+        msg = {"files": [{"filetype": "png", "url_private": "https://x/b.png", "name": "b.png"}]}
+        result = ms.extract_attachments(msg)
+        self.assertEqual(result[0]["url"], "https://x/b.png")
+
+
+class IsHelpTriggerTests(unittest.TestCase):
+    def test_bare_help_is_a_trigger(self):
+        self.assertTrue(ms.is_help_trigger("help"))
+
+    def test_bare_remove_is_a_trigger(self):
+        self.assertTrue(ms.is_help_trigger("remove"))
+
+    def test_help_is_case_insensitive(self):
+        self.assertTrue(ms.is_help_trigger("HELP"))
+
+    def test_help_with_short_trailing_text_is_a_trigger(self):
+        self.assertTrue(ms.is_help_trigger("help me please?"))
+
+    def test_help_with_punctuation_immediately_after_is_a_trigger(self):
+        self.assertTrue(ms.is_help_trigger("Help!"))
+
+    def test_word_that_merely_starts_with_remove_is_not_a_trigger(self):
+        self.assertFalse(ms.is_help_trigger("removing the old poster"))
+
+    def test_long_message_starting_with_remove_is_not_a_trigger(self):
+        # A real notice, not an accidental command -- length is the signal.
+        text = "Remove your shoes before entering the office please and thank you"
+        self.assertFalse(ms.is_help_trigger(text))
+
+    def test_unrelated_text_is_not_a_trigger(self):
+        self.assertFalse(ms.is_help_trigger("Pizza in the kitchen at 1pm!"))
+
+    def test_empty_text_is_not_a_trigger(self):
+        self.assertFalse(ms.is_help_trigger(""))
+
+    def test_none_text_is_not_a_trigger(self):
+        self.assertFalse(ms.is_help_trigger(None))
+
+
+class BuildHelpTextTests(unittest.TestCase):
+    def setUp(self):
+        self.cfg = ms.SlackConfig(
+            token="xoxb-test", channel="C1", ttl_days=30,
+            server_url="http://kiosk.local:8420", admin_contact="@richard",
+        )
+        self.posted_at_dt = datetime(2026, 8, 1, 12, 0, tzinfo=timezone.utc)
+
+    def test_mentions_mess_tv(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn("Mess TV", text)
+
+    def test_includes_ttl_interval(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn("30 days", text)
+
+    def test_includes_remove_now_and_example_date(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn("`remove now`", text)
+        example_local = (self.posted_at_dt + timedelta(days=7)).astimezone(ms.LOCAL_TZ)
+        self.assertIn(f"`remove {example_local:%-d %b %Y}`", text)
+
+    def test_includes_admin_url(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn("http://kiosk.local:8420/admin", text)
+
+    def test_includes_contact(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn("`@richard`", text)
+
+    def test_singular_day_when_ttl_is_one(self):
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=1)
+        text = ms.build_help_text(cfg, self.posted_at_dt)
+        self.assertIn("1 day.", text)
+        self.assertNotIn("1 days", text)
+
+
 class ParseCommandTests(unittest.TestCase):
     NOW = datetime(2026, 9, 3, 12, 0, tzinfo=timezone.utc)  # a Thursday
 
@@ -102,15 +199,26 @@ class ParseCommandTests(unittest.TestCase):
     def test_remove_next_thursday_resolves_to_the_future(self):
         result = ms.parse_command("remove thursday", self.NOW)
         self.assertGreater(result.remove_at, self.NOW)
-        self.assertEqual(result.remove_at.strftime("%A"), "Thursday")
+        self.assertEqual(result.remove_at.astimezone(ms.LOCAL_TZ).strftime("%A"), "Thursday")
 
     def test_remove_with_explicit_date(self):
+        # A bare date with no time means midnight at the start of that day
+        # in London, which the test checks in local terms (it may be the
+        # previous UTC calendar day).
         result = ms.parse_command("remove 10 Sept", self.NOW)
-        self.assertEqual(result.remove_at.date().isoformat(), "2026-09-10")
+        self.assertEqual(result.remove_at.astimezone(ms.LOCAL_TZ).date().isoformat(), "2026-09-10")
 
     def test_remove_with_explicit_date_and_time(self):
+        # 10 Sept 2026 is British Summer Time (UTC+1) -- "10am" with no
+        # explicit zone means 10am in London (09:00 UTC), not 10am UTC.
         result = ms.parse_command("remove 10 Sept 10am", self.NOW)
-        self.assertEqual(result.remove_at.isoformat(), "2026-09-10T10:00:00+00:00")
+        self.assertEqual(result.remove_at.isoformat(), "2026-09-10T09:00:00+00:00")
+
+    def test_remove_with_explicit_time_in_winter_is_gmt(self):
+        # December is GMT (UTC+0), so no DST offset applies.
+        now = datetime(2026, 12, 1, 12, 0, tzinfo=timezone.utc)
+        result = ms.parse_command("remove 10 Dec 10am", now)
+        self.assertEqual(result.remove_at.isoformat(), "2026-12-10T10:00:00+00:00")
 
     def test_remove_with_unparseable_phrase_falls_back_to_now(self):
         result = ms.parse_command("remove pronto pronto pronto", self.NOW)
@@ -129,6 +237,32 @@ class ParseCommandTests(unittest.TestCase):
 class LocalFilenameTests(unittest.TestCase):
     def test_builds_expected_filename(self):
         self.assertEqual(ms.local_filename("1735300000.000100", "pdf"), "slack-1735300000.000100.pdf")
+
+    def test_builds_expected_filename_with_index(self):
+        self.assertEqual(
+            ms.local_filename("1735300000.000100", "png", index=2),
+            "slack-1735300000.000100-2.png",
+        )
+
+
+class ConvertEmojiShortcodesTests(unittest.TestCase):
+    def test_plain_shortcode_becomes_unicode(self):
+        self.assertEqual(ms.convert_emoji_shortcodes(":bangbang:"), "‼️")
+
+    def test_shortcode_with_skin_tone_modifier_becomes_unicode(self):
+        self.assertEqual(
+            ms.convert_emoji_shortcodes(":raised_hands::skin-tone-2:"),
+            "\U0001f64c\U0001f3fb",
+        )
+
+    def test_unknown_shortcode_is_left_as_is(self):
+        self.assertEqual(ms.convert_emoji_shortcodes(":not_a_real_emoji:"), ":not_a_real_emoji:")
+
+    def test_plain_text_is_unchanged(self):
+        self.assertEqual(ms.convert_emoji_shortcodes("Pizza in the kitchen!"), "Pizza in the kitchen!")
+
+    def test_empty_string_is_unchanged(self):
+        self.assertEqual(ms.convert_emoji_shortcodes(""), "")
 
 
 class StateLoadSaveTests(unittest.TestCase):
@@ -384,11 +518,141 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(state["100.2"]["local_files"], [expected_path])
         self.assertTrue(Path(expected_path).exists())
 
+    def test_multi_image_message_downloads_all_images(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.20", "text": "", "user": "U1", "files": [
+                {"filetype": "jpg", "url_private_download": "https://x/a.jpg", "name": "a.jpg"},
+                {"filetype": "png", "url_private_download": "https://x/b.png", "name": "b.png"},
+                {"filetype": "png", "url_private_download": "https://x/c.png", "name": "c.png"},
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.20"]["kind"], "attachment")
+        expected = [
+            str(self.source_dir / "slack-100.20-0.jpg"),
+            str(self.source_dir / "slack-100.20-1.png"),
+            str(self.source_dir / "slack-100.20-2.png"),
+        ]
+        self.assertEqual(state["100.20"]["local_files"], expected)
+        for path in expected:
+            self.assertTrue(Path(path).exists())
+
+    def test_multi_image_message_with_one_failed_download_keeps_the_rest(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.21", "text": "", "user": "U1", "files": [
+                {"filetype": "jpg", "url_private_download": "https://x/a.jpg", "name": "a.jpg"},
+                {"filetype": "png", "url_private_download": "https://x/bad.png", "name": "bad.png"},
+            ]}],
+            user_names={"U1": "Jane"},
+            downloads_fail_for={"https://x/bad.png"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.21"]["status"], "active")
+        self.assertEqual(state["100.21"]["local_files"], [str(self.source_dir / "slack-100.21-0.jpg")])
+
+    def test_multi_image_message_with_all_downloads_failed_is_marked_failed(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.22", "text": "", "user": "U1", "files": [
+                {"filetype": "jpg", "url_private_download": "https://x/bad1.jpg", "name": "bad1.jpg"},
+                {"filetype": "png", "url_private_download": "https://x/bad2.png", "name": "bad2.png"},
+            ]}],
+            user_names={"U1": "Jane"},
+            downloads_fail_for={"https://x/bad1.jpg", "https://x/bad2.png"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.22"]["status"], "failed")
+        self.assertEqual(state["100.22"]["local_files"], [])
+
+    def test_pdf_and_image_together_only_downloads_the_pdf(self):
+        # PDF + multi-image mixing is out of scope -- fall back to the
+        # existing single-attachment behavior (first recognized file).
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.23", "text": "", "user": "U1", "files": [
+                {"filetype": "pdf", "url_private_download": "https://x/a.pdf", "name": "a.pdf"},
+                {"filetype": "png", "url_private_download": "https://x/b.png", "name": "b.png"},
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.23"]["local_files"], [str(self.source_dir / "slack-100.23.pdf")])
+
+    def test_new_attachment_message_with_caption_stores_text(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.9", "text": "Free pizza today!", "user": "U1",
+                       "files": [{"filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.9"]["kind"], "attachment")
+        self.assertEqual(state["100.9"]["text"], "Free pizza today!")
+
+    def test_new_attachment_message_without_caption_has_empty_text(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.10", "text": "", "user": "U1",
+                       "files": [{"filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.10"]["text"], "")
+
     def test_ignored_message_is_not_added_as_an_active_entry(self):
         api = FakeSlackAPI(messages=[{"ts": "100.3", "text": "", "user": "U1", "files": []}])
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.3"]["status"], "ignored")
         self.assertEqual(ms.sorted_active_entries(state), [])
+
+    def test_bare_remove_message_is_not_shown_and_gets_a_help_reply(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.30", "text": "remove", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        self.assertEqual(state["100.30"]["status"], "ignored")
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.30"]
+        self.assertEqual(len(replies), 1)
+        self.assertIn("Mess TV", replies[0]["text"])
+
+    def test_bare_help_message_is_not_shown_and_gets_a_help_reply(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.31", "text": "help?", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.31"]
+        self.assertEqual(len(replies), 1)
+
+    def test_help_trigger_is_not_reprocessed_on_a_later_tick(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.32", "text": "remove", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        api2 = FakeSlackAPI(messages=[{"ts": "100.32", "text": "remove", "user": "U1", "files": []}])
+        ms.poll_slack(self.cfg, state, self.source_dir, self.now, api2, audit_path=self.audit_path)
+        self.assertEqual(api2.posted_messages, [])
+
+    def test_long_message_starting_with_remove_is_shown_normally(self):
+        text = "Remove your shoes before entering the office please and thank you"
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.33", "text": text, "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.33"]["kind"], "text")
+        self.assertEqual(state["100.33"]["status"], "active")
+
+    def test_attachment_with_short_remove_caption_is_shown_normally(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.34", "text": "remove", "user": "U1",
+                       "files": [{"filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.34"]["kind"], "attachment")
+        self.assertEqual(state["100.34"]["status"], "active")
 
     def test_channel_join_message_is_not_added_or_acknowledged(self):
         api = FakeSlackAPI(messages=[{
@@ -534,6 +798,32 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.7"]["text"], "Coffee & cake")
 
+    def test_emoji_shortcodes_in_text_are_converted_to_unicode(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.11", "text": "Drinks :bangbang: 5pm!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.11"]["text"], "Drinks ‼️ 5pm!")
+
+    def test_emoji_shortcode_with_skin_tone_is_converted_to_unicode(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.12", "text": "See you there :raised_hands::skin-tone-2:",
+                       "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.12"]["text"], "See you there \U0001f64c\U0001f3fb")
+
+    def test_unknown_shortcode_is_left_as_is(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.13", "text": "Not an emoji: :this_is_not_real:",
+                       "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.13"]["text"], "Not an emoji: :this_is_not_real:")
+
     def test_download_failure_records_ts_with_failed_status_and_excludes_from_rotation(self):
         api = FakeSlackAPI(
             messages=[{"ts": "100.6", "text": "", "user": "U1",
@@ -556,6 +846,45 @@ class PollSlackTests(unittest.TestCase):
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
         self.assertEqual(len(replies), 1)
         self.assertEqual(replies[0]["channel"], "C1")
+
+    def test_accepted_message_reply_names_display_and_expiry_and_remove_examples(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
+        text = replies[0]["text"]
+        self.assertIn("Skiff TV", text)
+        remove_at_local = datetime.fromisoformat(state["100.1"]["remove_at"]).astimezone(ms.LOCAL_TZ)
+        self.assertIn(f"{remove_at_local:%-d %b %Y %H:%M}", text)
+        self.assertIn("`remove now`", text)
+        posted_at = datetime.fromisoformat(state["100.1"]["posted_at"])
+        example_date_local = (posted_at + timedelta(days=7)).astimezone(ms.LOCAL_TZ)
+        self.assertIn(f"`remove {example_date_local:%-d %b %Y}`", text)
+
+    def test_accepted_message_reply_does_not_mention_utc(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
+        self.assertNotIn("UTC", replies[0]["text"])
+
+    def test_accepted_message_reply_uses_bst_in_summer(self):
+        # 1 Aug is British Summer Time (UTC+1); the reply should show the
+        # locally-correct wall-clock time, not the raw UTC one.
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30)
+        now = datetime(2026, 8, 1, tzinfo=timezone.utc)
+        ts = str(datetime(2026, 8, 1, 12, 0, tzinfo=timezone.utc).timestamp())
+        api = FakeSlackAPI(
+            messages=[{"ts": ts, "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(cfg, {}, self.source_dir, now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == ts]
+        self.assertIn("13:00", replies[0]["text"])
 
     def test_ignored_message_gets_no_reply(self):
         api = FakeSlackAPI(messages=[{"ts": "100.3", "text": "", "user": "U1", "files": []}])

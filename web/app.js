@@ -1,11 +1,15 @@
 (() => {
   "use strict";
 
+  const stage = document.getElementById("stage");
   const layerA = document.getElementById("layer-a");
   const layerB = document.getElementById("layer-b");
   const textCard = document.getElementById("text-card");
   const textMessage = document.getElementById("text-message");
   const textAuthor = document.getElementById("text-author");
+  const imageCaption = document.getElementById("image-caption");
+  const imageCaptionText = document.getElementById("image-caption-text");
+  const gridLayer = document.getElementById("grid-layer");
   const emptyState = document.getElementById("empty-state");
 
   const DEFAULT_SLIDE_MS = 8000;
@@ -35,16 +39,137 @@
     });
   }
 
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // Minimal, safe Slack mrkdwn -> HTML: escape first, then only ever wrap
+  // already-escaped text in a fixed set of tags, so no unescaped input
+  // ever reaches innerHTML. Not a full markdown parser -- just the marks
+  // people actually use in short notices (bold/italic/strike/code/links).
+  function slackMrkdwnToHtml(text) {
+    let html = escapeHtml(text || "");
+
+    // <url|label> or bare <url> -- shown as plain text; a link isn't
+    // clickable on a kiosk with no pointer, so just drop the wrapper.
+    html = html.replace(/&lt;(https?:\/\/[^|&]*)\|([^&]*?)&gt;/g, "$2");
+    html = html.replace(/&lt;(https?:\/\/[^&]*)&gt;/g, "$1");
+
+    html = html.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    html = html.replace(/(?<![A-Za-z0-9*])\*(\S(?:[^*\n]*\S)?)\*(?![A-Za-z0-9*])/g, "<strong>$1</strong>");
+    html = html.replace(/(?<![A-Za-z0-9_])_(\S(?:[^_\n]*\S)?)_(?![A-Za-z0-9_])/g, "<em>$1</em>");
+    html = html.replace(/(?<![A-Za-z0-9~])~(\S(?:[^~\n]*\S)?)~(?![A-Za-z0-9~])/g, "<s>$1</s>");
+
+    return html;
+  }
+
+  // Short messages should fill the available space with large type; long
+  // ones shrink to fit rather than overflow. Tuned by eye, not derived.
+  function scaledFontSizeVw(text, minVw, maxVw, k) {
+    const scaled = k / Math.max(text.length, 20);
+    return Math.max(minVw, Math.min(maxVw, scaled));
+  }
+
+  // Full-width text-only slide.
+  function textFontSizeVw(text) {
+    return scaledFontSizeVw(text, 2.4, 9, 900);
+  }
+
+  // Caption panel is ~46% of the screen width, so it gets a smaller cap
+  // than the full-width text slide -- sized so a ~100-char caption (a
+  // realistic length) comfortably wraps within the panel's height.
+  function captionFontSizeVw(text) {
+    return scaledFontSizeVw(text, 2, 4.6, 380);
+  }
+
+  // Multi-image grid: near-square layout that scales for any region count.
+  function gridDims(n) {
+    const cols = Math.ceil(Math.sqrt(n));
+    const rows = Math.ceil(n / cols);
+    return { cols, rows };
+  }
+
+  // Text region in a grid cell is scaled down from captionFontSizeVw's
+  // ~46vw-wide tuning, proportional to how much narrower this cell is.
+  function gridTextFontSizeVw(text, cols) {
+    const cellVw = 100 / cols;
+    const scale = cellVw / 46;
+    return scaledFontSizeVw(text, 1.4, Math.max(2, 4.6 * scale), 380 * scale);
+  }
+
+  async function showGridSlide(item) {
+    const regions = Array.isArray(item.regions) ? item.regions : [];
+    const loaded = await Promise.all(regions.map(async (region) => {
+      if (region.kind !== "image") return region;
+      try {
+        const url = await preload(region.src);
+        return { ...region, url };
+      } catch (err) {
+        console.warn("Mess TV Bot: failed to load grid image", region.src, err);
+        return null;
+      }
+    }));
+    const usable = loaded.filter(Boolean);
+    if (usable.length === 0) return false;
+
+    const { cols, rows } = gridDims(usable.length);
+    gridLayer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    gridLayer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    gridLayer.replaceChildren();
+    for (const region of usable) {
+      const cell = document.createElement("div");
+      cell.className = "grid-cell";
+      if (region.kind === "text") {
+        cell.classList.add("text-cell");
+        const p = document.createElement("p");
+        p.innerHTML = slackMrkdwnToHtml(region.text || "");
+        p.style.fontSize = gridTextFontSizeVw(region.text || "", cols) + "vw";
+        cell.appendChild(p);
+      } else {
+        const img = document.createElement("img");
+        img.src = region.url;
+        img.alt = region.name || "";
+        cell.appendChild(img);
+      }
+      gridLayer.appendChild(cell);
+    }
+    return true;
+  }
+
   async function showSlide(index) {
     if (items.length === 0) return;
     const item = items[index];
 
     if (item.kind === "text") {
-      textMessage.textContent = item.text || "";
+      const text = item.text || "";
+      textMessage.innerHTML = slackMrkdwnToHtml(text);
       textAuthor.textContent = item.author ? "— " + item.author : "";
+      const messageVw = textFontSizeVw(text);
+      textMessage.style.fontSize = messageVw + "vw";
+      textAuthor.style.fontSize = Math.max(1.2, messageVw * 0.35) + "vw";
       textCard.classList.add("visible");
       frontLayer.classList.remove("visible");
       backLayer.classList.remove("visible");
+      stage.classList.remove("split");
+      imageCaption.classList.remove("visible");
+      gridLayer.classList.remove("visible");
+      currentIndex = index;
+      return;
+    }
+
+    if (item.kind === "grid") {
+      const ok = await showGridSlide(item);
+      if (!ok) {
+        console.warn("Mess TV Bot: grid slide had no loadable images", item);
+        scheduleNext(300);
+        return;
+      }
+      gridLayer.classList.add("visible");
+      textCard.classList.remove("visible");
+      frontLayer.classList.remove("visible");
+      backLayer.classList.remove("visible");
+      stage.classList.remove("split");
+      imageCaption.classList.remove("visible");
       currentIndex = index;
       return;
     }
@@ -59,11 +184,21 @@
       backLayer.classList.add("visible");
       frontLayer.classList.remove("visible");
       textCard.classList.remove("visible");
+      gridLayer.classList.remove("visible");
+      if (item.caption) {
+        imageCaptionText.innerHTML = slackMrkdwnToHtml(item.caption);
+        imageCaptionText.style.fontSize = captionFontSizeVw(item.caption) + "vw";
+        stage.classList.add("split");
+        imageCaption.classList.add("visible");
+      } else {
+        stage.classList.remove("split");
+        imageCaption.classList.remove("visible");
+      }
       [frontLayer, backLayer] = [backLayer, frontLayer];
       currentIndex = index;
     } catch (err) {
       // Broken/missing image: skip it and try the next one shortly.
-      console.warn("Masthead: failed to load", item.src, err);
+      console.warn("Mess TV Bot: failed to load", item.src, err);
       scheduleNext(300);
     }
   }
@@ -81,7 +216,7 @@
 
   function applyManifest(manifest) {
     slideMs = (manifest.slide_seconds || DEFAULT_SLIDE_MS / 1000) * 1000;
-    window.__masthead_poll_seconds = manifest.poll_seconds || DEFAULT_POLL_MS / 1000;
+    window.__kiosk_poll_seconds = manifest.poll_seconds || DEFAULT_POLL_MS / 1000;
     const newItems = Array.isArray(manifest.items) ? manifest.items : [];
 
     if (newItems.length === 0) {
@@ -90,6 +225,9 @@
       frontLayer.classList.remove("visible");
       backLayer.classList.remove("visible");
       textCard.classList.remove("visible");
+      stage.classList.remove("split");
+      imageCaption.classList.remove("visible");
+      gridLayer.classList.remove("visible");
       clearTimeout(slideTimer);
       currentIndex = -1;
       return;
@@ -122,9 +260,9 @@
         applyManifest(JSON.parse(raw));
       }
     } catch (err) {
-      console.warn("Masthead: manifest poll failed", err);
+      console.warn("Mess TV Bot: manifest poll failed", err);
     } finally {
-      const nextPollMs = (window.__masthead_poll_seconds || DEFAULT_POLL_MS / 1000) * 1000;
+      const nextPollMs = (window.__kiosk_poll_seconds || DEFAULT_POLL_MS / 1000) * 1000;
       setTimeout(pollManifest, nextPollMs);
     }
   }

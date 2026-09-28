@@ -1,3 +1,4 @@
-config/masthead.env
+config/kiosk.env
 __pycache__/
 *.pyc
+.venv/

@@ -1,0 +1,12 @@
+[project]
+name = "messtvbot"
+version = "0.1.0"
+description = "Self-hosted digital signage kiosk driven by a Slack channel"
+requires-python = ">=3.11"
+dependencies = [
+    "dateparser",
+    "emoji>=2.16.0",
+]
+
+[tool.uv]
+package = false

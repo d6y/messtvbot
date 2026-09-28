@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Opens Chrome in kiosk mode against the local Masthead server, for
+# Opens Chrome in kiosk mode against the local Mess TV Bot server, for
 # dev/testing on macOS. This is NOT meant to lock down the whole Mac the
 # way it does on the Pi -- it's just so you can preview the slideshow
 # full-screen. Press Cmd+Q (or Option+Cmd+Esc) to quit.
@@ -8,19 +8,19 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # shellcheck disable=SC1090
-[ -f "$REPO_DIR/config/masthead.env" ] && source "$REPO_DIR/config/masthead.env"
+[ -f "$REPO_DIR/config/kiosk.env" ] && source "$REPO_DIR/config/kiosk.env"
 
-MASTHEAD_PORT="${MASTHEAD_PORT:-8420}"
-URL="http://127.0.0.1:${MASTHEAD_PORT}/"
+KIOSK_PORT="${KIOSK_PORT:-8420}"
+URL="http://127.0.0.1:${KIOSK_PORT}/"
 
 CHROME_APP="Google Chrome"
 if ! osascript -e "id of application \"$CHROME_APP\"" >/dev/null 2>&1; then
-  echo "masthead: '$CHROME_APP' not found. Install Chrome, or open $URL manually." >&2
+  echo "kiosk: '$CHROME_APP' not found. Install Chrome, or open $URL manually." >&2
   exit 1
 fi
 
 # Use a scratch profile dir so this never touches your real Chrome profile.
-PROFILE_DIR="$(mktemp -d -t masthead-kiosk)"
+PROFILE_DIR="$(mktemp -d -t kiosk-preview)"
 
 open -na "$CHROME_APP" --args \
   --kiosk "$URL" \

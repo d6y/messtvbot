@@ -1,5 +1,5 @@
 [Unit]
-Description=Periodic trigger for masthead-refresh.service
+Description=Periodic trigger for kiosk-refresh.service
 
 [Timer]
 OnBootSec=30s
