@@ -177,13 +177,19 @@ def _unsupported_attachment_reason(msg: dict, max_bytes: int = DEFAULT_MAX_ATTAC
 
 @dataclass
 class RemovalCommand:
-    remove_at: datetime
+    # None means the trigger word was recognized but the phrase after it
+    # couldn't be understood as a date -- distinct from a *bare* trigger
+    # word, which means "now" (see parse_command). poll_slack treats
+    # remove_at=None as "tell them we didn't understand, leave the
+    # existing schedule alone" rather than silently removing immediately.
+    remove_at: datetime | None
 
 
 def parse_command(text: str, now: datetime) -> RemovalCommand | None:
     """Return a RemovalCommand if `text` contains a removal trigger word,
-    else None. A trigger word with no (or an unparseable) time phrase
-    after it means "remove now"."""
+    else None. A bare trigger word (no phrase after it) means "remove
+    now". A trigger word followed by a phrase that can't be parsed as a
+    date returns RemovalCommand(remove_at=None) -- see its docstring."""
     if not text:
         return None
     lowered = text.lower()
@@ -208,12 +214,31 @@ def parse_command(text: str, now: datetime) -> RemovalCommand | None:
         "RELATIVE_BASE": naive_local_now,
     })
     if parsed is None:
-        return RemovalCommand(remove_at=now)
+        return RemovalCommand(remove_at=None)
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=LOCAL_TZ)
     # Stored/compared as UTC like every other timestamp in this app --
     # LOCAL_TZ only decides how bare text like "10am" is interpreted.
     return RemovalCommand(remove_at=parsed.astimezone(timezone.utc))
+
+
+def _describe_interval(target: datetime, now: datetime) -> str:
+    """Human-friendly relative description of how far target is from now,
+    e.g. "in 3 days", "in 1 hour" -- shown alongside an absolute date/time
+    in a reply so a poster doesn't have to do the arithmetic themselves."""
+    total_seconds = int((target - now).total_seconds())
+    if total_seconds <= 0:
+        return "now"
+    days, rem = divmod(total_seconds, 86400)
+    if days >= 1:
+        return f"in {days} day" + ("" if days == 1 else "s")
+    hours, rem = divmod(rem, 3600)
+    if hours >= 1:
+        return f"in {hours} hour" + ("" if hours == 1 else "s")
+    minutes = rem // 60
+    if minutes >= 1:
+        return f"in {minutes} minute" + ("" if minutes == 1 else "s")
+    return "in under a minute"
 
 
 def is_help_trigger(text: str) -> bool:
@@ -678,7 +703,9 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             "summary": _describe_entry(entry),
         })
         if entry["status"] == "active":
-            remove_at_local = datetime.fromisoformat(entry["remove_at"]).astimezone(LOCAL_TZ)
+            remove_at_utc = datetime.fromisoformat(entry["remove_at"])
+            remove_at_local = remove_at_utc.astimezone(LOCAL_TZ)
+            interval = _describe_interval(remove_at_utc, now)
             # Deliberately NOT tied to cfg.ttl_days -- see build_help_text.
             example_remove_at_local = (posted_at_dt + timedelta(days=1)).astimezone(LOCAL_TZ)
             truncation_note = (
@@ -687,7 +714,7 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             )
             _post_safe(
                 api, cfg.channel,
-                f"Added to the Skiff TV, until {remove_at_local:%-d %b %Y %H:%M}. "
+                f"Added to the Skiff TV, until {remove_at_local:%-d %b %Y %H:%M} ({interval}). "
                 f"To remove, reply with `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example."
                 f"{truncation_note}",
                 thread_ts=ts,
@@ -743,6 +770,28 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         else:
             requested_by = "someone"
 
+        if command.remove_at is None:
+            # Trigger word recognized, but the phrase after it wasn't a
+            # date we could parse -- say so and repeat the *existing*
+            # schedule, rather than silently treating it as "remove now"
+            # (which a garbled reply almost certainly didn't mean).
+            entry["remove_command_ts"] = command_ts
+            current_remove_at_utc = datetime.fromisoformat(entry["remove_at"])
+            current_remove_at_local = current_remove_at_utc.astimezone(LOCAL_TZ)
+            interval = _describe_interval(current_remove_at_utc, now)
+            append_audit(audit_path, {
+                "at": now.isoformat(timespec="seconds"), "ts": ts, "author": requested_by,
+                "kind": "command", "action": "not_understood",
+                "summary": "removal phrase not understood",
+            })
+            _post_safe(
+                api, cfg.channel,
+                "Sorry, I didn't understand that date. Still set to be removed on "
+                f"{current_remove_at_local:%-d %b %Y %H:%M} ({interval}).",
+                thread_ts=ts,
+            )
+            continue
+
         entry["remove_reason"] = "command"
         entry["remove_requested_by"] = requested_by
         entry["remove_command_ts"] = command_ts
@@ -760,9 +809,10 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         else:
             entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
             remove_at_local = command.remove_at.astimezone(LOCAL_TZ)
+            interval = _describe_interval(command.remove_at, now)
             _post_safe(
                 api, cfg.channel,
-                f"Scheduled for removal on {remove_at_local:%-d %b %Y %H:%M}.",
+                f"Scheduled for removal on {remove_at_local:%-d %b %Y %H:%M} ({interval}).",
                 thread_ts=ts,
             )
 

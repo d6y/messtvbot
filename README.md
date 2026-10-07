@@ -29,8 +29,12 @@ enabled for this repo (Settings → Pages → deploy from `docs/` on `main`).
 To remove a message, reply to it in its thread with "remove" -- a bare
 "remove" (or "remove now") removes it immediately, while a trailing time
 phrase schedules the removal instead: "remove in 1 week", "remove
-thursday", "remove 3 Sept", "remove 3 Sept 10am". An unparseable time
-phrase falls back to an immediate removal. The admin page at `/admin/` lists active entries
+thursday", "remove 3 Sept", "remove 3 Sept 10am". A time phrase that can't
+be understood doesn't remove anything -- the bot replies saying so and
+restates the post's existing removal date, so nothing is removed by
+surprise on a typo. Any reply stating a removal date (on posting, on
+scheduling, or after an unparseable reply) also says how far off that
+date is, e.g. "until 14 Aug 2026 09:00 (in 13 days)". The admin page at `/admin/` lists active entries
 and can remove one immediately -- it has no authentication, so access
 control is whoever's on the same network/host.
 

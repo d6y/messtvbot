@@ -350,9 +350,22 @@ class ParseCommandTests(unittest.TestCase):
         result = ms.parse_command("remove 10 Dec 10am", now)
         self.assertEqual(result.remove_at.isoformat(), "2026-12-10T10:00:00+00:00")
 
-    def test_remove_with_unparseable_phrase_falls_back_to_now(self):
+    def test_remove_with_unparseable_phrase_has_no_remove_at(self):
+        # The trigger word was there, but the phrase after it couldn't be
+        # understood as a date -- distinct from a *bare* "remove" (which
+        # means "now"). poll_slack uses remove_at is None to reply
+        # "I didn't understand that" rather than silently removing now.
         result = ms.parse_command("remove pronto pronto pronto", self.NOW)
-        self.assertEqual(result.remove_at, self.NOW)
+        self.assertIsNotNone(result)
+        self.assertIsNone(result.remove_at)
+
+    def test_remove_with_ambiguous_bare_number_is_still_a_valid_date(self):
+        # dateparser treats a bare number as a day-or-month number, not
+        # gibberish -- this documents that "remove 10" is NOT the
+        # unparseable case above, even though it's surprising (see also
+        # the ambiguous-bare-number discussion for this command).
+        result = ms.parse_command("remove 10", self.NOW)
+        self.assertIsNotNone(result.remove_at)
 
     def test_unrelated_reply_does_not_match(self):
         self.assertIsNone(ms.parse_command("nice!", self.NOW))
@@ -1136,7 +1149,7 @@ class PollSlackTests(unittest.TestCase):
                                 "local_files": [], "last_seen_latest_reply": "100.42.1"}}
         api = FakeSlackAPI(
             messages=[{"ts": "100.42", "reply_count": 2, "latest_reply": "100.42.9"}],
-            replies_by_ts={"100.42": [{"text": "please remove", "user": "U2"}]},
+            replies_by_ts={"100.42": [{"text": "remove now", "user": "U2"}]},
         )
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(api.replies_calls, ["100.42"])
@@ -1150,7 +1163,7 @@ class PollSlackTests(unittest.TestCase):
                                 "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
                                 "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
                                 "local_files": []}}
-        api = FakeSlackAPI(messages=[], replies_by_ts={"100.43": [{"text": "please remove", "user": "U2"}]})
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.43": [{"text": "remove now", "user": "U2"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(api.replies_calls, ["100.43"])
         self.assertEqual(state["100.43"]["status"], "cancelled")
@@ -1162,7 +1175,7 @@ class PollSlackTests(unittest.TestCase):
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
                                "remove_at": "2026-07-31T00:00:00+00:00", "remove_reason": "ttl",
                                "local_files": [str(local_file)]}}
-        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please remove", "user": "U2"}]})
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "remove now", "user": "U2"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.2"]["status"], "cancelled")
         self.assertFalse(local_file.exists())
@@ -1208,6 +1221,66 @@ class PollSlackTests(unittest.TestCase):
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.9"]
         self.assertEqual(len(replies), 1)
         self.assertIn("Scheduled for removal", replies[0]["text"])
+
+    def test_scheduled_removal_reply_states_the_interval(self):
+        # self.now is 2026-08-01; "remove in 1 week" lands on 2026-08-08.
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove in 1 week", "user": "U2"}]})
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.9"]
+        self.assertIn("(in 7 days)", replies[0]["text"])
+
+    def test_accepted_message_reply_states_the_interval(self):
+        # Post ts == self.now, so remove_at (posted_at + ttl_days) is
+        # exactly ttl_days (30, from self.cfg) away from self.now.
+        ts = str(self.now.timestamp())
+        api = FakeSlackAPI(
+            messages=[{"ts": ts, "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == ts]
+        self.assertIn("(in 30 days)", replies[0]["text"])
+
+    def test_unparseable_removal_phrase_leaves_existing_schedule_untouched(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove whenever", "user": "U2"}]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.9"]["status"], "active")
+        self.assertEqual(state["100.9"]["remove_at"], "2026-08-14T00:00:00+00:00")
+        self.assertEqual(state["100.9"]["remove_reason"], "ttl")
+
+    def test_unparseable_removal_phrase_gets_a_not_understood_reply_with_existing_date(self):
+        # self.now is 2026-08-01; the existing remove_at is 2026-08-14,
+        # 13 days out.
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove whenever", "user": "U2"}]})
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.9"]
+        self.assertEqual(len(replies), 1)
+        text = replies[0]["text"]
+        self.assertIn("didn't understand", text)
+        self.assertIn("14 Aug 2026", text)
+        self.assertIn("(in 13 days)", text)
+
+    def test_unparseable_removal_phrase_is_audited_as_not_understood(self):
+        existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove whenever", "user": "U2"}]})
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        matching = [e for e in self._audit_events() if e["ts"] == "100.9"]
+        self.assertEqual(matching[-1]["action"], "not_understood")
 
     def test_most_recent_reply_wins_over_an_earlier_one(self):
         existing = {"100.9": {"status": "active", "kind": "text", "text": "hi",
@@ -1410,7 +1483,7 @@ class PollSlackTests(unittest.TestCase):
         existing = {"100.2": {"status": "active", "kind": "attachment", "text": "",
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
                                "local_files": [str(local_file)], "remove_at": "2026-08-31T00:00:00+00:00", "remove_reason": "ttl"}}
-        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please remove"}]})
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "remove now"}]})
         ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.2"]
         self.assertEqual(len(replies), 1)
@@ -1486,7 +1559,7 @@ class PollSlackTests(unittest.TestCase):
                                "author": "Jane", "posted_at": "2026-07-01T00:00:00+00:00",
                                "remove_at": "2026-07-31T00:00:00+00:00", "remove_reason": "ttl",
                                "local_files": []}}
-        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "please remove", "user": "U2"}]})
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.2": [{"text": "remove now", "user": "U2"}]})
         ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         events = self._audit_events()
         self.assertEqual(len(events), 1)

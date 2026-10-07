@@ -74,8 +74,10 @@
         </tbody>
       </table>
       <p>
-        If a date/time phrase can't be understood, the post is removed
-        immediately.
+        If a date/time phrase can't be understood (e.g. a typo), nothing is
+        removed &mdash; the bot replies saying it didn't understand and
+        restates the post's current removal date, so a garbled reply can't
+        accidentally take something down.
       </p>
       <p>
         Times are always in UK local time, adjusting automatically for GMT/BST.
@@ -83,7 +85,9 @@
       <p>
         Scheduling a removal doesn't take the post down early &mdash; it stays
         up until the new date arrives. The bot confirms the date in a thread
-        reply either way, so you always have something to check back against.
+        reply either way, so you always have something to check back against
+        &mdash; and that confirmation always includes how far off the date is,
+        e.g. "14 Aug 2026 09:00 (in 13 days)".
       </p>
 
       <h2>Getting help</h2>
