@@ -208,7 +208,7 @@ def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
         "Messages posted here appear on the Mess TV. You can send text, "
         "images or a combination of both.\n\n"
         f"Each message is shown for {interval}. To remove sooner or later, "
-        f"reply to the notice with `remove now` or `remove {example_remove_at:%-d %b %Y}`.\n\n"
+        f"reply to the message with `remove now` or `remove {example_remove_at:%-d %b %Y}`.\n\n"
         f"There's also a simple admin interface at {cfg.server_url}/admin.\n\n"
         f"If I'm broken, please contact `{cfg.admin_contact}`."
     )
