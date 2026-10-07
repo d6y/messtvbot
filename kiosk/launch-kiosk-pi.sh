@@ -41,6 +41,10 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
+# --disable-gpu: the Pi 3's VC4 GPU driver only supports GLES2, but
+# Chromium's default EGL path requests a GLES3 context and fails outright
+# (blank/white window, eglCreateContext errors in the log). Software
+# rendering is plenty for a 2D slideshow and sidesteps that entirely.
 while true; do
   "$BROWSER_BIN" \
     --kiosk "$URL" \
@@ -53,6 +57,7 @@ while true; do
     --autoplay-policy=no-user-gesture-required \
     --check-for-update-interval=31536000 \
     --password-store=basic \
+    --disable-gpu \
     || true
   echo "kiosk: browser exited, relaunching in 2s"
   sleep 2
