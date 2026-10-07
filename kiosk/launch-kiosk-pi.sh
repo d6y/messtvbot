@@ -52,6 +52,7 @@ while true; do
     --overscroll-history-navigation=disabled \
     --autoplay-policy=no-user-gesture-required \
     --check-for-update-interval=31536000 \
+    --password-store=basic \
     || true
   echo "kiosk: browser exited, relaunching in 2s"
   sleep 2
