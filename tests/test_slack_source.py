@@ -193,6 +193,33 @@ class UnsupportedAttachmentReasonTests(unittest.TestCase):
         self.assertIn(".tiff isn't supported", reason)
         self.assertIn("too large", reason)
 
+    def test_single_pdf_is_not_rejected(self):
+        msg = {"files": [{"filetype": "pdf"}]}
+        self.assertIsNone(ms._unsupported_attachment_reason(msg))
+
+    def test_multiple_pdfs_is_rejected(self):
+        msg = {"files": [{"filetype": "pdf"}, {"filetype": "pdf"}]}
+        reason = ms._unsupported_attachment_reason(msg)
+        self.assertIn("multiple PDFs", reason)
+        self.assertIn("images instead", reason)
+
+    def test_multiple_pdfs_alongside_an_image_still_rejected(self):
+        # A PDF+image mix isn't ambiguous by file count alone, but it's
+        # still two-or-more PDFs, which is the thing we can't resolve.
+        msg = {"files": [
+            {"filetype": "pdf"},
+            {"filetype": "pdf"},
+            {"filetype": "png"},
+        ]}
+        reason = ms._unsupported_attachment_reason(msg)
+        self.assertIn("multiple PDFs", reason)
+
+    def test_multiple_pdfs_combined_with_unsupported_type(self):
+        msg = {"files": [{"filetype": "pdf"}, {"filetype": "pdf"}, {"filetype": "tiff"}]}
+        reason = ms._unsupported_attachment_reason(msg)
+        self.assertIn("multiple PDFs", reason)
+        self.assertIn(".tiff isn't supported", reason)
+
 
 class IsHelpTriggerTests(unittest.TestCase):
     def test_bare_help_is_a_trigger(self):
@@ -276,17 +303,16 @@ class BuildHelpTextTests(unittest.TestCase):
 class ParseCommandTests(unittest.TestCase):
     NOW = datetime(2026, 9, 3, 12, 0, tzinfo=timezone.utc)  # a Thursday
 
-    def test_bare_cancel_means_now(self):
-        result = ms.parse_command("please cancel this", self.NOW)
-        self.assertEqual(result.remove_at, self.NOW)
+    def test_cancel_is_not_a_trigger_word(self):
+        # "cancel"/"delete"/"undo" used to also work as removal aliases;
+        # "remove" is now the only recognized trigger word.
+        self.assertIsNone(ms.parse_command("please cancel this", self.NOW))
 
-    def test_bare_delete_means_now(self):
-        result = ms.parse_command("DELETE", self.NOW)
-        self.assertEqual(result.remove_at, self.NOW)
+    def test_delete_is_not_a_trigger_word(self):
+        self.assertIsNone(ms.parse_command("DELETE", self.NOW))
 
-    def test_bare_undo_means_now(self):
-        result = ms.parse_command("undo please", self.NOW)
-        self.assertEqual(result.remove_at, self.NOW)
+    def test_undo_is_not_a_trigger_word(self):
+        self.assertIsNone(ms.parse_command("undo please", self.NOW))
 
     def test_bare_remove_means_now(self):
         result = ms.parse_command("remove", self.NOW)
@@ -1110,7 +1136,7 @@ class PollSlackTests(unittest.TestCase):
                                 "local_files": [], "last_seen_latest_reply": "100.42.1"}}
         api = FakeSlackAPI(
             messages=[{"ts": "100.42", "reply_count": 2, "latest_reply": "100.42.9"}],
-            replies_by_ts={"100.42": [{"text": "please cancel", "user": "U2"}]},
+            replies_by_ts={"100.42": [{"text": "please remove", "user": "U2"}]},
         )
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(api.replies_calls, ["100.42"])
@@ -1124,7 +1150,7 @@ class PollSlackTests(unittest.TestCase):
                                 "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
                                 "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
                                 "local_files": []}}
-        api = FakeSlackAPI(messages=[], replies_by_ts={"100.43": [{"text": "please cancel", "user": "U2"}]})
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.43": [{"text": "please remove", "user": "U2"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(api.replies_calls, ["100.43"])
         self.assertEqual(state["100.43"]["status"], "cancelled")

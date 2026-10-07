@@ -34,7 +34,10 @@ IMAGE_FILETYPES = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "heic", "heif"}
 IMAGE_FILETYPES_NEEDING_CONVERSION = {"heic", "heif"}
 VIDEO_FILETYPES = {"mp4", "mov", "webm", "m4v"}
 PDF_FILETYPE = "pdf"
-COMMAND_WORDS = ("cancel", "delete", "undo", "remove")
+# "remove" is the only removal trigger word -- aliases like "cancel"/
+# "delete"/"undo" used to also work but were dropped as unnecessary
+# surface area (one word to document and recognize, not four).
+COMMAND_WORDS = ("remove",)
 
 # A short new top-level message starting with "help" or "remove" is almost
 # certainly someone testing the bot or confused about how to remove a post,
@@ -144,7 +147,17 @@ def _unsupported_attachment_reason(msg: dict, max_bytes: int = DEFAULT_MAX_ATTAC
         and f["size"] > max_bytes
         for f in files
     )
-    if not bad and not oversized:
+    # A single PDF (any number of pages) is fine -- single_file_only in
+    # poll_slack handles that. Two or more PDFs in one message is rejected
+    # outright rather than defining some combined-rendering behaviour for
+    # it (e.g. which one's pages come first, do they interleave with other
+    # attachments) -- not worth the complexity for a rare case, and the
+    # poster has a simple workaround (convert extra PDFs to images and
+    # send as a multi-image message instead).
+    multiple_pdfs = sum(
+        1 for f in files if (f.get("filetype") or "").lower() == PDF_FILETYPE
+    ) > 1
+    if not bad and not oversized and not multiple_pdfs:
         return None
     video_exts = [ext for ext in bad if ext in VIDEO_FILETYPES]
     other_exts = [ext for ext in bad if ext not in VIDEO_FILETYPES]
@@ -154,6 +167,8 @@ def _unsupported_attachment_reason(msg: dict, max_bytes: int = DEFAULT_MAX_ATTAC
     if other_exts:
         verb = "isn't" if len(other_exts) == 1 else "aren't"
         reasons.append(f"{'/'.join('.' + e for e in other_exts)} {verb} supported")
+    if multiple_pdfs:
+        reasons.append("multiple PDFs in one message aren't supported (try converting them to images instead)")
     if oversized:
         max_mb = max_bytes / (1024 * 1024)
         reasons.append(f"the file is too large (max {max_mb:g}MB)")
