@@ -1,96 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>FAQ — Mess TV Bot</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Frequently asked questions about Mess TV Bot.">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <nav>
-    <div class="nav-inner">
-      <a class="brand" href="index.html">Mess TV Bot</a>
-      <a href="index.html">Introduction</a>
-      <a href="commands.html">Commands</a>
-      <a href="faq.html" class="active">FAQ</a>
-    </div>
-  </nav>
+  <head>
+    <meta charset="utf-8" />
+    <title>FAQ — Mess TV Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Frequently asked questions about Mess TV Bot."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="index.html">Mess TV Bot</a>
+        <a href="index.html">Introduction</a>
+        <a href="commands.html">Commands</a>
+        <a href="faq.html" class="active">FAQ</a>
+      </div>
+    </nav>
 
-  <main>
-    <h1>FAQ</h1>
+    <main>
+      <h1>FAQ</h1>
 
-    <div class="faq-item">
-      <h3>I posted something and nothing happened. What's wrong?</h3>
-      <p>Check whether the bot replied in a thread under your post. No reply at
-        all usually means the message wasn't recognised as content &mdash; an
-        empty message, or a file type other than an image or PDF. A failed
-        download (a flaky network, usually) also means no "added" confirmation;
-        try posting again.</p>
-    </div>
+      <div class="faq-item">
+        <h3>I posted something and nothing happened. What's wrong?</h3>
+        <p>
+          Check whether the bot replied in a thread under your post. No reply at
+          all usually means the message wasn't recognised as content &mdash; an
+          empty message, or a file type other than an image. A failed download
+          (a flaky network, usually) also means no "added" confirmation; try
+          posting again.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>I edited my post and the display didn't change. Why not?</h3>
-      <p>Edits aren't picked up &mdash; the bot only reads what your post said
-        the moment it first arrived. Remove the old post (see
-        <a href="commands.html">Commands</a>) and post the corrected version.</p>
-    </div>
+      <div class="faq-item">
+        <h3>I edited my post and the display didn't change. Why not?</h3>
+        <p>
+          Edits aren't picked up &mdash; the bot only reads what your post said
+          the moment it first arrived. Remove the old post (see
+          <a href="commands.html">Commands</a>) and post the corrected version.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>Can I post more than one image at once?</h3>
-      <p>Yes &mdash; attach several images to the same message and they'll be
-        shown together on one slide, laid out in a grid rather than cycling one
-        at a time. Add a caption too and it becomes one more tile in that grid.</p>
-    </div>
+      <div class="faq-item">
+        <h3>Can I post more than one image at once?</h3>
+        <p>
+          Yes &mdash; attach several images to the same message and they'll be
+          shown together on one slide, laid out in a grid rather than cycling
+          one at a time. Add a caption too and it becomes one more tile in that
+          grid.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>Can I post a PDF?</h3>
-      <p>Yes &mdash; each page becomes its own slide, shown in order.</p>
-    </div>
+      <div class="faq-item">
+        <h3>Can I post a PDF?</h3>
+        <p>Yes &mdash; each page becomes its own slide, shown in order.</p>
+      </div>
 
-    <div class="faq-item">
-      <h3>Can I use bold, italic, or other formatting?</h3>
-      <p>Yes, Slack's normal formatting works: <code>*bold*</code>,
-        <code>_italic_</code>, <code>~strikethrough~</code>, and
-        <code>`code`</code>. A link is shown as plain text rather than something
-        clickable, since there's no pointer on a TV screen.</p>
-    </div>
+      <div class="faq-item">
+        <h3>Can I use bold, italic, or other formatting?</h3>
+        <p>
+          Yes, Slack's normal formatting works: <code>*bold*</code>,
+          <code>_italic_</code>, <code>~strikethrough~</code>, and
+          <code>`code`</code>. A link is shown as plain text rather than
+          something clickable, since there's no pointer on a TV screen.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>Does emoji work?</h3>
-      <p>Yes, including skin-tone variants &mdash; they're shown as the actual
-        emoji, not as text codes like <code>:thumbsup:</code>.</p>
-    </div>
+      <div class="faq-item">
+        <h3>Does emoji work?</h3>
+        <p>
+          Yes, including skin-tone variants &mdash; they're shown as the actual
+          emoji, not as text codes like <code>:thumbsup:</code>.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>How long does a post stay up?</h3>
-      <p>The bot's reply to your post states the exact date and time it'll come
-        down. That's always accurate for your post specifically &mdash; the
-        default length of time can vary between deployments.</p>
-    </div>
+      <div class="faq-item">
+        <h3>How long does a post stay up?</h3>
+        <p>
+          The bot's reply to your post states the exact date and time it'll come
+          down. That's always accurate for your post specifically &mdash; the
+          default length of time can vary between deployments.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>How do I take my post down early, or push it back?</h3>
-      <p>Reply to it in its thread &mdash; see <a href="commands.html">Commands</a>
-        for the exact wording.</p>
-    </div>
+      <div class="faq-item">
+        <h3>How do I take my post down early, or push it back?</h3>
+        <p>
+          Reply to it in its thread &mdash; see
+          <a href="commands.html">Commands</a> for the exact wording.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>I typed "help" or "remove" as a new message and got an odd reply instead of it showing up. Why?</h3>
-      <p>That's expected. A short new message starting with one of those words is
-        treated as someone looking for instructions, not content for the screen
-        &mdash; see <a href="commands.html">Commands</a>.</p>
-    </div>
+      <div class="faq-item">
+        <h3>
+          I typed "help" or "remove" as a new message and got an odd reply
+          instead of it showing up. Why?
+        </h3>
+        <p>
+          That's expected. A short new message starting with one of those words
+          is treated as someone looking for instructions, not content for the
+          screen &mdash; see <a href="commands.html">Commands</a>.
+        </p>
+      </div>
 
-    <div class="faq-item">
-      <h3>Something seems broken &mdash; who do I ask?</h3>
-      <p>Post <code>help</code> as a new message; the bot's reply names who
-        manages this instance.</p>
-    </div>
-  </main>
+      <div class="faq-item">
+        <h3>Something seems broken &mdash; who do I ask?</h3>
+        <p>
+          Post <code>help</code> as a new message; the bot's reply names who
+          manages this instance.
+        </p>
+      </div>
+    </main>
 
-  <footer>
-    <a href="https://github.com/d6y/messtvbot">Mess TV Bot on GitHub</a>
-  </footer>
-</body>
+    <footer>
+      <a href="https://github.com/d6y/messtvbot">Mess TV Bot on GitHub</a>
+    </footer>
+  </body>
 </html>

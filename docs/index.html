@@ -1,64 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Mess TV Bot</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Post to a Slack channel, it shows up on the display. How to use Mess TV Bot.">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <nav>
-    <div class="nav-inner">
-      <a class="brand" href="index.html">Mess TV Bot</a>
-      <a href="index.html" class="active">Introduction</a>
-      <a href="commands.html">Commands</a>
-      <a href="faq.html">FAQ</a>
-    </div>
-  </nav>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mess TV Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Post to a Slack channel, it shows up on the display. How to use Mess TV Bot."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="index.html">Mess TV Bot</a>
+        <a href="index.html" class="active">Introduction</a>
+        <a href="commands.html">Commands</a>
+        <a href="faq.html">FAQ</a>
+      </div>
+    </nav>
 
-  <main>
-    <h1>Mess TV Bot</h1>
-    <p class="lede">Post to a Slack channel. It shows up on the display.</p>
+    <main>
+      <h1>Mess TV Bot</h1>
+      <p class="lede">Post to a Slack channel. It shows up on the display.</p>
 
-    <h2>What you can post</h2>
-    <ul>
-      <li><strong>Text</strong> &mdash; a plain message becomes a full-screen slide.</li>
-      <li><strong>An image</strong> &mdash; shown full-screen. Add a caption (just type
-        a message alongside it) and the image and text share the slide side by side.</li>
-      <li><strong>Several images in one post</strong> &mdash; they're shown together on
-        one slide, laid out in a grid. A caption becomes one more tile in that grid.</li>
-      <li><strong>A PDF</strong> &mdash; each page becomes its own slide, in order.</li>
-    </ul>
+      <h2>What you can post</h2>
+      <ul>
+        <li>
+          <strong>Text</strong> &mdash; a plain message becomes a full-screen
+          slide.
+        </li>
+        <li>
+          <strong>An image</strong> &mdash; shown full-screen. Add a caption
+          (just type a message alongside it) and the image and text share the
+          slide side by side.
+        </li>
+        <li>
+          <strong>Several images in one post</strong> &mdash; they're shown
+          together on one slide, laid out in a grid. A caption becomes one more
+          tile in that grid.
+        </li>
+      </ul>
 
-    <div class="callout">
-      <p>When your post is accepted, the bot replies in a thread confirming it's up,
-        and tells you exactly when it'll come back down. That reply is always the
-        source of truth &mdash; if you're not sure what's live or when something
-        expires, check the thread.</p>
-    </div>
+      <div class="callout">
+        <p>
+          When your post is accepted, the bot replies in a thread confirming
+          it's up, and tells you exactly when it'll come back down. That reply
+          is always the source of truth &mdash; if you're not sure what's live
+          or when something expires, check the thread.
+        </p>
+      </div>
 
-    <h2>Formatting</h2>
-    <p>Slack's usual text formatting works: <code>*bold*</code>, <code>_italic_</code>,
-      <code>~strikethrough~</code>, and <code>`code`</code>. Emoji &mdash; including
-      skin-tone variants &mdash; are shown properly rather than as text codes.
-      Links are shown as plain text, since there's nothing to click on a TV.</p>
+      <h2>Formatting</h2>
+      <p>
+        Slack's usual text formatting works: <code>*bold*</code>,
+        <code>_italic_</code>, <code>~strikethrough~</code>, and
+        <code>`code`</code>. Emoji &mdash; including skin-tone variants &mdash;
+        are shown properly rather than as text codes. Links are shown as plain
+        text, since there's nothing to click on a TV.
+      </p>
 
-    <h2>How long a post stays up</h2>
-    <p>Every post has an expiry date, set automatically when it's accepted (your
-      bot's reply tells you exactly when). After that, it's removed on its own.
-      You can also remove it sooner, or push the date back &mdash; see
-      <a href="commands.html">Commands</a>.</p>
+      <h2>How long a post stays up</h2>
+      <p>
+        Every post has an expiry date, set automatically when it's accepted
+        (your bot's reply tells you exactly when). After that, it's removed on
+        its own. You can also remove it sooner, or push the date back &mdash;
+        see <a href="commands.html">Commands</a>.
+      </p>
 
-    <h2>One thing to know</h2>
-    <p><strong>Editing your original message doesn't update the display.</strong>
-      The bot reads your post once, when you first send it. If you need to change
-      something, remove the old post (see <a href="commands.html">Commands</a>) and
-      post again.</p>
-  </main>
+      <h2>One thing to know</h2>
+      <p>
+        <strong
+          >Editing your original message doesn't update the display.</strong
+        >
+        The bot reads your post once, when you first send it. If you need to
+        change something, remove the old post (see
+        <a href="commands.html">Commands</a>) and post again.
+      </p>
+    </main>
 
-  <footer>
-    <a href="https://github.com/d6y/messtvbot">Mess TV Bot on GitHub</a>
-  </footer>
-</body>
+    <footer>
+      <a href="https://github.com/d6y/messtvbot">Mess TV Bot on GitHub</a>
+    </footer>
+  </body>
 </html>
