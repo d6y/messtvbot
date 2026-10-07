@@ -72,6 +72,24 @@ scope in step 2.
    bottom of that panel -- the ID looks like `C0123456789` (private
    channels get an ID in the same format, just starting with `G` on
    some older workspaces). This is your `KIOSK_SLACK_CHANNEL`.
+6. **Optional, for later:** Mess TV Bot currently polls Slack
+   (`conversations.history`) rather than receiving events in real
+   time. If you might switch to a real-time connection (Slack's
+   Socket Mode) in future, it's worth enabling it on this same app
+   now -- there's no downside to doing it while nothing's live yet,
+   and it avoids a disruptive step later:
+   - **Socket Mode** (left sidebar) → toggle on → generate an
+     app-level token (starts `xapp-`, scope `connections:write`).
+     Store it somewhere safe; nothing uses it yet.
+   - **Event Subscriptions** → toggle on → under "Subscribe to bot
+     events" add `message.channels` (or `message.groups` for a
+     private channel). No Request URL needed -- Socket Mode handles
+     delivery.
+   - This may prompt a reinstall of the app, which issues a **new**
+     bot token -- update `KIOSK_SLACK_TOKEN` if so. Your existing
+     Bot Token Scopes from step 2 already cover what these events
+     need; nothing else changes, and today's polling keeps working
+     unmodified either way.
 
 With both values in hand:
 

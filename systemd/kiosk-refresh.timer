@@ -3,7 +3,7 @@ Description=Periodic trigger for kiosk-refresh.service
 
 [Timer]
 OnBootSec=30s
-OnUnitActiveSec=2min
+OnUnitActiveSec=20s
 Persistent=true
 
 [Install]

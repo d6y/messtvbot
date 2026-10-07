@@ -20,6 +20,16 @@ Invite the bot to the channel people will post signage content to
 bottom, or use the Slack API's `conversations.list`) -- this is
 `KIOSK_SLACK_CHANNEL`.
 
+**Optional, for later:** Mess TV Bot currently polls Slack rather than
+receiving events in real time. If you might move to a real-time
+connection (Socket Mode) in future, it costs nothing to enable it on
+this same app now, while it's not live yet: toggle on **Socket Mode**
+(generates an app-level `xapp-...` token, scope `connections:write`)
+and **Event Subscriptions** (subscribe to `message.channels` /
+`message.groups`, no Request URL needed). This may trigger a reinstall
+that issues a new bot token -- update `KIOSK_SLACK_TOKEN` if so.
+Nothing currently uses these; polling keeps working unchanged.
+
 ## 2. Configure Mess TV Bot
 
 ```
@@ -36,7 +46,7 @@ Edit `config/kiosk.env`:
 **Pi:** `./install/install-pi.sh` -- installs `poppler-utils`/
 `chromium`/`unclutter`, sets up two systemd **user** services
 (`kiosk-serve`, always running the web server) and a timer
-(`kiosk-refresh`, polling/rendering every 2 minutes by default), and
+(`kiosk-refresh`, polling/rendering every 20 seconds by default), and
 adds a kiosk autostart entry so Chromium launches full-screen after
 login. It also enables "linger" so those services keep running even
 without an active graphical login.

@@ -62,6 +62,16 @@ class SlackAPIError(RuntimeError):
     pass
 
 
+class SlackRateLimitedError(SlackAPIError):
+    """Slack responded 429, or {"ok": false, "error": "ratelimited"}.
+    `retry_after` is the seconds Slack asked us to wait (from the
+    Retry-After header), or None if that wasn't available."""
+
+    def __init__(self, message: str, retry_after: int | None = None):
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
 # --------------------------------------------------------------------------
 # Pure helpers (no network) -- unit tested directly.
 # --------------------------------------------------------------------------
@@ -299,11 +309,30 @@ class SlackWebAPI:
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 payload = json.loads(resp.read())
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429:
+                retry_after = self._parse_retry_after(exc.headers)
+                log.warning("Slack rate-limited %s (HTTP 429), retry after %ss", method, retry_after)
+                raise SlackRateLimitedError(f"{method} rate-limited (429)", retry_after=retry_after) from exc
+            raise SlackAPIError(f"{method} request failed: {exc}") from exc
         except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
             raise SlackAPIError(f"{method} request failed: {exc}") from exc
         if not payload.get("ok"):
+            if payload.get("error") == "ratelimited":
+                log.warning("Slack rate-limited %s (ok=false, error=ratelimited)", method)
+                raise SlackRateLimitedError(f"{method} rate-limited (ratelimited)")
             raise SlackAPIError(f"{method} failed: {payload.get('error')}")
         return payload
+
+    @staticmethod
+    def _parse_retry_after(headers) -> int | None:
+        value = headers.get("Retry-After") if headers else None
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return None
 
     def history(self, channel: str, oldest: str) -> list[dict]:
         messages: list[dict] = []
@@ -400,8 +429,14 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
     unchanged so a bad tick doesn't blank the display."""
     backfill_entries(state, cfg.ttl_days)
 
-    newest_ts = max((ts for ts in state), default=None)
-    oldest = newest_ts if newest_ts else str((now - timedelta(days=cfg.ttl_days)).timestamp())
+    # Always the full TTL window, not just "since the newest ts seen" --
+    # this is what lets the reply-check loop below read each active
+    # entry's current reply_count/latest_reply from this same response,
+    # instead of calling conversations.replies for every active entry
+    # every tick (that method is rate-limited independently of how many
+    # threads you're checking, so doing it unconditionally doesn't scale
+    # past a handful of simultaneously active entries).
+    oldest = str((now - timedelta(days=cfg.ttl_days)).timestamp())
 
     try:
         messages = api.history(cfg.channel, oldest)
@@ -409,6 +444,7 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         log.error("Slack history fetch failed: %s", exc)
         return state
 
+    messages_by_ts = {msg["ts"]: msg for msg in messages if msg.get("ts")}
     pre_existing_ts = set(state)
 
     for msg in messages:
@@ -502,11 +538,24 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
     for ts, entry in state.items():
         if entry["status"] != "active":
             continue
+        msg = messages_by_ts.get(ts)
+        if msg is not None:
+            latest_reply = msg.get("latest_reply")
+            if not msg.get("reply_count"):
+                continue  # no replies at all -- nothing to check
+            if latest_reply is not None and entry.get("last_seen_latest_reply") == latest_reply:
+                continue  # already scanned up to this reply, nothing new
+        # msg is None when this entry's parent message wasn't in this
+        # tick's fetch (shouldn't normally happen now that `oldest` covers
+        # the full TTL window) -- fall back to checking rather than risk
+        # silently missing a removal command.
         try:
             replies = api.replies(cfg.channel, ts)
         except SlackAPIError as exc:
             log.error("Failed to fetch replies for %s: %s", ts, exc)
             continue
+        if msg is not None:
+            entry["last_seen_latest_reply"] = msg.get("latest_reply")
         human_replies = [r for r in replies if not r.get("bot_id")]
         command = None
         command_ts = None

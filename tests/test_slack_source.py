@@ -1,5 +1,8 @@
+import email.message
+import io
 import sys
 import unittest
+import urllib.error
 from pathlib import Path
 import json
 import tempfile
@@ -342,6 +345,52 @@ class SlackWebAPICallTests(unittest.TestCase):
             self.assertEqual(api.auth_test(), "UBOT1")
 
 
+class SlackWebAPIRateLimitTests(unittest.TestCase):
+    def _http_429(self, retry_after=None):
+        headers = email.message.Message()
+        if retry_after is not None:
+            headers.add_header("Retry-After", str(retry_after))
+        return urllib.error.HTTPError(
+            url="https://slack.com/api/conversations.history", code=429,
+            msg="Too Many Requests", hdrs=headers, fp=io.BytesIO(b""),
+        )
+
+    def test_429_raises_rate_limited_error_with_retry_after(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        with mock.patch("urllib.request.urlopen", side_effect=self._http_429(retry_after=30)):
+            with self.assertRaises(ms.SlackRateLimitedError) as ctx:
+                api._call("conversations.history", {"channel": "C1", "oldest": "0"})
+        self.assertEqual(ctx.exception.retry_after, 30)
+
+    def test_429_without_retry_after_header_has_none(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        with mock.patch("urllib.request.urlopen", side_effect=self._http_429()):
+            with self.assertRaises(ms.SlackRateLimitedError) as ctx:
+                api._call("conversations.history", {"channel": "C1", "oldest": "0"})
+        self.assertIsNone(ctx.exception.retry_after)
+
+    def test_ratelimited_error_field_raises_rate_limited_error(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        fake_resp = mock.MagicMock()
+        fake_resp.read.return_value = json.dumps({"ok": False, "error": "ratelimited"}).encode()
+        fake_resp.__enter__.return_value = fake_resp
+        fake_resp.__exit__.return_value = False
+        with mock.patch("urllib.request.urlopen", return_value=fake_resp):
+            with self.assertRaises(ms.SlackRateLimitedError):
+                api._call("conversations.history", {"channel": "C1", "oldest": "0"})
+
+    def test_non_rate_limit_http_error_is_plain_slack_api_error(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        err = urllib.error.HTTPError(
+            url="https://slack.com/api/conversations.history", code=500,
+            msg="Internal Server Error", hdrs=email.message.Message(), fp=io.BytesIO(b""),
+        )
+        with mock.patch("urllib.request.urlopen", side_effect=err):
+            with self.assertRaises(ms.SlackAPIError) as ctx:
+                api._call("conversations.history", {"channel": "C1", "oldest": "0"})
+        self.assertNotIsInstance(ctx.exception, ms.SlackRateLimitedError)
+
+
 def _entry(status, posted_at, kind="text", local_files=None, remove_at=None, remove_reason="ttl"):
     return {"status": status, "kind": kind, "text": "x", "author": "A",
             "posted_at": posted_at, "local_files": local_files or [],
@@ -415,11 +464,15 @@ class FakeSlackAPI:
         self.posts_fail = posts_fail
         self.downloaded = {}
         self.posted_messages = []
+        self.history_oldest_calls = []
+        self.replies_calls = []
 
     def history(self, channel, oldest):
+        self.history_oldest_calls.append(oldest)
         return self.messages
 
     def replies(self, channel, thread_ts):
+        self.replies_calls.append(thread_ts)
         return self.replies_by_ts.get(thread_ts, [])
 
     def user_name(self, user_id):
@@ -670,6 +723,65 @@ class PollSlackTests(unittest.TestCase):
         api = FakeSlackAPI(messages=[{"ts": "100.1", "text": "new text!", "user": "U1", "files": []}])
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.1"]["text"], "old")
+
+    def test_history_oldest_is_the_ttl_cutoff_even_with_existing_state(self):
+        # Always re-fetches the full TTL window (not just "since the newest
+        # ts seen") so reply_count/latest_reply on existing active entries'
+        # parent messages stay fresh -- see the reply-skipping tests below.
+        existing = {"999999999.000001": {
+            "status": "active", "kind": "text", "text": "hi", "author": "Jane",
+            "posted_at": "2026-07-15T00:00:00+00:00",
+            "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+            "local_files": [],
+        }}
+        api = FakeSlackAPI(messages=[])
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        expected_oldest = str((self.now - timedelta(days=self.cfg.ttl_days)).timestamp())
+        self.assertEqual(api.history_oldest_calls, [expected_oldest])
+
+    def test_active_entry_with_no_replies_is_not_checked_via_replies_api(self):
+        existing = {"100.40": {"status": "active", "kind": "text", "text": "hi",
+                                "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                                "local_files": []}}
+        api = FakeSlackAPI(messages=[{"ts": "100.40", "reply_count": 0}])
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(api.replies_calls, [])
+
+    def test_active_entry_with_unchanged_latest_reply_is_not_rechecked(self):
+        existing = {"100.41": {"status": "active", "kind": "text", "text": "hi",
+                                "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                                "local_files": [], "last_seen_latest_reply": "100.41.9"}}
+        api = FakeSlackAPI(messages=[{"ts": "100.41", "reply_count": 1, "latest_reply": "100.41.9"}])
+        ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(api.replies_calls, [])
+
+    def test_active_entry_with_new_latest_reply_is_rechecked_and_applied(self):
+        existing = {"100.42": {"status": "active", "kind": "attachment", "text": "",
+                                "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                                "local_files": [], "last_seen_latest_reply": "100.42.1"}}
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.42", "reply_count": 2, "latest_reply": "100.42.9"}],
+            replies_by_ts={"100.42": [{"text": "please cancel", "user": "U2"}]},
+        )
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(api.replies_calls, ["100.42"])
+        self.assertEqual(state["100.42"]["status"], "cancelled")
+        self.assertEqual(state["100.42"]["last_seen_latest_reply"], "100.42.9")
+
+    def test_entry_whose_parent_message_is_outside_the_fetched_window_falls_back_to_checking(self):
+        # Defensive fallback: if we can't see this tick's reply_count for
+        # some reason, check anyway rather than silently missing a removal.
+        existing = {"100.43": {"status": "active", "kind": "text", "text": "hi",
+                                "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                                "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.43": [{"text": "please cancel", "user": "U2"}]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(api.replies_calls, ["100.43"])
+        self.assertEqual(state["100.43"]["status"], "cancelled")
 
     def test_cancel_reply_marks_entry_cancelled_and_deletes_file(self):
         local_file = self.source_dir / "slack-100.2.png"
