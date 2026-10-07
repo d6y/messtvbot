@@ -152,6 +152,47 @@ class UnsupportedAttachmentReasonTests(unittest.TestCase):
         msg = {"files": [{}]}
         self.assertEqual(ms._unsupported_attachment_reason(msg), ".unknown isn't supported")
 
+    def test_oversized_displayable_file_is_rejected(self):
+        msg = {"files": [{"filetype": "png", "size": 30 * 1024 * 1024}]}
+        reason = ms._unsupported_attachment_reason(msg, max_bytes=25 * 1024 * 1024)
+        self.assertIn("too large", reason)
+        self.assertIn("25MB", reason)
+
+    def test_file_within_size_limit_is_not_rejected(self):
+        msg = {"files": [{"filetype": "png", "size": 10 * 1024 * 1024}]}
+        self.assertIsNone(ms._unsupported_attachment_reason(msg, max_bytes=25 * 1024 * 1024))
+
+    def test_missing_size_field_is_not_treated_as_oversized(self):
+        # Don't reject on missing/unreliable metadata -- only act when
+        # Slack actually told us a size and it's over the limit.
+        msg = {"files": [{"filetype": "png"}]}
+        self.assertIsNone(ms._unsupported_attachment_reason(msg, max_bytes=25 * 1024 * 1024))
+
+    def test_oversized_unsupported_filetype_only_mentions_the_type_not_size(self):
+        # Avoid a redundant/confusing double reason for a file that's
+        # already going to be rejected for being the wrong type.
+        msg = {"files": [{"filetype": "tiff", "size": 100 * 1024 * 1024}]}
+        self.assertEqual(
+            ms._unsupported_attachment_reason(msg, max_bytes=25 * 1024 * 1024),
+            ".tiff isn't supported",
+        )
+
+    def test_oversized_video_only_mentions_video_not_size(self):
+        msg = {"files": [{"filetype": "mp4", "size": 100 * 1024 * 1024}]}
+        self.assertEqual(
+            ms._unsupported_attachment_reason(msg, max_bytes=25 * 1024 * 1024),
+            "video isn't supported yet",
+        )
+
+    def test_oversized_file_alongside_unsupported_type_combines_reasons(self):
+        msg = {"files": [
+            {"filetype": "png", "size": 30 * 1024 * 1024},
+            {"filetype": "tiff"},
+        ]}
+        reason = ms._unsupported_attachment_reason(msg, max_bytes=25 * 1024 * 1024)
+        self.assertIn(".tiff isn't supported", reason)
+        self.assertIn("too large", reason)
+
 
 class IsHelpTriggerTests(unittest.TestCase):
     def test_bare_help_is_a_trigger(self):
@@ -985,6 +1026,32 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(ms.sorted_active_entries(state), [])
         self.assertEqual(api.downloaded, {})
+
+    def test_oversized_attachment_is_rejected_not_downloaded(self):
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30, max_attachment_bytes=1024 * 1024)
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.41", "text": "", "user": "U1",
+                       "files": [{"filetype": "png", "url_private_download": "https://x/a.png",
+                                  "name": "a.png", "size": 5 * 1024 * 1024}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        self.assertEqual(api.downloaded, {})
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.41"]
+        self.assertEqual(len(replies), 1)
+        self.assertIn("too large", replies[0]["text"])
+
+    def test_file_within_size_limit_is_shown_normally(self):
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30, max_attachment_bytes=25 * 1024 * 1024)
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.42", "text": "", "user": "U1",
+                       "files": [{"filetype": "png", "url_private_download": "https://x/a.png",
+                                  "name": "a.png", "size": 1024 * 1024}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.42"]["status"], "active")
 
     def test_channel_join_message_is_not_added_or_acknowledged(self):
         api = FakeSlackAPI(messages=[{

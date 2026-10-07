@@ -15,7 +15,8 @@ refresh = importlib.import_module("refresh")
 class LoadConfigKioskDirTests(unittest.TestCase):
     def setUp(self):
         self._saved_env = dict(os.environ)
-        for key in ("KIOSK_SLACK_TOKEN", "KIOSK_SLACK_CHANNEL", "KIOSK_DIR", "KIOSK_MAX_IMAGES"):
+        for key in ("KIOSK_SLACK_TOKEN", "KIOSK_SLACK_CHANNEL", "KIOSK_DIR", "KIOSK_MAX_IMAGES",
+                    "KIOSK_MAX_ATTACHMENT_MB"):
             os.environ.pop(key, None)
         os.environ["KIOSK_SLACK_TOKEN"] = "xoxb-test"
         os.environ["KIOSK_SLACK_CHANNEL"] = "C1"
@@ -46,6 +47,15 @@ class LoadConfigKioskDirTests(unittest.TestCase):
         os.environ["KIOSK_MAX_IMAGES"] = "3"
         cfg = refresh.load_config(["refresh.py"])
         self.assertEqual(cfg.max_images, 3)
+
+    def test_default_max_attachment_mb_is_25(self):
+        cfg = refresh.load_config(["refresh.py"])
+        self.assertEqual(cfg.max_attachment_mb, 25)
+
+    def test_max_attachment_mb_is_read_from_env(self):
+        os.environ["KIOSK_MAX_ATTACHMENT_MB"] = "10"
+        cfg = refresh.load_config(["refresh.py"])
+        self.assertEqual(cfg.max_attachment_mb, 10)
 
 
 def _attachment_entry(text="", local_files=None, ts="100.1"):
@@ -209,6 +219,88 @@ class BuildManifestTests(unittest.TestCase):
         regions = manifest["items"][0]["regions"]
         self.assertEqual(regions[0]["src"], "rendered/heic/slack-100.11-0.jpg")
         self.assertEqual(regions[1]["src"], "source/slack-100.11-1.png")
+
+
+class RenderPdfsMaxPagesTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.pdf_path = self.tmp_dir / "slack-1.pdf"
+        self.pdf_path.write_bytes(b"x")
+        self.rendered_dir = self.tmp_dir / "rendered"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def _fake_subprocess_run(self, pdfinfo_pages, pdftoppm_creates):
+        """pdfinfo_pages: int or None (pdfinfo failure). pdftoppm_creates:
+        how many page-N.png files the fake pdftoppm call should create."""
+        def run(cmd, **kwargs):
+            if cmd[0] == "pdfinfo":
+                if pdfinfo_pages is None:
+                    return mock.Mock(returncode=1, stdout="", stderr="boom")
+                return mock.Mock(returncode=0, stdout=f"Pages:          {pdfinfo_pages}\n", stderr="")
+            # pdftoppm
+            out_prefix = Path(cmd[-1])
+            out_prefix.parent.mkdir(parents=True, exist_ok=True)
+            for i in range(1, pdftoppm_creates + 1):
+                (out_prefix.parent / f"page-{i}.png").write_bytes(b"x")
+            return mock.Mock(returncode=0, stdout="", stderr="")
+        return run
+
+    def test_passes_last_page_flag_bounded_by_max_pages(self):
+        captured = {}
+
+        def run(cmd, **kwargs):
+            if cmd[0] == "pdftoppm":
+                captured["cmd"] = cmd
+                out_prefix = Path(cmd[-1])
+                out_prefix.parent.mkdir(parents=True, exist_ok=True)
+                (out_prefix.parent / "page-1.png").write_bytes(b"x")
+                return mock.Mock(returncode=0, stdout="", stderr="")
+            return mock.Mock(returncode=1, stdout="", stderr="")
+
+        with mock.patch("refresh.shutil.which", return_value="/usr/bin/pdftoppm"), \
+             mock.patch("refresh.subprocess.run", side_effect=run):
+            refresh.render_pdfs([self.pdf_path], self.rendered_dir, 1920, max_pages=15)
+
+        self.assertIn("-l", captured["cmd"])
+        self.assertEqual(captured["cmd"][captured["cmd"].index("-l") + 1], "15")
+
+    def test_only_keeps_pages_up_to_the_cap(self):
+        # Simulates a 50-page PDF -- pdftoppm bounded by -l only ever
+        # produces (at most) max_pages files in the first place.
+        run = self._fake_subprocess_run(pdfinfo_pages=50, pdftoppm_creates=15)
+        with mock.patch("refresh.shutil.which", return_value="/usr/bin/pdftoppm"), \
+             mock.patch("refresh.subprocess.run", side_effect=run):
+            result = refresh.render_pdfs([self.pdf_path], self.rendered_dir, 1920, max_pages=15)
+        self.assertEqual(len(result["slack-1"]), 15)
+
+    def test_logs_truncation_when_pdf_exceeds_max_pages(self):
+        run = self._fake_subprocess_run(pdfinfo_pages=50, pdftoppm_creates=15)
+        with mock.patch("refresh.shutil.which", return_value="/usr/bin/pdftoppm"), \
+             mock.patch("refresh.subprocess.run", side_effect=run), \
+             self.assertLogs("kiosk", level="INFO") as logs:
+            refresh.render_pdfs([self.pdf_path], self.rendered_dir, 1920, max_pages=15)
+        self.assertTrue(any("50" in line and "15" in line for line in logs.output))
+
+    def test_no_truncation_log_when_within_max_pages(self):
+        run = self._fake_subprocess_run(pdfinfo_pages=5, pdftoppm_creates=5)
+        with mock.patch("refresh.shutil.which", return_value="/usr/bin/pdftoppm"), \
+             mock.patch("refresh.subprocess.run", side_effect=run), \
+             self.assertLogs("kiosk", level="INFO") as logs:
+            refresh.render_pdfs([self.pdf_path], self.rendered_dir, 1920, max_pages=15)
+        self.assertFalse(any("only keeping" in line for line in logs.output))
+
+    def test_pdfinfo_failure_does_not_block_rendering(self):
+        # pdfinfo is only used for the log message -- the -l cap on
+        # pdftoppm itself is what actually protects against a huge PDF,
+        # so rendering must still succeed (and still be bounded) even if
+        # pdfinfo can't be run at all.
+        run = self._fake_subprocess_run(pdfinfo_pages=None, pdftoppm_creates=3)
+        with mock.patch("refresh.shutil.which", return_value="/usr/bin/pdftoppm"), \
+             mock.patch("refresh.subprocess.run", side_effect=run):
+            result = refresh.render_pdfs([self.pdf_path], self.rendered_dir, 1920, max_pages=15)
+        self.assertEqual(len(result["slack-1"]), 3)
 
 
 class CleanupStaleRendersTests(unittest.TestCase):

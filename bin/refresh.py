@@ -69,6 +69,8 @@ class Config:
     server_url: str
     admin_contact: str
     max_images: int
+    max_pdf_pages: int
+    max_attachment_mb: int
 
     @property
     def source_dir(self) -> Path:
@@ -131,6 +133,8 @@ def load_config(argv: list[str]) -> Config:
         server_url=server_url,
         admin_contact=os.environ.get("KIOSK_ADMIN_CONTACT", "@richard").strip(),
         max_images=int(os.environ.get("KIOSK_MAX_IMAGES", "6")),
+        max_pdf_pages=int(os.environ.get("KIOSK_MAX_PDF_PAGES", "15")),
+        max_attachment_mb=int(os.environ.get("KIOSK_MAX_ATTACHMENT_MB", "25")),
     )
 
 
@@ -151,8 +155,31 @@ def _page_number(path: Path) -> int:
     return int(m.group(1)) if m else 0
 
 
-def render_pdfs(pdf_files: list[Path], rendered_dir: Path, width: int) -> dict[str, list[Path]]:
+def _pdf_page_count(pdf: Path) -> int | None:
+    """Total page count via pdfinfo, or None if it's unavailable/fails.
+    Only used for the truncation log message -- rendering itself is
+    bounded by pdftoppm's own -l flag regardless of whether this works."""
+    try:
+        result = subprocess.run(["pdfinfo", str(pdf)], capture_output=True, text=True, timeout=10)
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    if result.returncode != 0:
+        return None
+    for line in result.stdout.splitlines():
+        if line.startswith("Pages:"):
+            try:
+                return int(line.split(":", 1)[1].strip())
+            except ValueError:
+                return None
+    return None
+
+
+def render_pdfs(pdf_files: list[Path], rendered_dir: Path, width: int, max_pages: int) -> dict[str, list[Path]]:
     """Render each PDF to PNG pages, skipping ones already up to date.
+    Rendering stops at max_pages (pdftoppm's -l flag) -- a PDF with far
+    more pages than that was previously timing out the whole subprocess
+    (120s) on a Pi 3B+, which also meant it retried that same expensive
+    failure every single tick forever (no marker gets written on failure).
     Returns {pdf_stem: [sorted page image paths]}.
     """
     pages_by_stem: dict[str, list[Path]] = {}
@@ -172,7 +199,12 @@ def render_pdfs(pdf_files: list[Path], rendered_dir: Path, width: int) -> dict[s
             needs_render = False
 
         if needs_render and have_pdftoppm:
-            log.info("Rendering %s", pdf.name)
+            total_pages = _pdf_page_count(pdf)
+            if total_pages is not None and total_pages > max_pages:
+                log.info("Rendering %s (%d pages, only keeping the first %d)",
+                          pdf.name, total_pages, max_pages)
+            else:
+                log.info("Rendering %s", pdf.name)
             if out_dir.exists():
                 shutil.rmtree(out_dir)
             out_dir.mkdir(parents=True)
@@ -180,6 +212,7 @@ def render_pdfs(pdf_files: list[Path], rendered_dir: Path, width: int) -> dict[s
                 "pdftoppm", "-png",
                 "-scale-to-x", str(width),
                 "-scale-to-y", "-1",
+                "-l", str(max_pages),
                 str(pdf), str(out_dir / "page"),
             ]
             try:
@@ -404,6 +437,7 @@ def main(argv: list[str]) -> int:
         slack_cfg = slack_source.SlackConfig(
             cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days, bot_user_id,
             server_url=cfg.server_url, admin_contact=cfg.admin_contact, max_images=cfg.max_images,
+            max_attachment_bytes=cfg.max_attachment_mb * 1024 * 1024,
         )
         with slack_source.state_lock(state_path):
             state = slack_source.load_state(state_path)
@@ -430,7 +464,7 @@ def main(argv: list[str]) -> int:
         if Path(f).suffix.lower() in HEIC_EXTS
     ]
 
-    rendered_pages = render_pdfs(pdf_files, cfg.rendered_dir, cfg.render_width)
+    rendered_pages = render_pdfs(pdf_files, cfg.rendered_dir, cfg.render_width, cfg.max_pdf_pages)
     cleanup_stale_renders({f.stem for f in pdf_files}, cfg.rendered_dir)
     heic_rendered = render_heic_images(heic_files, cfg.rendered_dir)
     cleanup_stale_heic_renders({f.stem for f in heic_files}, cfg.rendered_dir)

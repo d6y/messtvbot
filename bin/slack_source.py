@@ -123,17 +123,28 @@ def extract_attachments(msg: dict) -> list[dict]:
 DISPLAYABLE_FILETYPES = IMAGE_FILETYPES | {PDF_FILETYPE}
 
 
-def _unsupported_attachment_reason(msg: dict) -> str | None:
-    """None if every file attached to msg (if any) can be displayed.
-    Otherwise a short human-readable reason, for a rejection reply --
-    see the "reject the whole message" handling in poll_slack."""
+DEFAULT_MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
+
+
+def _unsupported_attachment_reason(msg: dict, max_bytes: int = DEFAULT_MAX_ATTACHMENT_BYTES) -> str | None:
+    """None if every file attached to msg (if any) can be displayed and is
+    within max_bytes. Otherwise a short human-readable reason, for a
+    rejection reply -- see the "reject the whole message" handling in
+    poll_slack. A file whose type is already unsupported doesn't also get
+    flagged for size -- one reason per file is plenty."""
     files = msg.get("files") or []
     bad = sorted({
         (f.get("filetype") or "unknown").lower()
         for f in files
         if (f.get("filetype") or "").lower() not in DISPLAYABLE_FILETYPES
     })
-    if not bad:
+    oversized = any(
+        (f.get("filetype") or "").lower() in DISPLAYABLE_FILETYPES
+        and isinstance(f.get("size"), (int, float))
+        and f["size"] > max_bytes
+        for f in files
+    )
+    if not bad and not oversized:
         return None
     video_exts = [ext for ext in bad if ext in VIDEO_FILETYPES]
     other_exts = [ext for ext in bad if ext not in VIDEO_FILETYPES]
@@ -143,6 +154,9 @@ def _unsupported_attachment_reason(msg: dict) -> str | None:
     if other_exts:
         verb = "isn't" if len(other_exts) == 1 else "aren't"
         reasons.append(f"{'/'.join('.' + e for e in other_exts)} {verb} supported")
+    if oversized:
+        max_mb = max_bytes / (1024 * 1024)
+        reasons.append(f"the file is too large (max {max_mb:g}MB)")
     return " and ".join(reasons)
 
 
@@ -368,6 +382,7 @@ class SlackConfig:
     server_url: str = "http://localhost:8420"
     admin_contact: str = "@richard"
     max_images: int = 6
+    max_attachment_bytes: int = DEFAULT_MAX_ATTACHMENT_BYTES
 
 
 class SlackAPI(Protocol):
@@ -549,7 +564,7 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
         posted_at = posted_at_dt.isoformat(timespec="seconds")
 
-        unsupported_reason = _unsupported_attachment_reason(msg)
+        unsupported_reason = _unsupported_attachment_reason(msg, max_bytes=cfg.max_attachment_bytes)
         if unsupported_reason is not None:
             # Reject the whole message rather than silently dropping the
             # attachment (or, worse, showing just the caption with no
