@@ -83,7 +83,19 @@
     if (!el || !container) return;
     let vw = parseFloat(el.style.fontSize) || minVw;
     let guard = 60;
-    while (el.scrollHeight > container.clientHeight && vw > minVw && guard-- > 0) {
+    // container.clientHeight includes its own padding, but a centered
+    // flex child only has clientHeight minus top+bottom padding to fit
+    // in -- comparing against the unadjusted clientHeight let content
+    // stay too large and overflow past the padding, clipped off-screen
+    // by body's overflow:hidden (found live: #text-card's 4vw padding
+    // alone was ~150px, enough that "fits" by the old check still spilled
+    // the title line above the top edge of the screen).
+    const style = getComputedStyle(container);
+    const availableHeight =
+      container.clientHeight -
+      parseFloat(style.paddingTop || "0") -
+      parseFloat(style.paddingBottom || "0");
+    while (el.scrollHeight > availableHeight && vw > minVw && guard-- > 0) {
       vw = Math.max(minVw, vw - 0.25);
       el.style.fontSize = vw + "vw";
     }
