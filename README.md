@@ -26,12 +26,11 @@ enabled for this repo (Settings → Pages → deploy from `docs/` on `main`).
 
 # User guide
 
-To remove a message, reply to it in its thread with "cancel", "delete",
-"undo", or "remove" -- a bare command word (or one followed by "now")
-removes it immediately, while a trailing time phrase schedules the
-removal instead: "remove in 1 week", "remove thursday", "remove 3
-Sept", "remove 3 Sept 10am". An unparseable time phrase falls back to
-an immediate removal. The admin page at `/admin/` lists active entries
+To remove a message, reply to it in its thread with "remove" -- a bare
+"remove" (or "remove now") removes it immediately, while a trailing time
+phrase schedules the removal instead: "remove in 1 week", "remove
+thursday", "remove 3 Sept", "remove 3 Sept 10am". An unparseable time
+phrase falls back to an immediate removal. The admin page at `/admin/` lists active entries
 and can remove one immediately -- it has no authentication, so access
 control is whoever's on the same network/host.
 
