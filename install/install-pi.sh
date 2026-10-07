@@ -16,9 +16,12 @@ if [ "$REPO_DIR" != "$HOME/messtvbot" ]; then
   [ "$ans" = "y" ] || [ "$ans" = "Y" ] || exit 1
 fi
 
-echo "==> Installing packages (poppler-utils, chromium, unclutter)"
+echo "==> Installing packages (poppler-utils, chromium, unclutter, emoji font)"
 sudo apt-get update
-sudo apt-get install -y poppler-utils unclutter curl
+# fonts-noto-color-emoji: without it, Chromium renders the real emoji glyphs
+# that convert_emoji_shortcodes() produces (see bin/slack_source.py) as empty
+# boxes -- Raspberry Pi OS doesn't ship a color emoji font by default.
+sudo apt-get install -y poppler-utils unclutter curl fonts-noto-color-emoji
 if ! command -v chromium >/dev/null 2>&1 && ! command -v chromium-browser >/dev/null 2>&1; then
   sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
 fi
