@@ -1,32 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Mess TV Bot admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 2rem; background: #111; color: #eee; }
-    h1 { font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #333; }
-    button { background: #a33; color: #fff; border: none; padding: 0.4rem 0.8rem;
-             border-radius: 4px; cursor: pointer; }
-    button:hover { background: #c44; }
-    .empty { color: #888; margin-top: 1rem; }
-    .thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 4px;
-             display: block; background: #222; }
-  </style>
-</head>
-<body>
-  <h1>Mess TV Bot admin</h1>
-  <p>Entries currently on (or scheduled to leave) the display.</p>
-  <table id="entries">
-    <thead>
-      <tr><th></th><th>Author</th><th>Summary</th><th>Posted</th><th>Removes at</th><th></th></tr>
-    </thead>
-    <tbody id="entries-body"></tbody>
-  </table>
-  <p id="empty" class="empty" hidden>Nothing on the display right now.</p>
-  <script src="admin.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mess TV Bot admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+        background: #111;
+        color: #eee;
+      }
+      h1 {
+        font-weight: 600;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #333;
+      }
+      button {
+        background: #a33;
+        color: #fff;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #c44;
+      }
+      .empty {
+        color: #888;
+        margin-top: 1rem;
+      }
+      .thumb {
+        width: 64px;
+        height: 64px;
+        object-fit: cover;
+        border-radius: 4px;
+        display: block;
+        background: #222;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mess TV Bot admin</h1>
+    <p>Entries currently on the display.</p>
+    <table id="entries">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Author</th>
+          <th>Summary</th>
+          <th>Posted</th>
+          <th>Removes at</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="entries-body"></tbody>
+    </table>
+    <p id="empty" class="empty" hidden>Nothing on the display right now.</p>
+    <script src="admin.js"></script>
+  </body>
 </html>
