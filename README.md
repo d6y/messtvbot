@@ -18,6 +18,11 @@ It polls Slack, only so we don't need to be addressable on the public internet.
 
 Slides remove `KIOSK_SLACK_TTL_DAYS` (30 by default), or when removed via a thread reply or the admin page.
 
+**End users** (people posting to Slack): see the
+[user guide](https://d6y.github.io/messtvbot/) (`docs/` in this repo) --
+introduction, commands, FAQ. That site isn't live until GitHub Pages is
+enabled for this repo (Settings → Pages → deploy from `docs/` on `main`).
+
 
 # User guide
 

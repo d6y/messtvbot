@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Commands — Mess TV Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to remove or reschedule a post, and how to get help, with Mess TV Bot.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="brand" href="index.html">Mess TV Bot</a>
+      <a href="index.html">Introduction</a>
+      <a href="commands.html" class="active">Commands</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </nav>
+
+  <main>
+    <h1>Commands</h1>
+    <p class="lede">All commands are replies to your own post's thread &mdash;
+      except <code>help</code>, which is a new message on its own.</p>
+
+    <div class="callout">
+      <p>Find the message you posted, open its thread, and reply there. A reply
+        posted anywhere else (a new top-level message, or a reply on someone
+        else's post) doesn't count.</p>
+    </div>
+
+    <h2>Removing a post</h2>
+    <p>Reply with any of: <code>remove</code>, <code>cancel</code>,
+      <code>delete</code>, <code>undo</code>.</p>
+    <table>
+      <thead><tr><th>Reply</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td><code>remove</code></td><td>Removed immediately.</td></tr>
+        <tr><td><code>remove now</code></td><td>Same as above &mdash; "now" is optional.</td></tr>
+        <tr><td><code>remove in 1 week</code></td><td>Scheduled to come down 7 days from now.</td></tr>
+        <tr><td><code>remove thursday</code></td><td>Scheduled for the next Thursday.</td></tr>
+        <tr><td><code>remove 3 Sept</code></td><td>Scheduled for that date.</td></tr>
+        <tr><td><code>remove 3 Sept 10am</code></td><td>Scheduled for that date and time.</td></tr>
+      </tbody>
+    </table>
+    <p>Any of the four words work the same way &mdash; <code>cancel now</code>,
+      <code>delete thursday</code>, and so on all behave like the <code>remove</code>
+      examples above. If a date/time phrase can't be understood, the post is
+      removed immediately rather than left stuck.</p>
+    <p>Times are always in UK local time, adjusting automatically for GMT/BST.</p>
+    <p>Scheduling a removal doesn't take the post down early &mdash; it stays up
+      until the new date arrives. The bot confirms the date in a thread reply
+      either way, so you always have something to check back against.</p>
+
+    <h2>Getting help</h2>
+    <p>Post <code>help</code> as a new message (not a reply) and the bot replies
+      with a quick summary: what it does, how long a post stays up, how to
+      remove one, and who to contact if something's broken.</p>
+    <p>A short new message that happens to start with <code>help</code> or
+      <code>remove</code> is treated the same way &mdash; it won't be shown on the
+      display, since it's almost certainly someone looking for instructions
+      rather than content meant for the screen. A longer message that happens to
+      start with one of those words (a real notice, not a command) is shown
+      normally.</p>
+  </main>
+
+  <footer>
+    <a href="https://github.com/d6y/messtvbot">Mess TV Bot on GitHub</a>
+  </footer>
+</body>
+</html>
