@@ -6,7 +6,13 @@ html, body {
   background: #000;
   overflow: hidden;
   cursor: none;
-  font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  /* -apple-system/Helvetica Neue/Arial don't exist on Raspberry Pi OS --
+     without a Linux-friendly fallback named explicitly, the Pi silently
+     drops to whatever its own generic "sans-serif" resolves to, which
+     can have noticeably different line-height/ascender metrics than
+     what this was tuned against on a Mac. Name likely-installed Linux
+     fonts explicitly so the same font is actually used on both. */
+  font-family: -apple-system, "Helvetica Neue", Arial, "Noto Sans", "DejaVu Sans", sans-serif;
 }
 
 /* Slack mrkdwn `code` spans (see slackMrkdwnToHtml in app.js). */
