@@ -117,6 +117,35 @@ def extract_attachments(msg: dict) -> list[dict]:
     return attachments
 
 
+# Image/PDF are the only file kinds that can actually be shown on the
+# display. Video is "recognized" (extract_attachments includes it) but
+# never displayable -- see _unsupported_attachment_reason.
+DISPLAYABLE_FILETYPES = IMAGE_FILETYPES | {PDF_FILETYPE}
+
+
+def _unsupported_attachment_reason(msg: dict) -> str | None:
+    """None if every file attached to msg (if any) can be displayed.
+    Otherwise a short human-readable reason, for a rejection reply --
+    see the "reject the whole message" handling in poll_slack."""
+    files = msg.get("files") or []
+    bad = sorted({
+        (f.get("filetype") or "unknown").lower()
+        for f in files
+        if (f.get("filetype") or "").lower() not in DISPLAYABLE_FILETYPES
+    })
+    if not bad:
+        return None
+    video_exts = [ext for ext in bad if ext in VIDEO_FILETYPES]
+    other_exts = [ext for ext in bad if ext not in VIDEO_FILETYPES]
+    reasons = []
+    if video_exts:
+        reasons.append("video isn't supported yet")
+    if other_exts:
+        verb = "isn't" if len(other_exts) == 1 else "aren't"
+        reasons.append(f"{'/'.join('.' + e for e in other_exts)} {verb} supported")
+    return " and ".join(reasons)
+
+
 @dataclass
 class RemovalCommand:
     remove_at: datetime
@@ -520,6 +549,28 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
         posted_at = posted_at_dt.isoformat(timespec="seconds")
 
+        unsupported_reason = _unsupported_attachment_reason(msg)
+        if unsupported_reason is not None:
+            # Reject the whole message rather than silently dropping the
+            # attachment (or, worse, showing just the caption with no
+            # attachment at all): someone who specifically attached a file
+            # had something in mind that a stray caption alone -- or
+            # nothing shown and no explanation -- wouldn't represent.
+            log.info("Rejecting Slack message %s: %s", ts, unsupported_reason)
+            _post_safe(
+                api, cfg.channel,
+                f"Sorry, this post wasn't added -- {unsupported_reason}. "
+                "Try an image, PDF, or text instead.",
+                thread_ts=ts,
+            )
+            append_audit(audit_path, {
+                "at": now.isoformat(timespec="seconds"), "ts": ts,
+                "author": author_for_audit, "kind": "ignored", "action": "attachment_rejected",
+                "summary": (msg.get("text") or "")[:80],
+            })
+            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+            continue
+
         if kind == "ignored":
             log.info("Ignoring Slack message %s: no recognized content", ts)
             append_audit(audit_path, {
@@ -530,30 +581,6 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             # Record a marker so this message isn't refetched and re-audited on
             # every future tick. Never active, so it's invisible to the display,
             # the sweep, and the admin UI.
-            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
-            continue
-
-        if kind == "attachment" and any(
-            a["filetype"] in VIDEO_FILETYPES for a in extract_attachments(msg)
-        ):
-            # Video isn't supported yet -- Chromium can't play the HEVC
-            # encoding iPhones default to, and there's no transcode step
-            # (unlike HEIC images, which do get converted). Reject the
-            # whole message rather than showing just the caption with no
-            # video: someone who specifically sent a video had something
-            # in mind that a stray caption alone wouldn't represent.
-            log.info("Rejecting Slack message %s: contains a video (not supported)", ts)
-            _post_safe(
-                api, cfg.channel,
-                "Sorry, this post wasn't added -- video isn't supported yet. "
-                "Try posting an image or text instead.",
-                thread_ts=ts,
-            )
-            append_audit(audit_path, {
-                "at": now.isoformat(timespec="seconds"), "ts": ts,
-                "author": author_for_audit, "kind": "ignored", "action": "video_rejected",
-                "summary": (msg.get("text") or "")[:80],
-            })
             state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
             continue
 

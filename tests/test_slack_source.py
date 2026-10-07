@@ -117,6 +117,42 @@ class ExtractAttachmentsTests(unittest.TestCase):
         self.assertEqual([a["filetype"] for a in result], ["mp4", "mov"])
 
 
+class UnsupportedAttachmentReasonTests(unittest.TestCase):
+    def test_no_files_is_none(self):
+        self.assertIsNone(ms._unsupported_attachment_reason({"files": []}))
+
+    def test_all_displayable_files_is_none(self):
+        msg = {"files": [{"filetype": "png"}, {"filetype": "pdf"}]}
+        self.assertIsNone(ms._unsupported_attachment_reason(msg))
+
+    def test_single_unknown_filetype(self):
+        msg = {"files": [{"filetype": "tiff"}]}
+        self.assertEqual(ms._unsupported_attachment_reason(msg), ".tiff isn't supported")
+
+    def test_video_filetype_has_its_own_wording(self):
+        msg = {"files": [{"filetype": "mp4"}]}
+        self.assertEqual(ms._unsupported_attachment_reason(msg), "video isn't supported yet")
+
+    def test_unknown_filetype_alongside_a_displayable_image_still_flagged(self):
+        msg = {"files": [{"filetype": "png"}, {"filetype": "tiff"}]}
+        self.assertEqual(ms._unsupported_attachment_reason(msg), ".tiff isn't supported")
+
+    def test_multiple_unknown_filetypes(self):
+        msg = {"files": [{"filetype": "tiff"}, {"filetype": "psd"}]}
+        self.assertEqual(ms._unsupported_attachment_reason(msg), ".psd/.tiff aren't supported")
+
+    def test_video_and_unknown_filetype_together(self):
+        msg = {"files": [{"filetype": "mp4"}, {"filetype": "tiff"}]}
+        self.assertEqual(
+            ms._unsupported_attachment_reason(msg),
+            "video isn't supported yet and .tiff isn't supported",
+        )
+
+    def test_missing_filetype_field_is_treated_as_unsupported(self):
+        msg = {"files": [{}]}
+        self.assertEqual(ms._unsupported_attachment_reason(msg), ".unknown isn't supported")
+
+
 class IsHelpTriggerTests(unittest.TestCase):
     def test_bare_help_is_a_trigger(self):
         self.assertTrue(ms.is_help_trigger("help"))
@@ -917,6 +953,33 @@ class PollSlackTests(unittest.TestCase):
                 {"filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"},
                 {"filetype": "mp4", "url_private_download": "https://x/b.mp4", "name": "b.mp4"},
             ]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        self.assertEqual(api.downloaded, {})
+
+    def test_unsupported_filetype_with_no_caption_is_rejected_not_silently_ignored(self):
+        # Before this: a TIFF with no caption fell through to the generic
+        # "ignored" path -- no reply at all, poster left guessing why.
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.39", "text": "", "user": "U1",
+                       "files": [{"filetype": "tiff", "url_private_download": "https://x/a.tiff", "name": "a.tiff"}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.39"]
+        self.assertEqual(len(replies), 1)
+        self.assertIn(".tiff isn't supported", replies[0]["text"])
+
+    def test_unsupported_filetype_with_caption_is_rejected_not_shown_as_bare_text(self):
+        # Before this: the caption would show as a text-only slide with
+        # the TIFF silently dropped -- exactly the misleading partial
+        # content problem video rejection was built to avoid.
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.40", "text": "Check out this scan", "user": "U1",
+                       "files": [{"filetype": "tiff", "url_private_download": "https://x/a.tiff", "name": "a.tiff"}]}],
             user_names={"U1": "Jane"},
         )
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
