@@ -171,7 +171,10 @@ def is_help_trigger(text: str) -> bool:
 
 def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
     interval = "1 day" if cfg.ttl_days == 1 else f"{cfg.ttl_days} days"
-    example_remove_at = (posted_at_dt + timedelta(days=7)).astimezone(LOCAL_TZ)
+    # Deliberately NOT tied to cfg.ttl_days -- this is just illustrating the
+    # accepted date format, and a date that happens to match the real TTL
+    # expiry reads as confusing/redundant rather than illustrative.
+    example_remove_at = (posted_at_dt + timedelta(days=1)).astimezone(LOCAL_TZ)
     return (
         "Messages posted here appear on the Mess TV. You can send text, "
         "images or a combination of both.\n\n"
@@ -317,6 +320,7 @@ class SlackConfig:
     bot_user_id: str = ""
     server_url: str = "http://localhost:8420"
     admin_contact: str = "@richard"
+    max_images: int = 6
 
 
 class SlackAPI(Protocol):
@@ -541,6 +545,7 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         entry["text"] = convert_emoji_shortcodes(
             resolve_mentions(html.unescape(msg.get("text", "")), api)
         )
+        images_truncated_from = 0
         if kind == "attachment":
             attachments = extract_attachments(msg)
             single_file_only = any(
@@ -551,6 +556,9 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             # the single-attachment behavior (first recognized file) whenever
             # a PDF or video is involved.
             to_download = attachments[:1] if single_file_only else attachments
+            if not single_file_only and len(to_download) > cfg.max_images:
+                images_truncated_from = len(to_download)
+                to_download = to_download[:cfg.max_images]
             multi = len(to_download) > 1
             downloaded = []
             for i, attachment in enumerate(to_download):
@@ -574,11 +582,17 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         })
         if entry["status"] == "active":
             remove_at_local = datetime.fromisoformat(entry["remove_at"]).astimezone(LOCAL_TZ)
-            example_remove_at_local = (posted_at_dt + timedelta(days=7)).astimezone(LOCAL_TZ)
+            # Deliberately NOT tied to cfg.ttl_days -- see build_help_text.
+            example_remove_at_local = (posted_at_dt + timedelta(days=1)).astimezone(LOCAL_TZ)
+            truncation_note = (
+                f" Only the first {cfg.max_images} of {images_truncated_from} images were used."
+                if images_truncated_from else ""
+            )
             _post_safe(
                 api, cfg.channel,
                 f"Added to the Skiff TV, until {remove_at_local:%-d %b %Y %H:%M}. "
-                f"To remove, reply with `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example",
+                f"To remove, reply with `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example."
+                f"{truncation_note}",
                 thread_ts=ts,
             )
 

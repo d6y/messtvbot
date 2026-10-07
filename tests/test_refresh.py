@@ -15,7 +15,7 @@ refresh = importlib.import_module("refresh")
 class LoadConfigKioskDirTests(unittest.TestCase):
     def setUp(self):
         self._saved_env = dict(os.environ)
-        for key in ("KIOSK_SLACK_TOKEN", "KIOSK_SLACK_CHANNEL", "KIOSK_DIR"):
+        for key in ("KIOSK_SLACK_TOKEN", "KIOSK_SLACK_CHANNEL", "KIOSK_DIR", "KIOSK_MAX_IMAGES"):
             os.environ.pop(key, None)
         os.environ["KIOSK_SLACK_TOKEN"] = "xoxb-test"
         os.environ["KIOSK_SLACK_CHANNEL"] = "C1"
@@ -37,6 +37,15 @@ class LoadConfigKioskDirTests(unittest.TestCase):
     def test_default_kiosk_dir_is_home(self):
         cfg = refresh.load_config(["refresh.py"])
         self.assertEqual(cfg.kiosk_dir, Path.home() / "kiosk-data")
+
+    def test_default_max_images_is_6(self):
+        cfg = refresh.load_config(["refresh.py"])
+        self.assertEqual(cfg.max_images, 6)
+
+    def test_max_images_is_read_from_env(self):
+        os.environ["KIOSK_MAX_IMAGES"] = "3"
+        cfg = refresh.load_config(["refresh.py"])
+        self.assertEqual(cfg.max_images, 3)
 
 
 def _attachment_entry(text="", local_files=None, ts="100.1"):

@@ -170,7 +170,7 @@ class BuildHelpTextTests(unittest.TestCase):
     def test_includes_remove_now_and_example_date(self):
         text = ms.build_help_text(self.cfg, self.posted_at_dt)
         self.assertIn("`remove now`", text)
-        example_local = (self.posted_at_dt + timedelta(days=7)).astimezone(ms.LOCAL_TZ)
+        example_local = (self.posted_at_dt + timedelta(days=1)).astimezone(ms.LOCAL_TZ)
         self.assertIn(f"`remove {example_local:%-d %b %Y}`", text)
 
     def test_includes_admin_url(self):
@@ -186,6 +186,14 @@ class BuildHelpTextTests(unittest.TestCase):
         text = ms.build_help_text(cfg, self.posted_at_dt)
         self.assertIn("1 day.", text)
         self.assertNotIn("1 days", text)
+
+    def test_example_date_does_not_match_the_real_ttl_expiry(self):
+        # Regression: the example used to be hardcoded to +7 days, which
+        # collided with (and looked redundant next to) a 7-day TTL.
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=7)
+        text = ms.build_help_text(cfg, self.posted_at_dt)
+        real_expiry = (self.posted_at_dt + timedelta(days=7)).astimezone(ms.LOCAL_TZ)
+        self.assertNotIn(f"`remove {real_expiry:%-d %b %Y}`", text)
 
 
 class ParseCommandTests(unittest.TestCase):
@@ -685,6 +693,43 @@ class PollSlackTests(unittest.TestCase):
         for path in expected:
             self.assertTrue(Path(path).exists())
 
+    def test_images_beyond_max_images_are_ignored(self):
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30, max_images=3)
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.26", "text": "", "user": "U1", "files": [
+                {"filetype": "jpg", "url_private_download": f"https://x/{i}.jpg", "name": f"{i}.jpg"}
+                for i in range(5)
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(len(state["100.26"]["local_files"]), 3)
+
+    def test_reply_notes_when_images_were_truncated(self):
+        cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30, max_images=3)
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.27", "text": "", "user": "U1", "files": [
+                {"filetype": "jpg", "url_private_download": f"https://x/{i}.jpg", "name": f"{i}.jpg"}
+                for i in range(5)
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.27"]
+        self.assertIn("Only the first 3 of 5 images were used", replies[0]["text"])
+
+    def test_reply_does_not_mention_truncation_when_within_max_images(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.28", "text": "", "user": "U1", "files": [
+                {"filetype": "jpg", "url_private_download": "https://x/a.jpg", "name": "a.jpg"},
+                {"filetype": "png", "url_private_download": "https://x/b.png", "name": "b.png"},
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.28"]
+        self.assertNotIn("Only the first", replies[0]["text"])
+
     def test_multi_image_message_with_one_failed_download_keeps_the_rest(self):
         api = FakeSlackAPI(
             messages=[{"ts": "100.21", "text": "", "user": "U1", "files": [
@@ -1099,7 +1144,7 @@ class PollSlackTests(unittest.TestCase):
         self.assertIn(f"{remove_at_local:%-d %b %Y %H:%M}", text)
         self.assertIn("`remove now`", text)
         posted_at = datetime.fromisoformat(state["100.1"]["posted_at"])
-        example_date_local = (posted_at + timedelta(days=7)).astimezone(ms.LOCAL_TZ)
+        example_date_local = (posted_at + timedelta(days=1)).astimezone(ms.LOCAL_TZ)
         self.assertIn(f"`remove {example_date_local:%-d %b %Y}`", text)
 
     def test_accepted_message_reply_does_not_mention_utc(self):

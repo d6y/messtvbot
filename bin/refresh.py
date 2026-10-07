@@ -68,6 +68,7 @@ class Config:
     skip_slack_poll: bool
     server_url: str
     admin_contact: str
+    max_images: int
 
     @property
     def source_dir(self) -> Path:
@@ -129,6 +130,7 @@ def load_config(argv: list[str]) -> Config:
         skip_slack_poll=("--skip-slack-poll" in argv) or os.environ.get("KIOSK_SKIP_SLACK_POLL") == "1",
         server_url=server_url,
         admin_contact=os.environ.get("KIOSK_ADMIN_CONTACT", "@richard").strip(),
+        max_images=int(os.environ.get("KIOSK_MAX_IMAGES", "6")),
     )
 
 
@@ -386,7 +388,7 @@ def main(argv: list[str]) -> int:
             bot_user_id = ""
         slack_cfg = slack_source.SlackConfig(
             cfg.slack_token, cfg.slack_channel, cfg.slack_ttl_days, bot_user_id,
-            server_url=cfg.server_url, admin_contact=cfg.admin_contact,
+            server_url=cfg.server_url, admin_contact=cfg.admin_contact, max_images=cfg.max_images,
         )
         with slack_source.state_lock(state_path):
             state = slack_source.load_state(state_path)
