@@ -428,12 +428,17 @@ def _post_safe(api: SlackAPI, channel: str, text: str, thread_ts: str | None = N
         log.error("Failed to post Slack acknowledgement: %s", exc)
 
 
+def _truncate(text: str, limit: int = 80) -> str:
+    return text if len(text) <= limit else text[:limit - 3] + "..."
+
+
 def _describe_entry(entry: dict) -> str:
     if entry["kind"] == "text":
-        text = entry.get("text", "")
-        return text if len(text) <= 80 else text[:77] + "..."
+        return _truncate(entry.get("text", ""))
     if entry.get("local_files"):
-        return Path(entry["local_files"][0]).name
+        filename = Path(entry["local_files"][0]).name
+        caption = entry.get("text")
+        return f"{_truncate(caption)} ({filename})" if caption else filename
     return "attachment"
 
 

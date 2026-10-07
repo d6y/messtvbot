@@ -253,6 +253,31 @@ class ParseCommandTests(unittest.TestCase):
         self.assertIsNone(ms.parse_command(None, self.NOW))
 
 
+class DescribeEntryTests(unittest.TestCase):
+    def test_text_entry_shows_the_text(self):
+        entry = {"kind": "text", "text": "Pizza in the kitchen!"}
+        self.assertEqual(ms._describe_entry(entry), "Pizza in the kitchen!")
+
+    def test_attachment_without_caption_shows_filename_only(self):
+        entry = {"kind": "attachment", "text": "", "local_files": ["/x/slack-1.png"]}
+        self.assertEqual(ms._describe_entry(entry), "slack-1.png")
+
+    def test_attachment_with_caption_shows_both(self):
+        entry = {"kind": "attachment", "text": "Free pizza today!", "local_files": ["/x/slack-1.png"]}
+        self.assertEqual(ms._describe_entry(entry), "Free pizza today! (slack-1.png)")
+
+    def test_attachment_caption_is_truncated_like_text_entries(self):
+        long_caption = "x" * 100
+        entry = {"kind": "attachment", "text": long_caption, "local_files": ["/x/slack-1.png"]}
+        result = ms._describe_entry(entry)
+        self.assertTrue(result.startswith("x" * 77 + "..."))
+        self.assertTrue(result.endswith("(slack-1.png)"))
+
+    def test_attachment_without_local_files_falls_back(self):
+        entry = {"kind": "attachment", "text": "", "local_files": []}
+        self.assertEqual(ms._describe_entry(entry), "attachment")
+
+
 class LocalFilenameTests(unittest.TestCase):
     def test_builds_expected_filename(self):
         self.assertEqual(ms.local_filename("1735300000.000100", "pdf"), "slack-1735300000.000100.pdf")
