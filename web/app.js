@@ -66,9 +66,27 @@
 
   // Short messages should fill the available space with large type; long
   // ones shrink to fit rather than overflow. Tuned by eye, not derived.
+  // This is only a starting guess -- it goes by character count, which
+  // looks "short" even for text forced onto many short lines (explicit
+  // newlines, e.g. a numbered list), so shrinkFontToFit() below corrects
+  // it against the real rendered height rather than trusting the formula.
   function scaledFontSizeVw(text, minVw, maxVw, k) {
     const scaled = k / Math.max(text.length, 20);
     return Math.max(minVw, Math.min(maxVw, scaled));
+  }
+
+  // Backstop for scaledFontSizeVw: shrink el's font size step-by-step
+  // until its rendered content actually fits container's height, or we
+  // hit minVw. Needed because no character-count formula can predict how
+  // many lines text with explicit "\n"s will force.
+  function shrinkFontToFit(el, container, minVw) {
+    if (!el || !container) return;
+    let vw = parseFloat(el.style.fontSize) || minVw;
+    let guard = 60;
+    while (el.scrollHeight > container.clientHeight && vw > minVw && guard-- > 0) {
+      vw = Math.max(minVw, vw - 0.25);
+      el.style.fontSize = vw + "vw";
+    }
   }
 
   // Full-width text-only slide.
@@ -117,6 +135,7 @@
     gridLayer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
     gridLayer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
     gridLayer.replaceChildren();
+    const textCells = [];
     for (const region of usable) {
       const cell = document.createElement("div");
       cell.className = "grid-cell";
@@ -126,6 +145,7 @@
         p.innerHTML = slackMrkdwnToHtml(region.text || "");
         p.style.fontSize = gridTextFontSizeVw(region.text || "", cols) + "vw";
         cell.appendChild(p);
+        textCells.push({ p, cell });
       } else {
         const img = document.createElement("img");
         img.src = region.url;
@@ -133,6 +153,11 @@
         cell.appendChild(img);
       }
       gridLayer.appendChild(cell);
+    }
+    // Only measurable (clientHeight) once every cell is actually in the
+    // DOM and the grid has laid out, hence a second pass after the loop.
+    for (const { p, cell } of textCells) {
+      shrinkFontToFit(p, cell, 1.4);
     }
     return true;
   }
@@ -156,6 +181,7 @@
       textMessage.style.fontSize = messageVw + "vw";
       textAuthor.style.fontSize = Math.max(1.2, messageVw * 0.35) + "vw";
       textCard.classList.add("visible");
+      shrinkFontToFit(textMessage, textCard, 2.4);
       frontLayer.classList.remove("visible");
       backLayer.classList.remove("visible");
       stage.classList.remove("split");
@@ -201,6 +227,7 @@
         imageCaptionText.style.fontSize = captionFontSizeVw(item.caption) + "vw";
         stage.classList.add("split");
         imageCaption.classList.add("visible");
+        shrinkFontToFit(imageCaptionText, imageCaption, 2);
       } else {
         stage.classList.remove("split");
         imageCaption.classList.remove("visible");
@@ -226,6 +253,7 @@
         imageCaptionText.style.fontSize = captionFontSizeVw(item.caption) + "vw";
         stage.classList.add("split");
         imageCaption.classList.add("visible");
+        shrinkFontToFit(imageCaptionText, imageCaption, 2);
       } else {
         stage.classList.remove("split");
         imageCaption.classList.remove("visible");

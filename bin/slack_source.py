@@ -201,12 +201,30 @@ _SKIN_TONE_MODIFIERS = {
 }
 _SKIN_TONE_RE = re.compile(r":skin-tone-([2-6]):")
 
+# Slack's own shortcode names occasionally diverge from the `emoji`
+# package's CLDR-based aliases (e.g. Slack uses a numeral where the
+# package only has the word spelled out), so emojize() silently leaves
+# them as literal text. Small, targeted list of known divergences --
+# add to this as more turn up rather than trying to solve it generally.
+_SLACK_SHORTCODE_ALIASES = {
+    "smiling_face_with_3_hearts": "smiling_face_with_three_hearts",
+}
+_SHORTCODE_RE = re.compile(r":([a-zA-Z0-9_+-]+):")
+
+
+def _apply_slack_shortcode_aliases(text: str) -> str:
+    def replace(m: re.Match) -> str:
+        name = m.group(1)
+        alias = _SLACK_SHORTCODE_ALIASES.get(name)
+        return f":{alias}:" if alias else m.group(0)
+    return _SHORTCODE_RE.sub(replace, text)
+
 
 def convert_emoji_shortcodes(text: str) -> str:
     """Convert Slack-style `:shortcode:` emoji (including `:skin-tone-N:`
     modifiers) into real unicode emoji. Unrecognized shortcodes are left
     as-is rather than dropped."""
-    text = emoji.emojize(text, language="alias")
+    text = emoji.emojize(_apply_slack_shortcode_aliases(text), language="alias")
     return _SKIN_TONE_RE.sub(lambda m: _SKIN_TONE_MODIFIERS[m.group(1)], text)
 
 

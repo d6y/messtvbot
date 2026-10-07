@@ -316,6 +316,21 @@ class ConvertEmojiShortcodesTests(unittest.TestCase):
     def test_empty_string_is_unchanged(self):
         self.assertEqual(ms.convert_emoji_shortcodes(""), "")
 
+    def test_slack_specific_shortcode_name_divergence_is_handled(self):
+        # Regression: Slack's shortcode uses a numeral ("3"), the `emoji`
+        # package only recognizes the spelled-out alias ("three") -- found
+        # live when a message with ~50 shortcodes had exactly this one
+        # left as literal text while everything else converted fine.
+        self.assertEqual(ms.convert_emoji_shortcodes(":smiling_face_with_3_hearts:"), "\U0001f970")
+
+    def test_slack_specific_alias_also_resolves_when_followed_by_a_skin_tone_code(self):
+        # The base shortcode must still resolve even with a trailing
+        # :skin-tone-N: right after it (same regex pass handles both).
+        self.assertEqual(
+            ms.convert_emoji_shortcodes(":smiling_face_with_3_hearts::skin-tone-2:"),
+            "\U0001f970\U0001f3fb",
+        )
+
 
 class ResolveMentionsTests(unittest.TestCase):
     def test_user_mention_without_label_is_resolved_via_api(self):
