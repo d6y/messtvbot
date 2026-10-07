@@ -234,11 +234,19 @@ def render_heic_images(heic_files: list[Path], rendered_dir: Path) -> dict[str, 
     return converted
 
 
+# Subdirectories of rendered_dir that aren't a PDF-stem render and must
+# never be swept by cleanup_stale_renders -- currently just render_heic_
+# images()'s conversion cache.
+RESERVED_RENDER_DIRS = {"heic"}
+
+
 def cleanup_stale_renders(current_pdf_stems: set[str], rendered_dir: Path) -> None:
     if not rendered_dir.exists():
         return
     for entry in rendered_dir.iterdir():
-        if entry.is_dir() and entry.name not in current_pdf_stems:
+        if not entry.is_dir() or entry.name in RESERVED_RENDER_DIRS:
+            continue
+        if entry.name not in current_pdf_stems:
             log.info("Removing stale render for deleted PDF: %s", entry.name)
             shutil.rmtree(entry, ignore_errors=True)
 

@@ -181,6 +181,41 @@ class BuildManifestTests(unittest.TestCase):
         self.assertEqual(regions[1]["src"], "source/slack-100.11-1.png")
 
 
+class CleanupStaleRendersTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.rendered_dir = self.tmp_dir / "rendered"
+        self.rendered_dir.mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_removes_a_pdf_render_dir_no_longer_current(self):
+        stale = self.rendered_dir / "slack-old.pdf"
+        stale.mkdir()
+        (stale / "page-1.png").write_bytes(b"x")
+        refresh.cleanup_stale_renders(set(), self.rendered_dir)
+        self.assertFalse(stale.exists())
+
+    def test_keeps_a_pdf_render_dir_still_current(self):
+        current = self.rendered_dir / "slack-current.pdf"
+        current.mkdir()
+        refresh.cleanup_stale_renders({"slack-current.pdf"}, self.rendered_dir)
+        self.assertTrue(current.exists())
+
+    def test_never_removes_the_reserved_heic_directory(self):
+        # Regression: this directory isn't a PDF render -- it's where
+        # render_heic_images() caches converted JPEGs. It used to get
+        # treated as a stale PDF stem and wiped on every single tick,
+        # forcing every HEIC image to be fully reconverted every time.
+        heic_dir = self.rendered_dir / "heic"
+        heic_dir.mkdir()
+        (heic_dir / "slack-1.jpg").write_bytes(b"x")
+        refresh.cleanup_stale_renders(set(), self.rendered_dir)
+        self.assertTrue(heic_dir.exists())
+        self.assertTrue((heic_dir / "slack-1.jpg").exists())
+
+
 class RenderHeicImagesTests(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = Path(tempfile.mkdtemp())
