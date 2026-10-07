@@ -80,7 +80,7 @@ class BuildManifestTests(unittest.TestCase):
         manifest = refresh.build_manifest([("100.1", entry)], {}, self.kiosk_dir, 8, 30)
         self.assertNotIn("caption", manifest["items"][0])
 
-    def test_pdf_page_never_includes_caption(self):
+    def test_pdf_page_includes_caption_when_present(self):
         pdf_path = self.kiosk_dir / "source" / "slack-100.1.pdf"
         pdf_path.parent.mkdir(parents=True)
         pdf_path.write_bytes(b"x")
@@ -91,7 +91,37 @@ class BuildManifestTests(unittest.TestCase):
         manifest = refresh.build_manifest(
             [("100.1", entry)], {"slack-100.1": [page_path]}, self.kiosk_dir, 8, 30
         )
+        self.assertEqual(manifest["items"][0]["caption"], "a caption on a flyer")
+
+    def test_pdf_page_has_no_caption_field_when_none_posted(self):
+        pdf_path = self.kiosk_dir / "source" / "slack-100.2.pdf"
+        pdf_path.parent.mkdir(parents=True)
+        pdf_path.write_bytes(b"x")
+        page_path = self.kiosk_dir / "rendered" / "slack-100.2" / "page-1.png"
+        page_path.parent.mkdir(parents=True)
+        page_path.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(pdf_path)], ts="100.2")
+        manifest = refresh.build_manifest(
+            [("100.2", entry)], {"slack-100.2": [page_path]}, self.kiosk_dir, 8, 30
+        )
         self.assertNotIn("caption", manifest["items"][0])
+
+    def test_pdf_caption_repeats_on_every_page(self):
+        pdf_path = self.kiosk_dir / "source" / "slack-100.3.pdf"
+        pdf_path.parent.mkdir(parents=True)
+        pdf_path.write_bytes(b"x")
+        page1 = self.kiosk_dir / "rendered" / "slack-100.3" / "page-1.png"
+        page2 = self.kiosk_dir / "rendered" / "slack-100.3" / "page-2.png"
+        page1.parent.mkdir(parents=True)
+        page1.write_bytes(b"x")
+        page2.write_bytes(b"x")
+        entry = _attachment_entry(text="Flyer for the summer party", local_files=[str(pdf_path)], ts="100.3")
+        manifest = refresh.build_manifest(
+            [("100.3", entry)], {"slack-100.3": [page1, page2]}, self.kiosk_dir, 8, 30
+        )
+        self.assertEqual(len(manifest["items"]), 2)
+        self.assertEqual(manifest["items"][0]["caption"], "Flyer for the summer party")
+        self.assertEqual(manifest["items"][1]["caption"], "Flyer for the summer party")
 
     def _make_image(self, name):
         path = self.kiosk_dir / "source" / name

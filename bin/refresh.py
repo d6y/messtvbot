@@ -315,10 +315,17 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                     rel = _relative_or_none(page_path, kiosk_dir, entry.get("ts"), "manifest item")
                     if rel is None:
                         continue
-                    items.append({
+                    item = {
                         "kind": "pdf-page", "name": file_path.name, "src": rel,
                         "page": i, "pages": total,
-                    })
+                    }
+                    # Repeats on every page -- each page is its own slide
+                    # shown at a different point in the rotation, not all
+                    # at once, so repeating the caption keeps it in context
+                    # regardless of which page a viewer happens to catch.
+                    if entry.get("text"):
+                        item["caption"] = entry["text"]
+                    items.append(item)
             elif file_path.suffix.lower() in VIDEO_EXTS:
                 rel = _relative_or_none(file_path, kiosk_dir, entry.get("ts"), "manifest item")
                 if rel is not None:
