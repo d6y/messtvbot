@@ -769,18 +769,10 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.23"]["local_files"], [str(self.source_dir / "slack-100.23.pdf")])
 
-    def test_video_and_image_together_only_downloads_the_video(self):
-        # Same reasoning as PDF + multi-image: video mixing with a grid of
-        # images is out of scope -- fall back to single-attachment behavior.
-        api = FakeSlackAPI(
-            messages=[{"ts": "100.24", "text": "", "user": "U1", "files": [
-                {"filetype": "mp4", "url_private_download": "https://x/a.mp4", "name": "a.mp4"},
-                {"filetype": "png", "url_private_download": "https://x/b.png", "name": "b.png"},
-            ]}],
-            user_names={"U1": "Jane"},
-        )
-        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
-        self.assertEqual(state["100.24"]["local_files"], [str(self.source_dir / "slack-100.24.mp4")])
+    # Video attachments are rejected outright now -- see
+    # test_video_message_is_rejected_not_shown and
+    # test_image_and_video_together_is_still_rejected below (video isn't
+    # supported, not just "falls back to single-file" like PDF).
 
     def test_heic_image_downloads_like_any_other_image(self):
         api = FakeSlackAPI(
@@ -869,6 +861,52 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.34"]["kind"], "attachment")
         self.assertEqual(state["100.34"]["status"], "active")
+
+    def test_video_message_is_rejected_not_shown(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.35", "text": "", "user": "U1",
+                       "files": [{"filetype": "mp4", "url_private_download": "https://x/a.mp4", "name": "a.mp4"}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        self.assertEqual(state["100.35"]["status"], "ignored")
+        self.assertEqual(api.downloaded, {})
+
+    def test_video_message_gets_a_rejection_reply(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.36", "text": "check this out", "user": "U1",
+                       "files": [{"filetype": "mov", "url_private_download": "https://x/a.mov", "name": "a.mov"}]}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.36"]
+        self.assertEqual(len(replies), 1)
+        self.assertIn("video", replies[0]["text"].lower())
+
+    def test_video_message_with_text_is_rejected_entirely_not_shown_as_text(self):
+        # A video + caption is rejected as a whole -- showing just the
+        # caption without the video the poster actually sent would be
+        # misleading, not a reasonable fallback.
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.37", "text": "Team outing highlights!", "user": "U1",
+                       "files": [{"filetype": "mp4", "url_private_download": "https://x/a.mp4", "name": "a.mp4"}]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+
+    def test_image_and_video_together_is_still_rejected(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.38", "text": "", "user": "U1", "files": [
+                {"filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"},
+                {"filetype": "mp4", "url_private_download": "https://x/b.mp4", "name": "b.mp4"},
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(ms.sorted_active_entries(state), [])
+        self.assertEqual(api.downloaded, {})
 
     def test_channel_join_message_is_not_added_or_acknowledged(self):
         api = FakeSlackAPI(messages=[{

@@ -515,6 +515,30 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
             continue
 
+        if kind == "attachment" and any(
+            a["filetype"] in VIDEO_FILETYPES for a in extract_attachments(msg)
+        ):
+            # Video isn't supported yet -- Chromium can't play the HEVC
+            # encoding iPhones default to, and there's no transcode step
+            # (unlike HEIC images, which do get converted). Reject the
+            # whole message rather than showing just the caption with no
+            # video: someone who specifically sent a video had something
+            # in mind that a stray caption alone wouldn't represent.
+            log.info("Rejecting Slack message %s: contains a video (not supported)", ts)
+            _post_safe(
+                api, cfg.channel,
+                "Sorry, this post wasn't added -- video isn't supported yet. "
+                "Try posting an image or text instead.",
+                thread_ts=ts,
+            )
+            append_audit(audit_path, {
+                "at": now.isoformat(timespec="seconds"), "ts": ts,
+                "author": author_for_audit, "kind": "ignored", "action": "video_rejected",
+                "summary": (msg.get("text") or "")[:80],
+            })
+            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+            continue
+
         if kind == "text" and is_help_trigger(msg.get("text")):
             log.info("Replying with help text for Slack message %s: looks like a help/remove request", ts)
             _post_safe(api, cfg.channel, build_help_text(cfg, posted_at_dt), thread_ts=ts)
@@ -548,13 +572,11 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         images_truncated_from = 0
         if kind == "attachment":
             attachments = extract_attachments(msg)
-            single_file_only = any(
-                a["filetype"] == PDF_FILETYPE or a["filetype"] in VIDEO_FILETYPES
-                for a in attachments
-            )
-            # PDF/video + multi-image mixing is out of scope -- fall back to
-            # the single-attachment behavior (first recognized file) whenever
-            # a PDF or video is involved.
+            # Video is rejected above before reaching here, so this only
+            # ever needs to handle PDF -- multi-image mixing is out of
+            # scope, fall back to the single-attachment behavior (first
+            # recognized file) whenever a PDF is involved.
+            single_file_only = any(a["filetype"] == PDF_FILETYPE for a in attachments)
             to_download = attachments[:1] if single_file_only else attachments
             if not single_file_only and len(to_download) > cfg.max_images:
                 images_truncated_from = len(to_download)
