@@ -36,10 +36,17 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pillow_heif
+from PIL import Image
+
 import slack_source
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
+HEIC_EXTS = {".heic", ".heif"}
+VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4v"}
 PDF_EXT = ".pdf"
+
+pillow_heif.register_heif_opener()
 
 log = logging.getLogger("kiosk")
 
@@ -190,6 +197,41 @@ def render_pdfs(pdf_files: list[Path], rendered_dir: Path, width: int) -> dict[s
     return pages_by_stem
 
 
+def render_heic_images(heic_files: list[Path], rendered_dir: Path) -> dict[str, Path]:
+    """Convert each HEIC/HEIF image to a browser-displayable JPEG, skipping
+    ones already up to date. Chromium has no built-in HEIC decoder, so these
+    can't be referenced directly in the manifest the way other images are.
+    Returns {str(original_path): converted_jpg_path}.
+    """
+    converted: dict[str, Path] = {}
+    out_dir = rendered_dir / "heic"
+
+    for heic_path in heic_files:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        dest = out_dir / f"{heic_path.stem}.jpg"
+        marker = out_dir / f"{heic_path.stem}.source_mtime"
+        src_mtime = str(int(heic_path.stat().st_mtime))
+
+        needs_render = True
+        if marker.exists() and marker.read_text().strip() == src_mtime and dest.exists():
+            needs_render = False
+
+        if needs_render:
+            log.info("Converting HEIC image %s", heic_path.name)
+            try:
+                with Image.open(heic_path) as img:
+                    img.convert("RGB").save(dest, "JPEG", quality=90)
+                marker.write_text(src_mtime)
+            except Exception as exc:  # noqa: BLE001 -- any decode/write failure, never fatal
+                log.error("HEIC conversion failed for %s: %s", heic_path.name, exc)
+                continue
+
+        if dest.exists():
+            converted[str(heic_path)] = dest
+
+    return converted
+
+
 def cleanup_stale_renders(current_pdf_stems: set[str], rendered_dir: Path) -> None:
     if not rendered_dir.exists():
         return
@@ -197,6 +239,17 @@ def cleanup_stale_renders(current_pdf_stems: set[str], rendered_dir: Path) -> No
         if entry.is_dir() and entry.name not in current_pdf_stems:
             log.info("Removing stale render for deleted PDF: %s", entry.name)
             shutil.rmtree(entry, ignore_errors=True)
+
+
+def cleanup_stale_heic_renders(current_heic_stems: set[str], rendered_dir: Path) -> None:
+    heic_dir = rendered_dir / "heic"
+    if not heic_dir.exists():
+        return
+    for jpg in heic_dir.glob("*.jpg"):
+        if jpg.stem not in current_heic_stems:
+            log.info("Removing stale HEIC conversion for deleted image: %s", jpg.stem)
+            jpg.unlink(missing_ok=True)
+            (heic_dir / f"{jpg.stem}.source_mtime").unlink(missing_ok=True)
 
 
 def copy_site_assets(repo_dir: Path, kiosk_dir: Path) -> None:
@@ -218,8 +271,21 @@ def copy_site_assets(repo_dir: Path, kiosk_dir: Path) -> None:
                 shutil.copyfile(item, admin_dest / item.name)
 
 
+def _relative_or_none(path: Path, kiosk_dir: Path, ts: object, label: str) -> str | None:
+    try:
+        return path.relative_to(kiosk_dir).as_posix()
+    except ValueError:
+        log.warning(
+            "Skipping %s for ts=%s: file %s is not under kiosk_dir %s",
+            label, ts, path, kiosk_dir,
+        )
+        return None
+
+
 def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[str, list[Path]],
-                    kiosk_dir: Path, slide_seconds: int, poll_seconds: int) -> dict:
+                    kiosk_dir: Path, slide_seconds: int, poll_seconds: int,
+                    heic_rendered: dict[str, Path] | None = None) -> dict:
+    heic_rendered = heic_rendered or {}
     items = []
     for _ts, entry in active_entries:
         if entry["kind"] == "text":
@@ -236,42 +302,36 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                 pages = rendered_pages.get(file_path.stem, [])
                 total = len(pages)
                 for i, page_path in enumerate(pages, start=1):
-                    try:
-                        rel = page_path.relative_to(kiosk_dir).as_posix()
-                    except ValueError:
-                        log.warning(
-                            "Skipping manifest item for %s (ts=%s): rendered page %s is not "
-                            "under kiosk_dir %s", file_path.name, entry.get("ts"), page_path, kiosk_dir,
-                        )
+                    rel = _relative_or_none(page_path, kiosk_dir, entry.get("ts"), "manifest item")
+                    if rel is None:
                         continue
                     items.append({
                         "kind": "pdf-page", "name": file_path.name, "src": rel,
                         "page": i, "pages": total,
                     })
+            elif file_path.suffix.lower() in VIDEO_EXTS:
+                rel = _relative_or_none(file_path, kiosk_dir, entry.get("ts"), "manifest item")
+                if rel is not None:
+                    item = {"kind": "video", "name": file_path.name, "src": rel}
+                    if entry.get("text"):
+                        item["caption"] = entry["text"]
+                    items.append(item)
             elif len(local_files) > 1:
                 regions = []
                 if entry.get("text"):
                     regions.append({"kind": "text", "text": entry["text"]})
                 for img_path in local_files:
-                    try:
-                        rel = img_path.relative_to(kiosk_dir).as_posix()
-                    except ValueError:
-                        log.warning(
-                            "Skipping grid region for %s (ts=%s): file %s is not under kiosk_dir %s",
-                            img_path.name, entry.get("ts"), img_path, kiosk_dir,
-                        )
+                    display_path = heic_rendered.get(str(img_path), img_path)
+                    rel = _relative_or_none(display_path, kiosk_dir, entry.get("ts"), "grid region")
+                    if rel is None:
                         continue
                     regions.append({"kind": "image", "src": rel, "name": img_path.name})
                 if regions:
                     items.append({"kind": "grid", "regions": regions})
             else:
-                try:
-                    rel = file_path.relative_to(kiosk_dir).as_posix()
-                except ValueError:
-                    log.warning(
-                        "Skipping manifest item for %s (ts=%s): file %s is not under kiosk_dir %s",
-                        file_path.name, entry.get("ts"), file_path, kiosk_dir,
-                    )
+                display_path = heic_rendered.get(str(file_path), file_path)
+                rel = _relative_or_none(display_path, kiosk_dir, entry.get("ts"), "manifest item")
+                if rel is None:
                     continue
                 item = {"kind": "image", "name": file_path.name, "src": rel}
                 if entry.get("text"):
@@ -343,11 +403,23 @@ def main(argv: list[str]) -> int:
         if entry["kind"] == "attachment" and entry.get("local_files")
         and Path(entry["local_files"][0]).suffix.lower() == PDF_EXT
     ]
+    # HEIC images can appear anywhere in local_files (single image or one of
+    # several in a grid post), not just local_files[0] like PDF/video.
+    heic_files = [
+        Path(f)
+        for _ts, entry in active_entries
+        if entry["kind"] == "attachment"
+        for f in entry.get("local_files", [])
+        if Path(f).suffix.lower() in HEIC_EXTS
+    ]
 
     rendered_pages = render_pdfs(pdf_files, cfg.rendered_dir, cfg.render_width)
     cleanup_stale_renders({f.stem for f in pdf_files}, cfg.rendered_dir)
+    heic_rendered = render_heic_images(heic_files, cfg.rendered_dir)
+    cleanup_stale_heic_renders({f.stem for f in heic_files}, cfg.rendered_dir)
 
-    manifest = build_manifest(active_entries, rendered_pages, cfg.kiosk_dir, cfg.slide_seconds, cfg.poll_seconds)
+    manifest = build_manifest(active_entries, rendered_pages, cfg.kiosk_dir, cfg.slide_seconds, cfg.poll_seconds,
+                               heic_rendered=heic_rendered)
     write_manifest(manifest, cfg.data_dir)
 
     log.info("Refresh complete: %d slide(s) from %d active Slack message(s)",

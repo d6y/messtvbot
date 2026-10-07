@@ -40,7 +40,11 @@ def _thumb_path(kiosk_dir: Path, entry: dict) -> str | None:
         return None
     file_path = Path(entry["local_files"][0])
     filetype = file_path.suffix.lstrip(".").lower()
-    if filetype in ms.IMAGE_FILETYPES:
+    if filetype in ms.IMAGE_FILETYPES_NEEDING_CONVERSION:
+        # Chromium can't render these directly -- same converted-JPEG
+        # convention as render_heic_images() in refresh.py.
+        candidate = kiosk_dir / "rendered" / "heic" / f"{file_path.stem}.jpg"
+    elif filetype in ms.IMAGE_FILETYPES:
         candidate = file_path
     elif filetype == ms.PDF_FILETYPE:
         candidate = kiosk_dir / "rendered" / file_path.stem / "page-1.png"

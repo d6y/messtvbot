@@ -79,7 +79,8 @@ code {
    whichever .image-layer is currently visible (see app.js). Panel is
    wider than a minimal sidebar so captions read as a real half of the
    slide, not an afterthought next to the photo. */
-#stage.split .image-layer {
+#stage.split .image-layer,
+#stage.split .video-layer {
   left: 46%;
   width: 54%;
 }

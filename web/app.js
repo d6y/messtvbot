@@ -10,6 +10,7 @@
   const imageCaption = document.getElementById("image-caption");
   const imageCaptionText = document.getElementById("image-caption-text");
   const gridLayer = document.getElementById("grid-layer");
+  const videoLayer = document.getElementById("video-layer");
   const emptyState = document.getElementById("empty-state");
 
   const DEFAULT_SLIDE_MS = 8000;
@@ -136,6 +137,13 @@
     return true;
   }
 
+  function hideVideoLayer() {
+    videoLayer.classList.remove("visible");
+    videoLayer.pause();
+    videoLayer.removeAttribute("src");
+    videoLayer.load();
+  }
+
   async function showSlide(index) {
     if (items.length === 0) return;
     const item = items[index];
@@ -153,6 +161,7 @@
       stage.classList.remove("split");
       imageCaption.classList.remove("visible");
       gridLayer.classList.remove("visible");
+      hideVideoLayer();
       currentIndex = index;
       return;
     }
@@ -170,6 +179,32 @@
       backLayer.classList.remove("visible");
       stage.classList.remove("split");
       imageCaption.classList.remove("visible");
+      hideVideoLayer();
+      currentIndex = index;
+      return;
+    }
+
+    if (item.kind === "video") {
+      hideVideoLayer();
+      videoLayer.src = cacheBustedUrl(item.src);
+      videoLayer.loop = true;
+      videoLayer.classList.add("visible");
+      videoLayer.play().catch((err) => {
+        console.warn("Mess TV Bot: video playback failed", item.src, err);
+      });
+      textCard.classList.remove("visible");
+      frontLayer.classList.remove("visible");
+      backLayer.classList.remove("visible");
+      gridLayer.classList.remove("visible");
+      if (item.caption) {
+        imageCaptionText.innerHTML = slackMrkdwnToHtml(item.caption);
+        imageCaptionText.style.fontSize = captionFontSizeVw(item.caption) + "vw";
+        stage.classList.add("split");
+        imageCaption.classList.add("visible");
+      } else {
+        stage.classList.remove("split");
+        imageCaption.classList.remove("visible");
+      }
       currentIndex = index;
       return;
     }
@@ -185,6 +220,7 @@
       frontLayer.classList.remove("visible");
       textCard.classList.remove("visible");
       gridLayer.classList.remove("visible");
+      hideVideoLayer();
       if (item.caption) {
         imageCaptionText.innerHTML = slackMrkdwnToHtml(item.caption);
         imageCaptionText.style.fontSize = captionFontSizeVw(item.caption) + "vw";
@@ -228,6 +264,7 @@
       stage.classList.remove("split");
       imageCaption.classList.remove("visible");
       gridLayer.classList.remove("visible");
+      hideVideoLayer();
       clearTimeout(slideTimer);
       currentIndex = -1;
       return;

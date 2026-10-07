@@ -100,6 +100,22 @@ class ExtractAttachmentsTests(unittest.TestCase):
         result = ms.extract_attachments(msg)
         self.assertEqual(result[0]["url"], "https://x/b.png")
 
+    def test_recognizes_heic_and_heif(self):
+        msg = {"files": [
+            {"filetype": "heic", "url_private_download": "https://x/a.heic", "name": "a.heic"},
+            {"filetype": "heif", "url_private_download": "https://x/b.heif", "name": "b.heif"},
+        ]}
+        result = ms.extract_attachments(msg)
+        self.assertEqual([a["filetype"] for a in result], ["heic", "heif"])
+
+    def test_recognizes_video_filetypes(self):
+        msg = {"files": [
+            {"filetype": "mp4", "url_private_download": "https://x/a.mp4", "name": "a.mp4"},
+            {"filetype": "mov", "url_private_download": "https://x/b.mov", "name": "b.mov"},
+        ]}
+        result = ms.extract_attachments(msg)
+        self.assertEqual([a["filetype"] for a in result], ["mp4", "mov"])
+
 
 class IsHelpTriggerTests(unittest.TestCase):
     def test_bare_help_is_a_trigger(self):
@@ -266,6 +282,59 @@ class ConvertEmojiShortcodesTests(unittest.TestCase):
 
     def test_empty_string_is_unchanged(self):
         self.assertEqual(ms.convert_emoji_shortcodes(""), "")
+
+
+class ResolveMentionsTests(unittest.TestCase):
+    def test_user_mention_without_label_is_resolved_via_api(self):
+        api = FakeSlackAPI(user_names={"U0C5206CBK6": "Jane"})
+        self.assertEqual(ms.resolve_mentions("<@U0C5206CBK6> nice!", api), "@Jane nice!")
+
+    def test_user_mention_with_embedded_label_skips_api_lookup(self):
+        class NoLookupAPI(FakeSlackAPI):
+            def user_name(self, user_id):
+                raise AssertionError("should not call user_name when a label is embedded")
+
+        api = NoLookupAPI()
+        self.assertEqual(ms.resolve_mentions("<@U123|janedoe> hi", api), "@janedoe hi")
+
+    def test_user_mention_lookup_failure_falls_back_to_raw_id(self):
+        class FailingAPI(FakeSlackAPI):
+            def user_name(self, user_id):
+                raise ms.SlackAPIError("users.info boom")
+
+        api = FailingAPI()
+        self.assertEqual(ms.resolve_mentions("<@U0C5206CBK6> hi", api), "@U0C5206CBK6 hi")
+
+    def test_channel_mention_uses_embedded_name(self):
+        api = FakeSlackAPI()
+        self.assertEqual(
+            ms.resolve_mentions("see <#C0123456|general> for details", api),
+            "see #general for details",
+        )
+
+    def test_special_mentions_become_at_forms(self):
+        api = FakeSlackAPI()
+        self.assertEqual(ms.resolve_mentions("<!here> urgent", api), "@here urgent")
+        self.assertEqual(ms.resolve_mentions("<!channel> all hands", api), "@channel all hands")
+        self.assertEqual(ms.resolve_mentions("<!everyone> hi", api), "@everyone hi")
+
+    def test_subteam_mention_uses_embedded_label(self):
+        api = FakeSlackAPI()
+        self.assertEqual(
+            ms.resolve_mentions("ping <!subteam^S123|@eng-team>", api),
+            "ping @eng-team",
+        )
+
+    def test_url_link_is_left_untouched(self):
+        # <url|label>/<url> are handled client-side (web/app.js); this
+        # function only touches @/#/! mention syntax.
+        api = FakeSlackAPI()
+        text = "<https://example.com|Sign up> here"
+        self.assertEqual(ms.resolve_mentions(text, api), text)
+
+    def test_plain_text_is_unchanged(self):
+        api = FakeSlackAPI()
+        self.assertEqual(ms.resolve_mentions("Pizza in the kitchen!", api), "Pizza in the kitchen!")
 
 
 class StateLoadSaveTests(unittest.TestCase):
@@ -630,6 +699,30 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.23"]["local_files"], [str(self.source_dir / "slack-100.23.pdf")])
 
+    def test_video_and_image_together_only_downloads_the_video(self):
+        # Same reasoning as PDF + multi-image: video mixing with a grid of
+        # images is out of scope -- fall back to single-attachment behavior.
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.24", "text": "", "user": "U1", "files": [
+                {"filetype": "mp4", "url_private_download": "https://x/a.mp4", "name": "a.mp4"},
+                {"filetype": "png", "url_private_download": "https://x/b.png", "name": "b.png"},
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.24"]["local_files"], [str(self.source_dir / "slack-100.24.mp4")])
+
+    def test_heic_image_downloads_like_any_other_image(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.25", "text": "", "user": "U1", "files": [
+                {"filetype": "heic", "url_private_download": "https://x/a.heic", "name": "a.heic"},
+            ]}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.25"]["kind"], "attachment")
+        self.assertEqual(state["100.25"]["local_files"], [str(self.source_dir / "slack-100.25.heic")])
+
     def test_new_attachment_message_with_caption_stores_text(self):
         api = FakeSlackAPI(
             messages=[{"ts": "100.9", "text": "Free pizza today!", "user": "U1",
@@ -909,6 +1002,15 @@ class PollSlackTests(unittest.TestCase):
         )
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.7"]["text"], "Coffee & cake")
+
+    def test_user_mention_in_text_is_resolved_on_ingestion(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.50", "text": "<@U0C5206CBK6> this is cool", "user": "U1",
+                       "files": []}],
+            user_names={"U1": "Jane", "U0C5206CBK6": "Bob"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.50"]["text"], "@Bob this is cool")
 
     def test_emoji_shortcodes_in_text_are_converted_to_unicode(self):
         api = FakeSlackAPI(

@@ -123,6 +123,97 @@ class BuildManifestTests(unittest.TestCase):
         self.assertEqual(len(item["regions"]), 1)
         self.assertEqual(item["regions"][0]["name"], "slack-100.7-0.jpg")
 
+    def test_video_becomes_a_video_manifest_item(self):
+        video_path = self.kiosk_dir / "source" / "slack-100.8.mp4"
+        video_path.parent.mkdir(parents=True)
+        video_path.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(video_path)], ts="100.8")
+        manifest = refresh.build_manifest([("100.8", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["items"], [
+            {"kind": "video", "name": "slack-100.8.mp4", "src": "source/slack-100.8.mp4"},
+        ])
+
+    def test_video_with_caption_includes_caption_field(self):
+        video_path = self.kiosk_dir / "source" / "slack-100.9.mov"
+        video_path.parent.mkdir(parents=True)
+        video_path.write_bytes(b"x")
+        entry = _attachment_entry(text="Team outing clip!", local_files=[str(video_path)], ts="100.9")
+        manifest = refresh.build_manifest([("100.9", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["items"][0]["caption"], "Team outing clip!")
+
+    def test_single_heic_image_uses_the_converted_jpg(self):
+        heic_path = self._make_image("slack-100.10.heic")
+        converted = self.kiosk_dir / "rendered" / "heic" / "slack-100.10.jpg"
+        converted.parent.mkdir(parents=True)
+        converted.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(heic_path)], ts="100.10")
+        manifest = refresh.build_manifest(
+            [("100.10", entry)], {}, self.kiosk_dir, 8, 30,
+            heic_rendered={str(heic_path): converted},
+        )
+        item = manifest["items"][0]
+        self.assertEqual(item["kind"], "image")
+        self.assertEqual(item["src"], "rendered/heic/slack-100.10.jpg")
+        self.assertEqual(item["name"], "slack-100.10.heic")
+
+    def test_heic_image_in_a_grid_uses_the_converted_jpg(self):
+        heic_path = self._make_image("slack-100.11-0.heic")
+        png_path = self._make_image("slack-100.11-1.png")
+        converted = self.kiosk_dir / "rendered" / "heic" / "slack-100.11-0.jpg"
+        converted.parent.mkdir(parents=True)
+        converted.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(heic_path), str(png_path)], ts="100.11")
+        manifest = refresh.build_manifest(
+            [("100.11", entry)], {}, self.kiosk_dir, 8, 30,
+            heic_rendered={str(heic_path): converted},
+        )
+        regions = manifest["items"][0]["regions"]
+        self.assertEqual(regions[0]["src"], "rendered/heic/slack-100.11-0.jpg")
+        self.assertEqual(regions[1]["src"], "source/slack-100.11-1.png")
+
+
+class RenderHeicImagesTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.source_dir = self.tmp_dir / "source"
+        self.source_dir.mkdir()
+        self.rendered_dir = self.tmp_dir / "rendered"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def _write_heic(self, name):
+        import pillow_heif
+        from PIL import Image
+        path = self.source_dir / name
+        img = Image.new("RGB", (40, 30), color=(200, 100, 50))
+        heif_file = pillow_heif.from_pillow(img)
+        heif_file.save(path, quality=80)
+        return path
+
+    def test_converts_heic_to_jpg(self):
+        heic_path = self._write_heic("slack-1.heic")
+        result = refresh.render_heic_images([heic_path], self.rendered_dir)
+        self.assertEqual(set(result.keys()), {str(heic_path)})
+        jpg_path = result[str(heic_path)]
+        self.assertTrue(jpg_path.exists())
+        self.assertEqual(jpg_path.suffix, ".jpg")
+
+    def test_unchanged_heic_is_not_reconverted(self):
+        heic_path = self._write_heic("slack-2.heic")
+        refresh.render_heic_images([heic_path], self.rendered_dir)
+        jpg_path = self.rendered_dir / "heic" / "slack-2.jpg"
+        first_mtime = jpg_path.stat().st_mtime_ns
+
+        refresh.render_heic_images([heic_path], self.rendered_dir)
+        self.assertEqual(jpg_path.stat().st_mtime_ns, first_mtime)
+
+    def test_corrupt_heic_is_skipped_without_raising(self):
+        bad_path = self.source_dir / "bad.heic"
+        bad_path.write_bytes(b"not a real heic file")
+        result = refresh.render_heic_images([bad_path], self.rendered_dir)
+        self.assertEqual(result, {})
+
 
 class CopySiteAssetsTests(unittest.TestCase):
     def setUp(self):

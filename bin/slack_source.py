@@ -28,7 +28,11 @@ from zoneinfo import ZoneInfo
 
 log = logging.getLogger("kiosk.slack")
 
-IMAGE_FILETYPES = {"jpg", "jpeg", "png", "gif", "webp", "bmp"}
+IMAGE_FILETYPES = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "heic", "heif"}
+# Images in this set need converting to a browser-displayable format before
+# they can go in the manifest -- see render_heic_images() in refresh.py.
+IMAGE_FILETYPES_NEEDING_CONVERSION = {"heic", "heif"}
+VIDEO_FILETYPES = {"mp4", "mov", "webm", "m4v"}
 PDF_FILETYPE = "pdf"
 COMMAND_WORDS = ("cancel", "delete", "undo", "remove")
 
@@ -99,12 +103,12 @@ def extract_attachment(msg: dict) -> dict | None:
 
 
 def extract_attachments(msg: dict) -> list[dict]:
-    """Return {'url', 'filetype', 'name'} for every image/PDF file on the
-    message, in Slack's own order. Empty list if it has none."""
+    """Return {'url', 'filetype', 'name'} for every image/video/PDF file on
+    the message, in Slack's own order. Empty list if it has none."""
     attachments = []
     for f in msg.get("files", []) or []:
         filetype = (f.get("filetype") or "").lower()
-        if filetype in IMAGE_FILETYPES or filetype == PDF_FILETYPE:
+        if filetype in IMAGE_FILETYPES or filetype in VIDEO_FILETYPES or filetype == PDF_FILETYPE:
             attachments.append({
                 "url": f.get("url_private_download") or f.get("url_private"),
                 "filetype": filetype,
@@ -201,6 +205,39 @@ def convert_emoji_shortcodes(text: str) -> str:
     as-is rather than dropped."""
     text = emoji.emojize(text, language="alias")
     return _SKIN_TONE_RE.sub(lambda m: _SKIN_TONE_MODIFIERS[m.group(1)], text)
+
+
+# Slack's <@USERID>, <@USERID|label>, <#CHANNELID|name>, <!here>,
+# <!subteam^ID|label>, etc -- NOT <url>/<url|label> links, which are
+# handled client-side (see slackMrkdwnToHtml in web/app.js).
+_MENTION_RE = re.compile(r"<([@#!])([^|>]+)(?:\|([^>]*))?>")
+
+
+def resolve_mentions(text: str, api: "SlackAPI") -> str:
+    """Replace Slack's <@USERID>/<#CHANNELID|name>/<!here>-style mention
+    syntax with human-readable text. A user mention with no embedded
+    label costs one (cached) users.info lookup; everything else is
+    resolved from what Slack already included in the text."""
+    def replace(m: re.Match) -> str:
+        sigil, ident, label = m.group(1), m.group(2), m.group(3)
+        if sigil == "@":
+            if label:
+                return f"@{label}"
+            try:
+                return f"@{api.user_name(ident)}"
+            except SlackAPIError as exc:
+                log.error("Failed to resolve mentioned user %s: %s", ident, exc)
+                return f"@{ident}"
+        if sigil == "#":
+            return f"#{label}" if label else f"#{ident}"
+        # "!" covers @here/@channel/@everyone and subteam (user group)
+        # mentions -- Slack always embeds a usable label for these except
+        # the plain here/channel/everyone trio.
+        if ident in ("here", "channel", "everyone"):
+            return f"@{ident}"
+        return label if label else m.group(0)
+
+    return _MENTION_RE.sub(replace, text)
 
 
 def load_state(path: Path) -> dict:
@@ -496,14 +533,19 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             "remove_reason": "ttl",
         }
 
-        entry["text"] = convert_emoji_shortcodes(html.unescape(msg.get("text", "")))
+        entry["text"] = convert_emoji_shortcodes(
+            resolve_mentions(html.unescape(msg.get("text", "")), api)
+        )
         if kind == "attachment":
             attachments = extract_attachments(msg)
-            has_pdf = any(a["filetype"] == PDF_FILETYPE for a in attachments)
-            # PDF + multi-image mixing is out of scope -- fall back to the
-            # single-attachment behavior (first recognized file) whenever a
-            # PDF is involved.
-            to_download = attachments[:1] if has_pdf else attachments
+            single_file_only = any(
+                a["filetype"] == PDF_FILETYPE or a["filetype"] in VIDEO_FILETYPES
+                for a in attachments
+            )
+            # PDF/video + multi-image mixing is out of scope -- fall back to
+            # the single-attachment behavior (first recognized file) whenever
+            # a PDF or video is involved.
+            to_download = attachments[:1] if single_file_only else attachments
             multi = len(to_download) > 1
             downloaded = []
             for i, attachment in enumerate(to_download):

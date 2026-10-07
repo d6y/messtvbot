@@ -96,6 +96,33 @@ class AdminServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body[0]["thumb"], "rendered/slack-100.3/page-1.png")
 
+    def test_get_entries_heic_entry_has_converted_jpg_as_thumbnail(self):
+        heic_path = self.kiosk_dir / "source" / "slack-100.4.heic"
+        heic_path.parent.mkdir(parents=True)
+        heic_path.write_bytes(b"x")
+        jpg_path = self.kiosk_dir / "rendered" / "heic" / "slack-100.4.jpg"
+        jpg_path.parent.mkdir(parents=True)
+        jpg_path.write_bytes(b"x")
+        entry = {"status": "active", "kind": "attachment", "text": "", "author": "Jane",
+                  "posted_at": "2026-08-01T00:00:00+00:00", "remove_at": "2026-12-31T00:00:00+00:00",
+                  "remove_reason": "ttl", "local_files": [str(heic_path)]}
+        ms.save_state({"100.4": entry}, self.state_path)
+        status, body = self._get("/api/entries")
+        self.assertEqual(status, 200)
+        self.assertEqual(body[0]["thumb"], "rendered/heic/slack-100.4.jpg")
+
+    def test_get_entries_heic_entry_without_conversion_has_no_thumbnail(self):
+        heic_path = self.kiosk_dir / "source" / "slack-100.5.heic"
+        heic_path.parent.mkdir(parents=True)
+        heic_path.write_bytes(b"x")
+        entry = {"status": "active", "kind": "attachment", "text": "", "author": "Jane",
+                  "posted_at": "2026-08-01T00:00:00+00:00", "remove_at": "2026-12-31T00:00:00+00:00",
+                  "remove_reason": "ttl", "local_files": [str(heic_path)]}
+        ms.save_state({"100.5": entry}, self.state_path)
+        status, body = self._get("/api/entries")
+        self.assertEqual(status, 200)
+        self.assertIsNone(body[0]["thumb"])
+
     def test_get_entries_pdf_entry_without_rendered_page_has_no_thumbnail(self):
         pdf_path = self.kiosk_dir / "source" / "slack-100.4.pdf"
         pdf_path.parent.mkdir(parents=True)
