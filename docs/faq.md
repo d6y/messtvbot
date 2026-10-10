@@ -62,5 +62,5 @@ But `remove now` schedules it for immediate removal.
 <div class="faq-item" markdown="1">
 ### Something seems broken — who do I ask?
 
-Post `help` as a new message, or reply `help` in a message's thread.
+Post `help` as a new message, or reply `help` in a message's thread, to find out who.
 </div>
