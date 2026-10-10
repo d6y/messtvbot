@@ -311,7 +311,7 @@
       items = [];
       if (emptyStateSub) {
         emptyStateSub.textContent = reviewTs
-          ? "This post isn't currently on the display (it may have expired or been removed)."
+          ? "Message not found — it may have expired or been removed."
           : emptyStateSubDefault;
       }
       emptyState.classList.add("visible");
