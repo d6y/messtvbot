@@ -252,6 +252,12 @@ def is_help_trigger(text: str) -> bool:
     return bool(HELP_TRIGGER_RE.match(stripped))
 
 
+# Public end-user docs (docs/ in this repo, published via GitHub Pages) --
+# a fixed public URL, unrelated to cfg.server_url (that's this deployment's
+# own LAN address, e.g. for the admin interface below).
+DOCS_URL = "https://d6y.github.io/messtvbot/"
+
+
 def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
     interval = "1 day" if cfg.ttl_days == 1 else f"{cfg.ttl_days} days"
     # Deliberately NOT tied to cfg.ttl_days -- this is just illustrating the
@@ -263,6 +269,7 @@ def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
         "images or a combination of both.\n\n"
         f"Each message is shown for {interval}. To remove sooner or later, "
         f"reply to the message with `remove now` or `remove {example_remove_at:%-d %b %Y}`.\n\n"
+        f"More help: <{DOCS_URL}|{DOCS_URL}>.\n\n"
         f"There's also an admin interface at {cfg.server_url}/admin.\n\n"
         f"If I'm broken, please contact `{cfg.admin_contact}`."
     )

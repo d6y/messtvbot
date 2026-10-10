@@ -313,6 +313,10 @@ class BuildHelpTextTests(unittest.TestCase):
         text = ms.build_help_text(self.cfg, self.posted_at_dt)
         self.assertIn("http://kiosk.local:8420/admin", text)
 
+    def test_includes_docs_link(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn(ms.DOCS_URL, text)
+
     def test_includes_contact(self):
         text = ms.build_help_text(self.cfg, self.posted_at_dt)
         self.assertIn("`@richard`", text)
