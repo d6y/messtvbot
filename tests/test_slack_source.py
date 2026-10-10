@@ -1462,6 +1462,18 @@ class PollSlackTests(unittest.TestCase):
         example_date_local = (posted_at + timedelta(days=1)).astimezone(ms.LOCAL_TZ)
         self.assertIn(f"`remove {example_date_local:%-d %b %Y}`", text)
 
+    def test_accepted_message_reply_includes_a_review_link(self):
+        # Lets a poster see how their own post actually renders (useful
+        # for a multi-image grid or a PDF) without walking up to the TV --
+        # web/index.html?ts=<ts> opens as a review page for just that post.
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
+        self.assertIn(f"<{self.cfg.server_url}/index.html?ts=100.1|See how it looks>", replies[0]["text"])
+
     def test_accepted_message_reply_does_not_mention_utc(self):
         api = FakeSlackAPI(
             messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],

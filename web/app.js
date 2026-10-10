@@ -17,6 +17,14 @@
   const DEFAULT_POLL_MS = 30000;
   const MANIFEST_URL = "data/manifest.json";
 
+  // ?ts=<slack-ts> opens this same page as a review page for one post --
+  // the bot's acceptance reply links here so a poster can see how their
+  // post actually renders without walking up to the TV. Set once at load;
+  // never cleared, so a later manifest update still re-filters correctly.
+  const reviewTs = new URLSearchParams(location.search).get("ts");
+  const emptyStateSub = document.querySelector("#empty-state .sub");
+  const emptyStateSubDefault = emptyStateSub ? emptyStateSub.textContent : "";
+
   let items = [];
   let currentIndex = -1;
   let frontLayer = layerA;
@@ -293,10 +301,19 @@
   function applyManifest(manifest) {
     slideMs = (manifest.slide_seconds || DEFAULT_SLIDE_MS / 1000) * 1000;
     window.__kiosk_poll_seconds = manifest.poll_seconds || DEFAULT_POLL_MS / 1000;
-    const newItems = Array.isArray(manifest.items) ? manifest.items : [];
+    const allItems = Array.isArray(manifest.items) ? manifest.items : [];
+    // In review mode, scope the whole slideshow (cycling included) down to
+    // just this post's item(s) -- a multi-page PDF still cycles its pages,
+    // but nothing else from the display ever shows on this page.
+    const newItems = reviewTs ? allItems.filter((item) => item.ts === reviewTs) : allItems;
 
     if (newItems.length === 0) {
       items = [];
+      if (emptyStateSub) {
+        emptyStateSub.textContent = reviewTs
+          ? "This post isn't currently on the display (it may have expired or been removed)."
+          : emptyStateSubDefault;
+      }
       emptyState.classList.add("visible");
       frontLayer.classList.remove("visible");
       backLayer.classList.remove("visible");
@@ -345,6 +362,7 @@
   }
 
   // Kick things off.
+  if (reviewTs) document.title = "Review — " + document.title;
   emptyState.classList.add("visible");
   pollManifest();
 })();

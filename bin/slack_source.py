@@ -703,17 +703,20 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         interval = _describe_interval(remove_at_utc, now)
         # Deliberately NOT tied to cfg.ttl_days -- see build_help_text.
         example_remove_at_local = (posted_at_dt + timedelta(days=1)).astimezone(LOCAL_TZ)
-        truncation_note = (
-            f" Only the first {cfg.max_images} of {images_truncated_from} images were used."
-            if images_truncated_from else ""
-        )
-        _post_safe(
-            api, cfg.channel,
-            f"Added to the Skiff TV, until {remove_at_local:%-d %b %Y %H:%M} ({interval}). "
-            f"To remove, reply with `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example."
-            f"{truncation_note}",
-            thread_ts=ts,
-        )
+        review_url = f"{cfg.server_url}/index.html?ts={ts}"
+        # Slack's plain chat.postMessage mrkdwn has no native list syntax --
+        # each bullet line needs its own leading "• " (and its own
+        # newline before it), there's no block-list equivalent available
+        # without switching to Block Kit.
+        bullets = [
+            f"Removes {remove_at_local:%-d %b %Y %H:%M} ({interval})",
+            f"To remove: reply `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example",
+        ]
+        if images_truncated_from:
+            bullets.append(f"Only the first {cfg.max_images} of {images_truncated_from} images were used")
+        bullets.append(f"<{review_url}|See how it looks>")
+        message = "Added to the Skiff TV.\n" + "\n".join(f"• {b}" for b in bullets)
+        _post_safe(api, cfg.channel, message, thread_ts=ts)
 
 
 def apply_reply_command(cfg: SlackConfig, state: dict, parent_ts: str, reply: dict, now: datetime,

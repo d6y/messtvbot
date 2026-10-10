@@ -82,6 +82,38 @@ class BuildManifestTests(unittest.TestCase):
         manifest = refresh.build_manifest([("100.1", entry)], {}, self.kiosk_dir, 8, 30)
         self.assertEqual(manifest["items"][0]["caption"], "Free pizza today!")
 
+    def test_image_item_carries_its_source_post_ts(self):
+        # web/index.html?ts=<ts> uses this to find/show just one post's
+        # item(s) -- see the review-link acceptance reply in slack_source.py.
+        image_path = self.kiosk_dir / "source" / "slack-100.1.png"
+        image_path.parent.mkdir(parents=True)
+        image_path.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(image_path)], ts="100.1")
+        manifest = refresh.build_manifest([("100.1", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["items"][0]["ts"], "100.1")
+
+    def test_every_page_of_a_multi_page_pdf_carries_the_same_ts(self):
+        pdf_path = self.kiosk_dir / "source" / "slack-100.3.pdf"
+        pdf_path.parent.mkdir(parents=True)
+        pdf_path.write_bytes(b"x")
+        page1 = self.kiosk_dir / "rendered" / "slack-100.3" / "page-1.png"
+        page2 = self.kiosk_dir / "rendered" / "slack-100.3" / "page-2.png"
+        page1.parent.mkdir(parents=True)
+        page1.write_bytes(b"x")
+        page2.write_bytes(b"x")
+        entry = _attachment_entry(local_files=[str(pdf_path)], ts="100.3")
+        manifest = refresh.build_manifest(
+            [("100.3", entry)], {"slack-100.3": [page1, page2]}, self.kiosk_dir, 8, 30
+        )
+        self.assertEqual([item["ts"] for item in manifest["items"]], ["100.3", "100.3"])
+
+    def test_grid_item_carries_its_source_post_ts(self):
+        a = self._make_image("slack-100.5-0.jpg")
+        b = self._make_image("slack-100.5-1.png")
+        entry = _attachment_entry(text="", local_files=[str(a), str(b)], ts="100.5")
+        manifest = refresh.build_manifest([("100.5", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["items"][0]["ts"], "100.5")
+
     def test_image_without_caption_has_no_caption_field(self):
         image_path = self.kiosk_dir / "source" / "slack-100.1.png"
         image_path.parent.mkdir(parents=True)
@@ -179,7 +211,7 @@ class BuildManifestTests(unittest.TestCase):
         entry = _attachment_entry(text="", local_files=[str(video_path)], ts="100.8")
         manifest = refresh.build_manifest([("100.8", entry)], {}, self.kiosk_dir, 8, 30)
         self.assertEqual(manifest["items"], [
-            {"kind": "video", "name": "slack-100.8.mp4", "src": "source/slack-100.8.mp4"},
+            {"kind": "video", "ts": "100.8", "name": "slack-100.8.mp4", "src": "source/slack-100.8.mp4"},
         ])
 
     def test_video_with_caption_includes_caption_field(self):

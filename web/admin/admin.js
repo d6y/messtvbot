@@ -57,13 +57,25 @@
       const removeAt = document.createElement("td");
       removeAt.textContent = formatDate(entry.remove_at);
 
+      // Same page/CSS/JS a poster's own review link opens (see the bot's
+      // acceptance reply in slack_source.py) -- lets an admin see exactly
+      // how an entry renders without leaving this page.
+      const reviewCell = document.createElement("td");
+      const reviewLink = document.createElement("a");
+      reviewLink.className = "review-link";
+      reviewLink.href = "/index.html?ts=" + encodeURIComponent(entry.ts);
+      reviewLink.target = "_blank";
+      reviewLink.rel = "noopener";
+      reviewLink.textContent = "Review";
+      reviewCell.appendChild(reviewLink);
+
       const actionCell = document.createElement("td");
       const button = document.createElement("button");
       button.textContent = "Remove";
       button.addEventListener("click", () => removeEntry(entry.ts));
       actionCell.appendChild(button);
 
-      row.append(thumbCell, author, summary, posted, removeAt, actionCell);
+      row.append(thumbCell, author, summary, posted, removeAt, reviewCell, actionCell);
       tbody.appendChild(row);
     }
   }

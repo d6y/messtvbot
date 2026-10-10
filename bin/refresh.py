@@ -331,9 +331,14 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
     heic_rendered = heic_rendered or {}
     items = []
     for _ts, entry in active_entries:
+        # Every item carries its source post's ts, so web/index.html can be
+        # opened as a single-post review page via ?ts=<ts> (one post can
+        # produce several items -- one per PDF page -- all sharing it).
+        ts = entry["ts"]
         if entry["kind"] == "text":
             items.append({
                 "kind": "text",
+                "ts": ts,
                 "text": entry["text"],
                 "author": entry["author"],
                 "posted_at": entry["posted_at"],
@@ -349,7 +354,7 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                     if rel is None:
                         continue
                     item = {
-                        "kind": "pdf-page", "name": file_path.name, "src": rel,
+                        "kind": "pdf-page", "ts": ts, "name": file_path.name, "src": rel,
                         "page": i, "pages": total,
                     }
                     # Repeats on every page -- each page is its own slide
@@ -362,7 +367,7 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
             elif file_path.suffix.lower() in VIDEO_EXTS:
                 rel = _relative_or_none(file_path, kiosk_dir, entry.get("ts"), "manifest item")
                 if rel is not None:
-                    item = {"kind": "video", "name": file_path.name, "src": rel}
+                    item = {"kind": "video", "ts": ts, "name": file_path.name, "src": rel}
                     if entry.get("text"):
                         item["caption"] = entry["text"]
                     items.append(item)
@@ -377,13 +382,13 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                         continue
                     regions.append({"kind": "image", "src": rel, "name": img_path.name})
                 if regions:
-                    items.append({"kind": "grid", "regions": regions})
+                    items.append({"kind": "grid", "ts": ts, "regions": regions})
             else:
                 display_path = heic_rendered.get(str(file_path), file_path)
                 rel = _relative_or_none(display_path, kiosk_dir, entry.get("ts"), "manifest item")
                 if rel is None:
                     continue
-                item = {"kind": "image", "name": file_path.name, "src": rel}
+                item = {"kind": "image", "ts": ts, "name": file_path.name, "src": rel}
                 if entry.get("text"):
                     item["caption"] = entry["text"]
                 items.append(item)
