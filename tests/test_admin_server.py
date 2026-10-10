@@ -109,6 +109,26 @@ class AdminServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body[0]["thumb"], "rendered/slack-100.3/page-1.png")
 
+    def test_get_entries_pdf_with_zero_padded_page_names_has_first_page_as_thumbnail(self):
+        # Regression: pdftoppm zero-pads page numbers to the document's
+        # total page count once a PDF has 10+ pages (page-01.png, not
+        # page-1.png) -- a hardcoded "page-1.png" lookup silently finds
+        # nothing and the admin row shows no thumbnail at all.
+        pdf_path = self.kiosk_dir / "source" / "slack-100.5.pdf"
+        pdf_path.parent.mkdir(parents=True)
+        pdf_path.write_bytes(b"x")
+        render_dir = self.kiosk_dir / "rendered" / "slack-100.5"
+        render_dir.mkdir(parents=True)
+        for n in range(1, 13):
+            (render_dir / f"page-{n:02d}.png").write_bytes(b"x")
+        entry = {"status": "active", "kind": "attachment", "text": "", "author": "Jane",
+                  "posted_at": "2026-08-01T00:00:00+00:00", "remove_at": "2026-12-31T00:00:00+00:00",
+                  "remove_reason": "ttl", "local_files": [str(pdf_path)]}
+        ms.save_state({"100.5": entry}, self.state_path)
+        status, body = self._get("/api/entries")
+        self.assertEqual(status, 200)
+        self.assertEqual(body[0]["thumb"], "rendered/slack-100.5/page-01.png")
+
     def test_get_entries_heic_entry_has_converted_jpg_as_thumbnail(self):
         heic_path = self.kiosk_dir / "source" / "slack-100.4.heic"
         heic_path.parent.mkdir(parents=True)

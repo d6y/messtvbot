@@ -22,6 +22,7 @@ import base64
 import hmac
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -34,6 +35,23 @@ import slack_source as ms
 
 def _requires_auth(path: str) -> bool:
     return path == "/admin" or path.startswith("/admin/") or path.startswith("/api/")
+
+
+_PDF_PAGE_NUM_RE = re.compile(r"-(\d+)\.png$")
+
+
+def _first_rendered_pdf_page(pdf_render_dir: Path) -> Path | None:
+    """The lowest-numbered rendered page in a PDF's render directory, or
+    None if it hasn't been rendered yet. Not just `page-1.png` --
+    pdftoppm zero-pads page numbers to the document's total page count
+    (page-01.png, page-02.png, ... once a PDF has 10+ pages), so page one
+    isn't always named that; see _PAGE_NUM_RE's matching logic in
+    refresh.py, which this mirrors."""
+    pages = sorted(
+        pdf_render_dir.glob("page-*.png"),
+        key=lambda p: int(m.group(1)) if (m := _PDF_PAGE_NUM_RE.search(p.name)) else 0,
+    )
+    return pages[0] if pages else None
 
 
 def _thumb_path(kiosk_dir: Path, entry: dict) -> str | None:
@@ -51,7 +69,9 @@ def _thumb_path(kiosk_dir: Path, entry: dict) -> str | None:
     elif filetype in ms.IMAGE_FILETYPES:
         candidate = file_path
     elif filetype == ms.PDF_FILETYPE:
-        candidate = kiosk_dir / "rendered" / file_path.stem / "page-1.png"
+        candidate = _first_rendered_pdf_page(kiosk_dir / "rendered" / file_path.stem)
+        if candidate is None:
+            return None
     else:
         return None
     if not candidate.exists():

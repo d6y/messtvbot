@@ -216,6 +216,10 @@
       const ok = await showGridSlide(item);
       if (!ok) {
         console.warn("Mess TV Bot: grid slide had no loadable images", item);
+        // advance() computes the next slide from currentIndex -- without
+        // updating it here too, a permanently-broken item would be
+        // retried forever instead of actually moving on.
+        currentIndex = index;
         scheduleNext(300);
         return;
       }
@@ -282,7 +286,12 @@
       currentIndex = index;
     } catch (err) {
       // Broken/missing image: skip it and try the next one shortly.
+      // advance() computes the next slide from currentIndex -- without
+      // updating it here too, a permanently-broken image would be
+      // retried forever instead of actually moving on (found live: one
+      // bad image froze the whole slideshow on that slide indefinitely).
       console.warn("Mess TV Bot: failed to load", item.src, err);
+      currentIndex = index;
       scheduleNext(300);
     }
   }
