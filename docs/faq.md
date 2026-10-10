@@ -10,7 +10,7 @@ nav: faq
 <div class="faq-item" markdown="1">
 ### I posted something and nothing happened. What's wrong?
 
-Check the thread under your message — the bot replies either way. An unsupported attachment (video, an image format it doesn't recognise like TIFF, or a file that's too large) gets a reply explaining why it wasn't added, rather than being shown partially or silently dropped. No reply at all usually means the message was genuinely empty, or a download failed (a flaky network, usually) — try posting again.
+Check the thread under your message. An unsupported attachment (video, an image format it doesn't recognise like TIFF, or a file that's too large) gets a reply explaining why it wasn't added, rather than being shown partially or silently dropped. No reply at all usually means the message was genuinely empty, or a download failed (a flaky network, usually) — try posting again.
 </div>
 
 <div class="faq-item" markdown="1">

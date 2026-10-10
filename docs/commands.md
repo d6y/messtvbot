@@ -7,7 +7,12 @@ nav: commands
 
 # Commands
 
-`remove` is a reply to your own message's thread. `help` works either way — a new message on its own, or a reply in a message's thread.
+There are two:
+
+
+1. `remove` in message's thread to remove it or schedule removal.
+2. `help` in a new message on its own, or a reply in a message's thread.
+
 {:.lede}
 
 <div class="callout" markdown="1">
