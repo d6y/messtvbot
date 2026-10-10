@@ -266,9 +266,9 @@ def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
     example_remove_at = (posted_at_dt + timedelta(days=1)).astimezone(LOCAL_TZ)
     return (
         "Messages posted here appear on the Mess TV. You can send text, "
-        "images or a combination of both.\n\n"
-        f"Each message is shown for {interval}. To remove sooner or later, "
-        f"reply to the message with `remove now` or `remove {example_remove_at:%-d %b %Y}`.\n\n"
+        f"images or a combination of both. Each message is shown for {interval}.\n\n"
+        f"To remove at a different time: reply `remove now` or, for example, "
+        f"`remove {example_remove_at:%-d %b}`, `remove tomorrow`, etc.\n\n"
         f"More help: <{DOCS_URL}|{DOCS_URL}>.\n\n"
         f"There's also an admin interface at {cfg.server_url}/admin.\n\n"
         f"If I'm broken, please contact `{cfg.admin_contact}`."

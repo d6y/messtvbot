@@ -40,7 +40,7 @@ Yes, Slack's normal formatting works: `*bold*`, `_italic_`, `~strikethrough~`, a
 <div class="faq-item" markdown="1">
 ### Does emoji work?
 
-Yes, mostly, but there are some Slack-specific weirdness. If you see anything that looks wonky, let us know (type `help` to see who)
+Yes, mostly, but there issome Slack-specific weirdness. If you see anything that looks wonky, let us know (type `help` to see who)
 </div>
 
 <div class="faq-item" markdown="1">

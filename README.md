@@ -154,9 +154,6 @@ bin/serve.sh
 
 ...and open `http://127.0.0.1:8420/` (or /admin for the admin panel).
 
-Full walkthrough, including troubleshooting, is in
-[`docs/SETUP.md`](docs/SETUP.md).
-
 ## Repo layout
 
 ```
@@ -167,7 +164,7 @@ systemd/    Pi: user service/timer units
 launchd/    Mac: optional background agents
 install/    install-pi.sh, install-mac.sh
 config/     kiosk.env.example (copy to kiosk.env, gitignored)
-docs/       full setup walkthrough
+docs/       published end-user site (index.md, commands.md, faq.md), built via Jekyll/GitHub Pages
 ```
 
 ## Testing without Slack

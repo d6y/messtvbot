@@ -186,7 +186,7 @@ def render_pdfs(pdf_files: list[Path], rendered_dir: Path, width: int, max_pages
 
     have_pdftoppm = shutil.which("pdftoppm") is not None
     if not have_pdftoppm and pdf_files:
-        log.warning("pdftoppm not found; PDFs will be skipped (see docs/SETUP.md)")
+        log.warning("pdftoppm not found; PDFs will be skipped (install poppler -- see README.md)")
 
     for pdf in pdf_files:
         stem = pdf.stem

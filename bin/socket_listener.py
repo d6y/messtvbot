@@ -59,7 +59,7 @@ def load_app_token() -> str:
     app_token = os.environ.get("KIOSK_SLACK_APP_TOKEN", "").strip()
     if not app_token:
         log.error("KIOSK_SLACK_APP_TOKEN must be set to run socket_listener.py "
-                   "(the xapp-... app-level token -- see docs/SETUP.md).")
+                   "(the xapp-... app-level token -- see README.md's Slack app setup).")
         sys.exit(2)
     return app_token
 

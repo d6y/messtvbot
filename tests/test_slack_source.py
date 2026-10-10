@@ -307,7 +307,7 @@ class BuildHelpTextTests(unittest.TestCase):
         text = ms.build_help_text(self.cfg, self.posted_at_dt)
         self.assertIn("`remove now`", text)
         example_local = (self.posted_at_dt + timedelta(days=1)).astimezone(ms.LOCAL_TZ)
-        self.assertIn(f"`remove {example_local:%-d %b %Y}`", text)
+        self.assertIn(f"`remove {example_local:%-d %b}`", text)
 
     def test_includes_admin_url(self):
         text = ms.build_help_text(self.cfg, self.posted_at_dt)
