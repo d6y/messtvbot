@@ -284,12 +284,11 @@ def local_filename(ts: str, filetype: str, index: int | None = None) -> str:
 # Slack skin-tone shortcodes (":skin-tone-2:" through ":skin-tone-6:") are
 # sent as a separate code immediately after the base emoji's shortcode
 # rather than as part of one combined unicode sequence; `emoji` doesn't
-# know this Slack-specific convention, so it's applied as a second pass.
+# know this Slack-specific convention, so it has to be stitched on here.
 _SKIN_TONE_MODIFIERS = {
     "2": "\U0001f3fb", "3": "\U0001f3fc", "4": "\U0001f3fd",
     "5": "\U0001f3fe", "6": "\U0001f3ff",
 }
-_SKIN_TONE_RE = re.compile(r":skin-tone-([2-6]):")
 
 # Slack's own shortcode names occasionally diverge from the `emoji`
 # package's CLDR-based aliases (e.g. Slack uses a numeral where the
@@ -298,24 +297,70 @@ _SKIN_TONE_RE = re.compile(r":skin-tone-([2-6]):")
 # add to this as more turn up rather than trying to solve it generally.
 _SLACK_SHORTCODE_ALIASES = {
     "smiling_face_with_3_hearts": "smiling_face_with_three_hearts",
+    "woman-shrugging": "woman_shrugging",
+    "flag-england": "england",
+    "flag-scotland": "scotland",
+    "flag-wales": "wales",
 }
-_SHORTCODE_RE = re.compile(r":([a-zA-Z0-9_+-]+):")
+
+# A shortcode, with an optional immediately-following ":skin-tone-N:" --
+# matched as one unit (not two independent passes) so the modifier can be
+# inserted at the right place in whatever emojize() returns for the base
+# shortcode, rather than appended wherever ":skin-tone-N:" happened to sit
+# in the original text.
+_SHORTCODE_WITH_OPTIONAL_SKIN_TONE_RE = re.compile(
+    r":([a-zA-Z0-9_+-]+):(?::skin-tone-([2-6]):)?"
+)
+
+# Slack's two-letter country flags (":flag-gb:", ":flag-us:", ":flag-la:",
+# etc.) follow ISO 3166-1 alpha-2, but the `emoji` package's aliases for
+# these are inconsistent and mostly name-based (e.g. "laos", not "la") --
+# almost none of Slack's two-letter codes resolve via alias lookup, so
+# unlike the small hand-picked _SLACK_SHORTCODE_ALIASES list above, this
+# needs a general rule rather than an ever-growing per-country entry.
+# A country flag is just a pair of Unicode "regional indicator symbol"
+# letters, offset from the ASCII letters of the code -- computed directly,
+# not looked up. UK-nation flags (flag-england/scotland/wales) aren't ISO
+# codes and aren't two letters, so they don't hit this path; they're
+# already handled above.
+_COUNTRY_FLAG_RE = re.compile(r"flag-([a-zA-Z]{2})$")
+_REGIONAL_INDICATOR_OFFSET = ord("\U0001f1e6") - ord("a")
 
 
-def _apply_slack_shortcode_aliases(text: str) -> str:
-    def replace(m: re.Match) -> str:
-        name = m.group(1)
-        alias = _SLACK_SHORTCODE_ALIASES.get(name)
-        return f":{alias}:" if alias else m.group(0)
-    return _SHORTCODE_RE.sub(replace, text)
+def _country_flag_shortcode(name: str) -> str | None:
+    m = _COUNTRY_FLAG_RE.fullmatch(name)
+    if not m:
+        return None
+    return "".join(chr(ord(c) + _REGIONAL_INDICATOR_OFFSET) for c in m.group(1).lower())
 
 
 def convert_emoji_shortcodes(text: str) -> str:
     """Convert Slack-style `:shortcode:` emoji (including `:skin-tone-N:`
     modifiers) into real unicode emoji. Unrecognized shortcodes are left
     as-is rather than dropped."""
-    text = emoji.emojize(_apply_slack_shortcode_aliases(text), language="alias")
-    return _SKIN_TONE_RE.sub(lambda m: _SKIN_TONE_MODIFIERS[m.group(1)], text)
+    def replace(m: re.Match) -> str:
+        name, tone = m.group(1), m.group(2)
+        alias = _SLACK_SHORTCODE_ALIASES.get(name, name)
+        result = emoji.emojize(f":{alias}:", language="alias")
+        if result == f":{alias}:":
+            flag = _country_flag_shortcode(name)
+            if flag is None:
+                # Unrecognized shortcode -- leave the whole match
+                # (including any trailing :skin-tone-N:) untouched rather
+                # than silently dropping part of it.
+                return m.group(0)
+            result = flag
+        if tone:
+            # RGI order is base codepoint, then skin-tone modifier, then
+            # any ZWJ-joined parts (e.g. woman-shrugging + light tone is
+            # SHRUG, MODIFIER, ZWJ, FEMALE SIGN, VS16) -- modifier anywhere
+            # else, e.g. appended at the very end, is an invalid sequence
+            # that renders as the base emoji plus a stray flesh-tone square
+            # on at least some emoji fonts (seen live on the Pi deployment).
+            modifier = _SKIN_TONE_MODIFIERS[tone]
+            result = result[0] + modifier + result[1:]
+        return result
+    return _SHORTCODE_WITH_OPTIONAL_SKIN_TONE_RE.sub(replace, text)
 
 
 # Slack's <@USERID>, <@USERID|label>, <#CHANNELID|name>, <!here>,

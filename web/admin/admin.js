@@ -75,7 +75,7 @@
       button.addEventListener("click", () => removeEntry(entry.ts));
       actionCell.appendChild(button);
 
-      row.append(thumbCell, author, summary, posted, removeAt, reviewCell, actionCell);
+      row.append(thumbCell, author, summary, reviewCell, posted, removeAt, actionCell);
       tbody.appendChild(row);
     }
   }
