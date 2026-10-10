@@ -9,9 +9,12 @@ directly by slack-state.json, for the no-auth admin page at /admin/:
   GET  /api/entries              -- active entries, oldest first
   POST /api/entries/<ts>/remove  -- immediately remove one entry
 
-Runs as a long-lived process (systemd service / launchd agent), separate
-from refresh.py's periodic tick. Both processes write
-slack-state.json, guarded by slack_source.state_lock.
+Runs as a long-lived process (systemd service / launchd agent). An admin
+removal rebuilds manifest.json itself (via refresh.build_and_write_manifest)
+rather than waiting for socket_listener.py's next real-time event or
+periodic reconciliation pass (up to KIOSK_RECONCILE_SECONDS later) to
+notice the state change -- otherwise a removal via the admin UI would sit
+on screen for minutes with nothing to trigger a rebuild.
 """
 from __future__ import annotations
 
@@ -25,6 +28,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import refresh
 import slack_source as ms
 
 
@@ -58,7 +62,7 @@ def _thumb_path(kiosk_dir: Path, entry: dict) -> str | None:
         return None
 
 
-def make_handler(kiosk_dir: Path, state_path: Path, audit_path: Path,
+def make_handler(kiosk_dir: Path, state_path: Path, audit_path: Path, cfg: refresh.Config,
                   admin_user: str | None = None, admin_pass: str | None = None):
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
@@ -144,6 +148,7 @@ def make_handler(kiosk_dir: Path, state_path: Path, audit_path: Path,
                     "ts": ts, "author": "admin-ui", "kind": "command",
                     "action": "removed", "summary": "removed via admin UI",
                 })
+                refresh.build_and_write_manifest(cfg, state)
                 self._json(200, {"status": "cancelled"})
                 return
             self.send_error(404)
@@ -152,13 +157,18 @@ def make_handler(kiosk_dir: Path, state_path: Path, audit_path: Path,
 
 
 def main() -> int:
-    kiosk_dir = Path(os.path.expandvars(os.environ.get("KIOSK_DIR", "~/kiosk-data"))).expanduser()
+    # serve.sh sources config/kiosk.env into the environment before exec'ing
+    # this script, so load_config(sys.argv) (no file argument here) picks up
+    # everything from os.environ already -- same as refresh.py/
+    # socket_listener.py when run via systemd's EnvironmentFile.
+    cfg = refresh.load_config(sys.argv)
+    kiosk_dir = cfg.kiosk_dir
     port = int(os.environ.get("KIOSK_PORT", "8420"))
     bind_host = os.environ.get("KIOSK_BIND_HOST", "127.0.0.1")
     admin_user = os.environ.get("ADMIN_USER", "").strip()
     admin_pass = os.environ.get("ADMIN_PASS", "")
-    state_path = kiosk_dir / "data" / "slack-state.json"
-    audit_path = kiosk_dir / "data" / "audit.jsonl"
+    state_path = cfg.data_dir / "slack-state.json"
+    audit_path = cfg.data_dir / "audit.jsonl"
 
     if bind_host != "127.0.0.1" and not admin_user:
         print(
@@ -168,7 +178,7 @@ def main() -> int:
             file=sys.stderr,
         )
 
-    handler_cls = make_handler(kiosk_dir, state_path, audit_path, admin_user or None, admin_pass)
+    handler_cls = make_handler(kiosk_dir, state_path, audit_path, cfg, admin_user or None, admin_pass)
     server = ThreadingHTTPServer((bind_host, port), handler_cls)
     print(f"kiosk-admin-server: serving {kiosk_dir} on http://{bind_host}:{port}/ (admin at /admin/)")
     server.serve_forever()

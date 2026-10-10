@@ -319,9 +319,11 @@ _MENTION_RE = re.compile(r"<([@#!])([^|>]+)(?:\|([^>]*))?>")
 
 def resolve_mentions(text: str, api: "SlackAPI") -> str:
     """Replace Slack's <@USERID>/<#CHANNELID|name>/<!here>-style mention
-    syntax with human-readable text. A user mention with no embedded
-    label costs one (cached) users.info lookup; everything else is
-    resolved from what Slack already included in the text."""
+    syntax with human-readable text. A user mention with no embedded label
+    costs one (cached) users.info lookup, and likewise a channel mention
+    with no embedded label costs one (cached) conversations.info lookup --
+    everything else is resolved from what Slack already included in the
+    text."""
     def replace(m: re.Match) -> str:
         sigil, ident, label = m.group(1), m.group(2), m.group(3)
         if sigil == "@":
@@ -333,7 +335,13 @@ def resolve_mentions(text: str, api: "SlackAPI") -> str:
                 log.error("Failed to resolve mentioned user %s: %s", ident, exc)
                 return f"@{ident}"
         if sigil == "#":
-            return f"#{label}" if label else f"#{ident}"
+            if label:
+                return f"#{label}"
+            try:
+                return f"#{api.channel_name(ident)}"
+            except SlackAPIError as exc:
+                log.error("Failed to resolve mentioned channel %s: %s", ident, exc)
+                return f"#{ident}"
         # "!" covers @here/@channel/@everyone and subteam (user group)
         # mentions -- Slack always embeds a usable label for these except
         # the plain here/channel/everyone trio.
@@ -429,6 +437,7 @@ class SlackAPI(Protocol):
     def history(self, channel: str, oldest: str) -> list[dict]: ...
     def replies(self, channel: str, thread_ts: str) -> list[dict]: ...
     def user_name(self, user_id: str) -> str: ...
+    def channel_name(self, channel_id: str) -> str: ...
     def download(self, url: str, dest_path: Path) -> None: ...
     def post_message(self, channel: str, text: str, thread_ts: str | None = None) -> None: ...
     def auth_test(self) -> str: ...
@@ -442,6 +451,7 @@ class SlackWebAPI:
     def __init__(self, token: str):
         self.token = token
         self._user_cache: dict[str, str] = {}
+        self._channel_cache: dict[str, str] = {}
 
     def _call(self, method: str, params: dict) -> dict:
         url = self.BASE_URL + method
@@ -502,6 +512,14 @@ class SlackWebAPI:
         user = payload.get("user", {})
         name = user.get("real_name") or user.get("name") or user_id
         self._user_cache[user_id] = name
+        return name
+
+    def channel_name(self, channel_id: str) -> str:
+        if channel_id in self._channel_cache:
+            return self._channel_cache[channel_id]
+        payload = self._call("conversations.info", {"channel": channel_id})
+        name = payload.get("channel", {}).get("name") or channel_id
+        self._channel_cache[channel_id] = name
         return name
 
     def download(self, url: str, dest_path: Path) -> None:
@@ -569,6 +587,255 @@ def backfill_entries(state: dict, ttl_days: int) -> dict:
     return state
 
 
+def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, now: datetime,
+                    api: SlackAPI, audit_path: Path) -> None:
+    """Classify and ingest one raw Slack message dict (a new top-level post),
+    writing `state[ts]` and posting/auditing the appropriate reply. Shared by
+    poll_slack's bulk history scan and handle_realtime_event's one-at-a-time
+    Socket Mode path -- do not duplicate this logic at a new call site."""
+    ts = msg["ts"]
+    kind = classify_message(msg, bot_user_id=cfg.bot_user_id)
+    author_for_audit = msg.get("user", "unknown")
+    posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+    posted_at = posted_at_dt.isoformat(timespec="seconds")
+
+    unsupported_reason = _unsupported_attachment_reason(msg, max_bytes=cfg.max_attachment_bytes)
+    if unsupported_reason is not None:
+        # Reject the whole message rather than silently dropping the
+        # attachment (or, worse, showing just the caption with no
+        # attachment at all): someone who specifically attached a file
+        # had something in mind that a stray caption alone -- or
+        # nothing shown and no explanation -- wouldn't represent.
+        log.info("Rejecting Slack message %s: %s", ts, unsupported_reason)
+        _post_safe(
+            api, cfg.channel,
+            f"Sorry, this post wasn't added -- {unsupported_reason}. "
+            "Try an image, PDF, or text instead.",
+            thread_ts=ts,
+        )
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts,
+            "author": author_for_audit, "kind": "ignored", "action": "attachment_rejected",
+            "summary": (msg.get("text") or "")[:80],
+        })
+        state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+        return
+
+    if kind == "ignored":
+        log.info("Ignoring Slack message %s: no recognized content", ts)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts,
+            "author": author_for_audit, "kind": "ignored", "action": "ignored",
+            "summary": (msg.get("text") or "")[:80],
+        })
+        # Record a marker so this message isn't refetched and re-audited on
+        # every future tick. Never active, so it's invisible to the display,
+        # the sweep, and the admin UI.
+        state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+        return
+
+    if kind == "text" and is_help_trigger(msg.get("text")):
+        log.info("Replying with help text for Slack message %s: looks like a help/remove request", ts)
+        _post_safe(api, cfg.channel, build_help_text(cfg, posted_at_dt), thread_ts=ts)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts,
+            "author": author_for_audit, "kind": "ignored", "action": "help_reply",
+            "summary": (msg.get("text") or "")[:80],
+        })
+        # Same marker pattern as the "ignored" branch above -- never
+        # active, never re-processed, never shown on the display.
+        state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+        return
+    if msg.get("user"):
+        try:
+            author = api.user_name(msg["user"])
+        except SlackAPIError as exc:
+            log.error("Failed to resolve Slack user name for %s: %s", msg["user"], exc)
+            author = msg["user"]
+    else:
+        author = "Unknown"
+    entry = {
+        "ts": ts, "posted_at": posted_at, "status": "active", "kind": kind,
+        "text": "", "author": author, "local_files": [],
+        "remove_at": (posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
+        "remove_reason": "ttl",
+    }
+
+    entry["text"] = convert_emoji_shortcodes(
+        resolve_mentions(html.unescape(msg.get("text", "")), api)
+    )
+    images_truncated_from = 0
+    if kind == "attachment":
+        attachments = extract_attachments(msg)
+        # Video is rejected above before reaching here, so this only
+        # ever needs to handle PDF -- multi-image mixing is out of
+        # scope, fall back to the single-attachment behavior (first
+        # recognized file) whenever a PDF is involved.
+        single_file_only = any(a["filetype"] == PDF_FILETYPE for a in attachments)
+        to_download = attachments[:1] if single_file_only else attachments
+        if not single_file_only and len(to_download) > cfg.max_images:
+            images_truncated_from = len(to_download)
+            to_download = to_download[:cfg.max_images]
+        multi = len(to_download) > 1
+        downloaded = []
+        for i, attachment in enumerate(to_download):
+            dest = source_dir / local_filename(ts, attachment["filetype"], i if multi else None)
+            try:
+                api.download(attachment["url"], dest)
+            except SlackAPIError as exc:
+                log.error("Failed to download Slack attachment for %s (%s): %s",
+                          ts, attachment["name"], exc)
+            else:
+                downloaded.append(str(dest))
+        entry["local_files"] = downloaded
+        if not downloaded:
+            entry["status"] = "failed"
+
+    state[ts] = entry
+    append_audit(audit_path, {
+        "at": now.isoformat(timespec="seconds"), "ts": ts, "author": entry["author"],
+        "kind": kind, "action": "ingested" if entry["status"] == "active" else entry["status"],
+        "summary": _describe_entry(entry),
+    })
+    if entry["status"] == "active":
+        remove_at_utc = datetime.fromisoformat(entry["remove_at"])
+        remove_at_local = remove_at_utc.astimezone(LOCAL_TZ)
+        interval = _describe_interval(remove_at_utc, now)
+        # Deliberately NOT tied to cfg.ttl_days -- see build_help_text.
+        example_remove_at_local = (posted_at_dt + timedelta(days=1)).astimezone(LOCAL_TZ)
+        truncation_note = (
+            f" Only the first {cfg.max_images} of {images_truncated_from} images were used."
+            if images_truncated_from else ""
+        )
+        _post_safe(
+            api, cfg.channel,
+            f"Added to the Skiff TV, until {remove_at_local:%-d %b %Y %H:%M} ({interval}). "
+            f"To remove, reply with `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example."
+            f"{truncation_note}",
+            thread_ts=ts,
+        )
+
+
+def apply_reply_command(cfg: SlackConfig, state: dict, parent_ts: str, reply: dict, now: datetime,
+                         api: SlackAPI, audit_path: Path) -> None:
+    """Apply one already-parsed-as-a-command reply to the active entry at
+    `parent_ts`. Shared by poll_slack's per-thread reply scan and
+    handle_realtime_event's one-at-a-time Socket Mode path -- do not
+    duplicate this logic at a new call site."""
+    entry = state[parent_ts]
+    command = parse_command(reply.get("text", ""), now)
+    if command is None:
+        return
+    command_ts = reply.get("ts")
+    reply_user = reply.get("user")
+
+    # A scheduled removal deliberately leaves the entry active, so the same
+    # reply is still there next tick. Applying it again would recompute a
+    # relative remove_at ("in 1 week") forward forever and re-post/re-audit
+    # every tick, so skip a reply we've already fully applied.
+    if command_ts is not None and entry.get("remove_command_ts") == command_ts:
+        return
+
+    if reply_user:
+        try:
+            requested_by = api.user_name(reply_user)
+        except SlackAPIError as exc:
+            log.error("Failed to resolve Slack user name for %s: %s", reply_user, exc)
+            requested_by = reply_user
+    else:
+        requested_by = "someone"
+
+    if command.remove_at is None:
+        # Trigger word recognized, but the phrase after it wasn't a
+        # date we could parse -- say so and repeat the *existing*
+        # schedule, rather than silently treating it as "remove now"
+        # (which a garbled reply almost certainly didn't mean).
+        entry["remove_command_ts"] = command_ts
+        current_remove_at_utc = datetime.fromisoformat(entry["remove_at"])
+        current_remove_at_local = current_remove_at_utc.astimezone(LOCAL_TZ)
+        interval = _describe_interval(current_remove_at_utc, now)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": parent_ts, "author": requested_by,
+            "kind": "command", "action": "not_understood",
+            "summary": "removal phrase not understood",
+        })
+        _post_safe(
+            api, cfg.channel,
+            "Sorry, I didn't understand that date. Still set to be removed on "
+            f"{current_remove_at_local:%-d %b %Y %H:%M} ({interval}).",
+            thread_ts=parent_ts,
+        )
+        return
+
+    entry["remove_reason"] = "command"
+    entry["remove_requested_by"] = requested_by
+    entry["remove_command_ts"] = command_ts
+    append_audit(audit_path, {
+        "at": now.isoformat(timespec="seconds"), "ts": parent_ts, "author": requested_by,
+        "kind": "command", "action": "removed" if command.remove_at <= now else "scheduled_removal",
+        "summary": f"remove -> {command.remove_at.isoformat(timespec='seconds')}",
+    })
+    if command.remove_at <= now:
+        entry["status"] = "cancelled"
+        entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
+        for f in entry.get("local_files", []):
+            Path(f).unlink(missing_ok=True)
+        _post_safe(api, cfg.channel, "Removed from the display.", thread_ts=parent_ts)
+    else:
+        entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
+        remove_at_local = command.remove_at.astimezone(LOCAL_TZ)
+        interval = _describe_interval(command.remove_at, now)
+        _post_safe(
+            api, cfg.channel,
+            f"Scheduled for removal on {remove_at_local:%-d %b %Y %H:%M} ({interval}).",
+            thread_ts=parent_ts,
+        )
+
+
+def handle_realtime_event(cfg: SlackConfig, state: dict, source_dir: Path, event: dict, now: datetime,
+                           api: SlackAPI, audit_path: Path) -> bool:
+    """Apply one Slack Socket Mode `message` event to `state` -- the
+    real-time counterpart to poll_slack's bulk history scan. Returns True if
+    `state` was mutated (so the caller knows whether to rebuild the
+    manifest). Routes into the same ingest_message/apply_reply_command
+    helpers poll_slack uses -- any new ingestion entrypoint should call into
+    those, not reimplement this logic."""
+    ts = event.get("ts")
+    if not ts:
+        return False
+
+    thread_ts = event.get("thread_ts")
+    if not thread_ts or thread_ts == ts:
+        # A new top-level message. Subtype filtering matches
+        # classify_message's SYSTEM_SUBTYPES check -- edits, deletes, joins,
+        # etc. aren't content at all (edits specifically are a documented
+        # non-feature, see README). File uploads arrive as subtype
+        # "file_share", which is NOT in SYSTEM_SUBTYPES, so those still
+        # reach ingest_message below, same as poll_slack's bulk path.
+        if event.get("subtype") in SYSTEM_SUBTYPES:
+            return False
+        if ts in state:
+            return False
+        ingest_message(cfg, state, source_dir, event, now, api, audit_path)
+        return True
+
+    # A reply. poll_slack's own reply loop doesn't filter replies by subtype
+    # either (only by bot_id, below) -- so a "thread_broadcast" reply (the
+    # "also send to channel" option) is still a real removal command and
+    # must reach apply_reply_command here, not get dropped.
+
+    # A reply. Only meaningful if it's on a parent we're actively tracking,
+    # and not the bot's own thread replies.
+    if event.get("bot_id"):
+        return False
+    entry = state.get(thread_ts)
+    if entry is None or entry["status"] != "active":
+        return False
+    before = dict(entry)
+    apply_reply_command(cfg, state, thread_ts, event, now, api, audit_path)
+    return entry != before
+
+
 def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, api: SlackAPI,
                 audit_path: Path) -> dict:
     """One polling tick: fetch new messages, ingest them, check active
@@ -599,126 +866,7 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         ts = msg.get("ts")
         if not ts or ts in state:
             continue
-        kind = classify_message(msg, bot_user_id=cfg.bot_user_id)
-        author_for_audit = msg.get("user", "unknown")
-        posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
-        posted_at = posted_at_dt.isoformat(timespec="seconds")
-
-        unsupported_reason = _unsupported_attachment_reason(msg, max_bytes=cfg.max_attachment_bytes)
-        if unsupported_reason is not None:
-            # Reject the whole message rather than silently dropping the
-            # attachment (or, worse, showing just the caption with no
-            # attachment at all): someone who specifically attached a file
-            # had something in mind that a stray caption alone -- or
-            # nothing shown and no explanation -- wouldn't represent.
-            log.info("Rejecting Slack message %s: %s", ts, unsupported_reason)
-            _post_safe(
-                api, cfg.channel,
-                f"Sorry, this post wasn't added -- {unsupported_reason}. "
-                "Try an image, PDF, or text instead.",
-                thread_ts=ts,
-            )
-            append_audit(audit_path, {
-                "at": now.isoformat(timespec="seconds"), "ts": ts,
-                "author": author_for_audit, "kind": "ignored", "action": "attachment_rejected",
-                "summary": (msg.get("text") or "")[:80],
-            })
-            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
-            continue
-
-        if kind == "ignored":
-            log.info("Ignoring Slack message %s: no recognized content", ts)
-            append_audit(audit_path, {
-                "at": now.isoformat(timespec="seconds"), "ts": ts,
-                "author": author_for_audit, "kind": "ignored", "action": "ignored",
-                "summary": (msg.get("text") or "")[:80],
-            })
-            # Record a marker so this message isn't refetched and re-audited on
-            # every future tick. Never active, so it's invisible to the display,
-            # the sweep, and the admin UI.
-            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
-            continue
-
-        if kind == "text" and is_help_trigger(msg.get("text")):
-            log.info("Replying with help text for Slack message %s: looks like a help/remove request", ts)
-            _post_safe(api, cfg.channel, build_help_text(cfg, posted_at_dt), thread_ts=ts)
-            append_audit(audit_path, {
-                "at": now.isoformat(timespec="seconds"), "ts": ts,
-                "author": author_for_audit, "kind": "ignored", "action": "help_reply",
-                "summary": (msg.get("text") or "")[:80],
-            })
-            # Same marker pattern as the "ignored" branch above -- never
-            # active, never re-processed, never shown on the display.
-            state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
-            continue
-        if msg.get("user"):
-            try:
-                author = api.user_name(msg["user"])
-            except SlackAPIError as exc:
-                log.error("Failed to resolve Slack user name for %s: %s", msg["user"], exc)
-                author = msg["user"]
-        else:
-            author = "Unknown"
-        entry = {
-            "ts": ts, "posted_at": posted_at, "status": "active", "kind": kind,
-            "text": "", "author": author, "local_files": [],
-            "remove_at": (posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
-            "remove_reason": "ttl",
-        }
-
-        entry["text"] = convert_emoji_shortcodes(
-            resolve_mentions(html.unescape(msg.get("text", "")), api)
-        )
-        images_truncated_from = 0
-        if kind == "attachment":
-            attachments = extract_attachments(msg)
-            # Video is rejected above before reaching here, so this only
-            # ever needs to handle PDF -- multi-image mixing is out of
-            # scope, fall back to the single-attachment behavior (first
-            # recognized file) whenever a PDF is involved.
-            single_file_only = any(a["filetype"] == PDF_FILETYPE for a in attachments)
-            to_download = attachments[:1] if single_file_only else attachments
-            if not single_file_only and len(to_download) > cfg.max_images:
-                images_truncated_from = len(to_download)
-                to_download = to_download[:cfg.max_images]
-            multi = len(to_download) > 1
-            downloaded = []
-            for i, attachment in enumerate(to_download):
-                dest = source_dir / local_filename(ts, attachment["filetype"], i if multi else None)
-                try:
-                    api.download(attachment["url"], dest)
-                except SlackAPIError as exc:
-                    log.error("Failed to download Slack attachment for %s (%s): %s",
-                              ts, attachment["name"], exc)
-                else:
-                    downloaded.append(str(dest))
-            entry["local_files"] = downloaded
-            if not downloaded:
-                entry["status"] = "failed"
-
-        state[ts] = entry
-        append_audit(audit_path, {
-            "at": now.isoformat(timespec="seconds"), "ts": ts, "author": entry["author"],
-            "kind": kind, "action": "ingested" if entry["status"] == "active" else entry["status"],
-            "summary": _describe_entry(entry),
-        })
-        if entry["status"] == "active":
-            remove_at_utc = datetime.fromisoformat(entry["remove_at"])
-            remove_at_local = remove_at_utc.astimezone(LOCAL_TZ)
-            interval = _describe_interval(remove_at_utc, now)
-            # Deliberately NOT tied to cfg.ttl_days -- see build_help_text.
-            example_remove_at_local = (posted_at_dt + timedelta(days=1)).astimezone(LOCAL_TZ)
-            truncation_note = (
-                f" Only the first {cfg.max_images} of {images_truncated_from} images were used."
-                if images_truncated_from else ""
-            )
-            _post_safe(
-                api, cfg.channel,
-                f"Added to the Skiff TV, until {remove_at_local:%-d %b %Y %H:%M} ({interval}). "
-                f"To remove, reply with `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example."
-                f"{truncation_note}",
-                thread_ts=ts,
-            )
+        ingest_message(cfg, state, source_dir, msg, now, api, audit_path)
 
     for ts, entry in state.items():
         if entry["status"] != "active":
@@ -744,77 +892,15 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         human_replies = [r for r in replies if not r.get("bot_id")]
         command = None
         command_ts = None
-        reply_user = None
         for reply in human_replies:  # last match wins
             parsed = parse_command(reply.get("text", ""), now)
             if parsed is not None:
                 command = parsed
                 command_ts = reply.get("ts")
-                reply_user = reply.get("user")
+                winning_reply = reply
         if command is None:
             continue
-
-        # A scheduled removal deliberately leaves the entry active, so the same
-        # reply is still there next tick. Applying it again would recompute a
-        # relative remove_at ("in 1 week") forward forever and re-post/re-audit
-        # every tick, so skip a reply we've already fully applied.
-        if command_ts is not None and entry.get("remove_command_ts") == command_ts:
-            continue
-
-        if reply_user:
-            try:
-                requested_by = api.user_name(reply_user)
-            except SlackAPIError as exc:
-                log.error("Failed to resolve Slack user name for %s: %s", reply_user, exc)
-                requested_by = reply_user
-        else:
-            requested_by = "someone"
-
-        if command.remove_at is None:
-            # Trigger word recognized, but the phrase after it wasn't a
-            # date we could parse -- say so and repeat the *existing*
-            # schedule, rather than silently treating it as "remove now"
-            # (which a garbled reply almost certainly didn't mean).
-            entry["remove_command_ts"] = command_ts
-            current_remove_at_utc = datetime.fromisoformat(entry["remove_at"])
-            current_remove_at_local = current_remove_at_utc.astimezone(LOCAL_TZ)
-            interval = _describe_interval(current_remove_at_utc, now)
-            append_audit(audit_path, {
-                "at": now.isoformat(timespec="seconds"), "ts": ts, "author": requested_by,
-                "kind": "command", "action": "not_understood",
-                "summary": "removal phrase not understood",
-            })
-            _post_safe(
-                api, cfg.channel,
-                "Sorry, I didn't understand that date. Still set to be removed on "
-                f"{current_remove_at_local:%-d %b %Y %H:%M} ({interval}).",
-                thread_ts=ts,
-            )
-            continue
-
-        entry["remove_reason"] = "command"
-        entry["remove_requested_by"] = requested_by
-        entry["remove_command_ts"] = command_ts
-        append_audit(audit_path, {
-            "at": now.isoformat(timespec="seconds"), "ts": ts, "author": requested_by,
-            "kind": "command", "action": "removed" if command.remove_at <= now else "scheduled_removal",
-            "summary": f"remove -> {command.remove_at.isoformat(timespec='seconds')}",
-        })
-        if command.remove_at <= now:
-            entry["status"] = "cancelled"
-            entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
-            for f in entry.get("local_files", []):
-                Path(f).unlink(missing_ok=True)
-            _post_safe(api, cfg.channel, "Removed from the display.", thread_ts=ts)
-        else:
-            entry["remove_at"] = command.remove_at.isoformat(timespec="seconds")
-            remove_at_local = command.remove_at.astimezone(LOCAL_TZ)
-            interval = _describe_interval(command.remove_at, now)
-            _post_safe(
-                api, cfg.channel,
-                f"Scheduled for removal on {remove_at_local:%-d %b %Y %H:%M} ({interval}).",
-                thread_ts=ts,
-            )
+        apply_reply_command(cfg, state, ts, winning_reply, now, api, audit_path)
 
     # Only sweep entries that existed before this tick: a message's `ts` is
     # its real Slack post time, but `history()` is queried with `oldest` set

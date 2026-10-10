@@ -10,9 +10,16 @@ Each post is its own page, the kiosk mode browser cycles through them.
 
 ## How it works
 
-It polls Slack, only so we don't need to be addressable on the public internet.
+It connects out to Slack (Socket Mode, or polling for manual runs), only so we don't
+need to be addressable on the public internet.
 
-- `refresh.py` talks to slack, updates a data/manigest.json of pages.
+- `bin/socket_listener.py` is the production process: a real-time connection to Slack
+  (Socket Mode) that reacts to new posts/replies/removal commands the moment they
+  arrive, updating `data/manifest.json`. It also runs its own periodic reconciliation
+  poll underneath that, to catch anything missed during a disconnect and to handle
+  TTL expiry.
+- `bin/refresh.py` is a manual/debug entrypoint only -- one poll-or-skip + render +
+  manifest pass, handy for testing without the real-time connection running.
 - `bin/serve.sh` provides an API, and hosts an /admin page.
 - `kiosk/launch-kiosk` opens full-screen in Chromium/Chrome to show the pages.
 
@@ -61,8 +68,12 @@ scope in step 2.
    - `channels:history` -- if your channel is **public** (add this
      instead of, or alongside, `groups:history` if you plan to switch
      to a public channel later)
+   - `groups:read` / `channels:read` -- same public-vs-private choice as
+     above, lets the bot resolve a `#channel` mention in a post to its
+     name (otherwise it falls back to showing the raw channel ID)
    - `files:read` -- lets the bot download image/PDF attachments
-   - `users:read` -- lets the bot show the poster's name on text slides
+   - `users:read` -- lets the bot show the poster's name on text slides,
+     and resolve an `@user` mention in a post to their name
    - `chat:write` -- lets the bot reply in-thread when it accepts or
      removes a post, and announce when a post expires
 3. Scroll back up to the top of **OAuth & Permissions** and click
@@ -80,30 +91,24 @@ scope in step 2.
    bottom of that panel -- the ID looks like `C0123456789` (private
    channels get an ID in the same format, just starting with `G` on
    some older workspaces). This is your `KIOSK_SLACK_CHANNEL`.
-6. **Optional, for later:** Mess TV Bot currently polls Slack
-   (`conversations.history`) rather than receiving events in real
-   time. If you might switch to a real-time connection (Slack's
-   Socket Mode) in future, it's worth enabling it on this same app
-   now -- there's no downside to doing it while nothing's live yet,
-   and it avoids a disruptive step later:
+6. Enable Socket Mode -- this is how the bot receives messages in real time,
+   rather than waiting for a poll tick:
    - **Socket Mode** (left sidebar) → toggle on → generate an
      app-level token (starts `xapp-`, scope `connections:write`).
-     Store it somewhere safe; nothing uses it yet.
+     This is your `KIOSK_SLACK_APP_TOKEN`.
    - **Event Subscriptions** → toggle on → under "Subscribe to bot
      events" add `message.channels` (or `message.groups` for a
      private channel). No Request URL needed -- Socket Mode handles
      delivery.
    - This may prompt a reinstall of the app, which issues a **new**
      bot token -- update `KIOSK_SLACK_TOKEN` if so. Your existing
-     Bot Token Scopes from step 2 already cover what these events
-     need; nothing else changes, and today's polling keeps working
-     unmodified either way.
+     Bot Token Scopes from step 2 already cover what these events need.
 
-With both values in hand:
+With all three values in hand:
 
 ```
 cp config/kiosk.env.example config/kiosk.env
-$EDITOR config/kiosk.env   # set KIOSK_SLACK_TOKEN and KIOSK_SLACK_CHANNEL
+$EDITOR config/kiosk.env   # set KIOSK_SLACK_TOKEN, KIOSK_SLACK_CHANNEL, and KIOSK_SLACK_APP_TOKEN
 ```
 
 ## Quick start
@@ -127,7 +132,15 @@ $EDITOR config/kiosk.env
 ./install/install-mac.sh
 ```
 
-To fetch from Slack:
+To connect to Slack in real time (the production path -- `install-pi.sh` sets this up
+as a systemd service automatically):
+
+```
+uv run bin/socket_listener.py config/kiosk.env
+```
+
+Or, for a one-off manual poll + render without the real-time connection (handy for
+testing/debugging):
 
 ```
 uv run bin/refresh.py config/kiosk.env
@@ -147,7 +160,7 @@ Full walkthrough, including troubleshooting, is in
 ## Repo layout
 
 ```
-bin/        refresh.py (Slack poll+render+manifest), slack_source.py (Slack ingestion), serve.sh, admin_server.py
+bin/        socket_listener.py (real-time Slack ingestion, production), refresh.py (manual/debug poll+render+manifest), slack_source.py (Slack ingestion), serve.sh, admin_server.py
 web/        the kiosk webpage (index.html, style.css, app.js), admin/ (no-auth admin page)
 kiosk/      browser launch scripts + Pi autostart entry
 systemd/    Pi: user service/timer units

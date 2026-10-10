@@ -22,12 +22,14 @@ chmod +x "$REPO_DIR"/bin/*.sh "$REPO_DIR"/kiosk/*.sh
 
 if [ ! -f "$REPO_DIR/config/kiosk.env" ]; then
   cp "$REPO_DIR/config/kiosk.env.example" "$REPO_DIR/config/kiosk.env"
-  echo "==> Created config/kiosk.env -- edit KIOSK_SLACK_TOKEN and KIOSK_SLACK_CHANNEL before continuing!"
+  echo "==> Created config/kiosk.env -- edit KIOSK_SLACK_TOKEN, KIOSK_SLACK_CHANNEL, and" \
+       "KIOSK_SLACK_APP_TOKEN before continuing!"
 fi
 
 cat <<EOF
 ==> Done. Run things manually, e.g.:
-      uv run bin/refresh.py config/kiosk.env
+      uv run bin/socket_listener.py config/kiosk.env   # real-time ingestion
+      uv run bin/refresh.py config/kiosk.env            # manual/debug poll+render only
       bin/serve.sh
       kiosk/launch-kiosk-mac.sh
 EOF

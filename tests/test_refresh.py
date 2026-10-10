@@ -221,6 +221,45 @@ class BuildManifestTests(unittest.TestCase):
         self.assertEqual(regions[1]["src"], "source/slack-100.11-1.png")
 
 
+class BuildAndWriteManifestTests(unittest.TestCase):
+    """build_and_write_manifest is the extracted render+manifest pipeline
+    shared by refresh.py's manual run and socket_listener.py's real-time/
+    reconciliation passes -- this covers it end-to-end (render + manifest
+    write), not just build_manifest's pure item-shaping logic above."""
+
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.kiosk_dir = self.tmp_dir / "kiosk-data"
+        self.kiosk_dir.mkdir()
+        (self.kiosk_dir / "data").mkdir()
+        (self.kiosk_dir / "rendered").mkdir()
+        self.cfg = refresh.Config(
+            slack_token="xoxb-test", slack_channel="C1", slack_ttl_days=30,
+            kiosk_dir=self.kiosk_dir, repo_dir=self.tmp_dir, render_width=1920,
+            slide_seconds=8, poll_seconds=30, skip_slack_poll=True,
+            server_url="http://localhost:8420", admin_contact="@richard",
+            max_images=6, max_pdf_pages=15, max_attachment_mb=25,
+        )
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_writes_manifest_json_for_a_text_entry(self):
+        state = {"100.1": {"ts": "100.1", "kind": "text", "text": "Pizza!", "author": "Jane",
+                            "posted_at": "2026-08-01T00:00:00+00:00", "status": "active",
+                            "local_files": []}}
+        manifest = refresh.build_and_write_manifest(self.cfg, state)
+        self.assertEqual(len(manifest["items"]), 1)
+        self.assertTrue((self.kiosk_dir / "data" / "manifest.json").exists())
+
+    def test_ignores_non_active_entries(self):
+        state = {"100.1": {"ts": "100.1", "kind": "text", "text": "gone", "author": "Jane",
+                            "posted_at": "2026-08-01T00:00:00+00:00", "status": "cancelled",
+                            "local_files": []}}
+        manifest = refresh.build_and_write_manifest(self.cfg, state)
+        self.assertEqual(manifest["items"], [])
+
+
 class RenderPdfsMaxPagesTests(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = Path(tempfile.mkdtemp())

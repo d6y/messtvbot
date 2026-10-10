@@ -40,18 +40,29 @@ chmod +x "$REPO_DIR"/bin/*.sh "$REPO_DIR"/kiosk/*.sh
 
 if [ ! -f "$REPO_DIR/config/kiosk.env" ]; then
   cp "$REPO_DIR/config/kiosk.env.example" "$REPO_DIR/config/kiosk.env"
-  echo "==> Created config/kiosk.env -- edit KIOSK_SLACK_TOKEN and KIOSK_SLACK_CHANNEL before continuing!"
+  echo "==> Created config/kiosk.env -- edit KIOSK_SLACK_TOKEN, KIOSK_SLACK_CHANNEL, and" \
+       "KIOSK_SLACK_APP_TOKEN before continuing!"
 fi
 
 echo "==> Installing systemd user units"
 mkdir -p "$HOME/.config/systemd/user"
+# kiosk-refresh.service/.timer are installed but NOT enabled below --
+# kiosk-socket.service is the production ingestion path (real-time Socket
+# Mode + its own periodic reconciliation); refresh.py/the timer remain
+# available to run by hand for testing/debugging.
 cp "$REPO_DIR"/systemd/kiosk-refresh.service "$HOME/.config/systemd/user/"
 cp "$REPO_DIR"/systemd/kiosk-refresh.timer "$HOME/.config/systemd/user/"
+cp "$REPO_DIR"/systemd/kiosk-socket.service "$HOME/.config/systemd/user/"
 cp "$REPO_DIR"/systemd/kiosk-serve.service "$HOME/.config/systemd/user/"
 
 systemctl --user daemon-reload
+# Disable the old timer on a re-run against an existing install -- otherwise
+# it keeps polling every ~20s alongside kiosk-socket.service's own
+# reconciliation, doubling conversations.history calls against Slack's
+# 1/min rate limit and racing it to render/write the manifest.
+systemctl --user disable --now kiosk-refresh.timer 2>/dev/null || true
 systemctl --user enable --now kiosk-serve.service
-systemctl --user enable --now kiosk-refresh.timer
+systemctl --user enable --now kiosk-socket.service
 
 echo "==> Allowing user services to run without an active login (linger)"
 sudo loginctl enable-linger "$USER"
@@ -66,11 +77,12 @@ cat <<EOF
 ==> Done.
 
 Next steps:
-  1. If you haven't yet, create a Slack app and fill in KIOSK_SLACK_TOKEN
-     and KIOSK_SLACK_CHANNEL in config/kiosk.env (see docs/SETUP.md):
-       systemctl --user restart kiosk-refresh.timer
+  1. If you haven't yet, create a Slack app and fill in KIOSK_SLACK_TOKEN,
+     KIOSK_SLACK_CHANNEL, and KIOSK_SLACK_APP_TOKEN in config/kiosk.env
+     (see docs/SETUP.md), then:
+       systemctl --user restart kiosk-socket.service
   2. Check it worked:
-       systemctl --user status kiosk-refresh.service
+       systemctl --user status kiosk-socket.service
        cat ~/kiosk-data/data/manifest.json
   3. Reboot to see the kiosk autostart, or test it now without rebooting:
        $REPO_DIR/kiosk/launch-kiosk-pi.sh

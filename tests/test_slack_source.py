@@ -476,6 +476,24 @@ class ResolveMentionsTests(unittest.TestCase):
             "see #general for details",
         )
 
+    def test_channel_mention_without_label_is_resolved_via_api(self):
+        # Slack doesn't always embed the channel name -- seen live with a
+        # plain-text "#channel-name" that Slack still linkifies, but
+        # without the label the web UI would fetch client-side.
+        api = FakeSlackAPI(channel_names={"C0C508P9FPB": "mess-tv"})
+        self.assertEqual(
+            ms.resolve_mentions("welcome to <#C0C508P9FPB>", api),
+            "welcome to #mess-tv",
+        )
+
+    def test_channel_mention_lookup_failure_falls_back_to_raw_id(self):
+        class FailingAPI(FakeSlackAPI):
+            def channel_name(self, channel_id):
+                raise ms.SlackAPIError("conversations.info boom")
+
+        api = FailingAPI()
+        self.assertEqual(ms.resolve_mentions("<#C0123456> hi", api), "#C0123456 hi")
+
     def test_special_mentions_become_at_forms(self):
         api = FakeSlackAPI()
         self.assertEqual(ms.resolve_mentions("<!here> urgent", api), "@here urgent")
@@ -688,11 +706,12 @@ class SortedActiveEntriesTests(unittest.TestCase):
 class FakeSlackAPI:
     """Test double for SlackAPI -- no network."""
 
-    def __init__(self, messages=None, replies_by_ts=None, user_names=None, downloads_fail_for=None,
-                 posts_fail=False):
+    def __init__(self, messages=None, replies_by_ts=None, user_names=None, channel_names=None,
+                 downloads_fail_for=None, posts_fail=False):
         self.messages = messages or []
         self.replies_by_ts = replies_by_ts or {}
         self.user_names = user_names or {}
+        self.channel_names = channel_names or {}
         self.downloads_fail_for = downloads_fail_for or set()
         self.posts_fail = posts_fail
         self.downloaded = {}
@@ -710,6 +729,9 @@ class FakeSlackAPI:
 
     def user_name(self, user_id):
         return self.user_names.get(user_id, user_id)
+
+    def channel_name(self, channel_id):
+        return self.channel_names.get(channel_id, channel_id)
 
     def download(self, url, dest_path):
         if url in self.downloads_fail_for:
@@ -1697,6 +1719,164 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api,
                                audit_path=self.audit_path)
         self.assertEqual(state["100.9"]["remove_requested_by"], "U2")
+
+
+class HandleRealtimeEventTests(unittest.TestCase):
+    """handle_realtime_event is the Socket Mode counterpart to poll_slack's
+    bulk history scan -- it must route through the same ingest_message/
+    apply_reply_command helpers, so most of its guarantees mirror
+    PollSlackTests above, just applied to one event at a time."""
+
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.source_dir = self.tmp_dir / "source"
+        self.source_dir.mkdir()
+        self.now = datetime(2026, 8, 1, tzinfo=timezone.utc)
+        self.cfg = ms.SlackConfig(token="xoxb-test", channel="C1", ttl_days=30)
+        self.audit_path = self.tmp_dir / "audit.jsonl"
+
+    def test_new_top_level_message_is_ingested(self):
+        api = FakeSlackAPI(user_names={"U1": "Jane"})
+        event = {"ts": "100.1", "text": "Pizza today!", "user": "U1"}
+        changed = ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+
+    def test_duplicate_ts_is_not_reingested(self):
+        api = FakeSlackAPI()
+        event = {"ts": "100.1", "text": "Pizza today!", "user": "U1"}
+        state = {"100.1": {"status": "active", "kind": "text", "text": "hi", "author": "Jane",
+                            "posted_at": "2026-07-15T00:00:00+00:00",
+                            "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                            "local_files": []}}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertFalse(changed)
+        self.assertEqual(len(api.posted_messages), 0)
+
+    def test_unsupported_attachment_is_rejected(self):
+        api = FakeSlackAPI(user_names={"U1": "Jane"})
+        event = {"ts": "100.1", "user": "U1", "files": [{"filetype": "mp4", "url_private": "u", "name": "v.mp4"}]}
+        changed = ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+        self.assertIn("video isn't supported", api.posted_messages[0]["text"])
+
+    def test_edit_subtype_is_ignored(self):
+        api = FakeSlackAPI()
+        event = {"ts": "100.1", "subtype": "message_changed", "message": {"text": "edited"}}
+        changed = ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertFalse(changed)
+        self.assertEqual(len(api.posted_messages), 0)
+
+    def test_file_share_subtype_is_still_ingested(self):
+        # Slack delivers every file upload as subtype "file_share" -- not a
+        # SYSTEM_SUBTYPES housekeeping event -- so it must still reach
+        # ingest_message, same as poll_slack's bulk path.
+        api = FakeSlackAPI(user_names={"U1": "Jane"})
+        event = {"ts": "100.1", "subtype": "file_share", "user": "U1",
+                  "files": [{"filetype": "png", "url_private": "u", "name": "photo.png"}]}
+        changed = ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+        self.assertEqual(len(api.posted_messages), 1)
+
+    def _active_entry(self):
+        return {"status": "active", "kind": "text", "text": "hi", "author": "Jane",
+                "posted_at": "2026-07-15T00:00:00+00:00",
+                "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                "local_files": []}
+
+    def test_reply_with_remove_now_cancels_the_entry(self):
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "remove now", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+        self.assertEqual(state["100.9"]["status"], "cancelled")
+
+    def test_reply_with_scheduled_removal_leaves_entry_active(self):
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "remove in 1 week", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+        self.assertEqual(state["100.9"]["status"], "active")
+        self.assertIn("(in 7 days)", api.posted_messages[0]["text"])
+
+    def test_reply_with_unparseable_phrase_leaves_schedule_untouched(self):
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "remove whenever", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+        self.assertEqual(state["100.9"]["remove_at"], "2026-08-14T00:00:00+00:00")
+        self.assertIn("didn't understand", api.posted_messages[0]["text"])
+
+    def test_thread_broadcast_remove_reply_still_cancels_the_entry(self):
+        # "Also send to channel" tags the reply event with subtype
+        # "thread_broadcast" -- poll_slack's own reply loop doesn't filter
+        # replies by subtype at all, so this must still be treated as a
+        # real removal command here too, not dropped as housekeeping.
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "subtype": "thread_broadcast",
+                  "text": "remove now", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+        self.assertEqual(state["100.9"]["status"], "cancelled")
+
+    def test_reply_without_trigger_word_is_a_no_op(self):
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "nice one", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertFalse(changed)
+        self.assertEqual(len(api.posted_messages), 0)
+
+    def test_reply_to_unknown_parent_is_a_no_op(self):
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "999.9", "text": "remove now", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertFalse(changed)
+
+    def test_reply_to_already_cancelled_parent_is_a_no_op(self):
+        entry = self._active_entry()
+        entry["status"] = "cancelled"
+        state = {"100.9": entry}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "remove now", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertFalse(changed)
+
+    def test_bot_reply_is_ignored(self):
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "remove now", "bot_id": "B1"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertFalse(changed)
+        self.assertEqual(state["100.9"]["status"], "active")
+
+    def test_repeated_identical_scheduled_reply_is_not_reapplied(self):
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "remove in 1 week", "user": "U2"}
+        ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now, api, self.audit_path)
+        first_remove_at = state["100.9"]["remove_at"]
+        changed_again = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                                   api, self.audit_path)
+        self.assertFalse(changed_again)
+        self.assertEqual(state["100.9"]["remove_at"], first_remove_at)
+        self.assertEqual(len(api.posted_messages), 1)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,15 @@
+[Unit]
+Description=Mess TV Bot: real-time Slack ingestion over Socket Mode
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/messtvbot
+EnvironmentFile=%h/messtvbot/config/kiosk.env
+ExecStart=%h/messtvbot/.venv/bin/python3 %h/messtvbot/bin/socket_listener.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

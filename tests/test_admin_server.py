@@ -11,9 +11,20 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin"))
+import refresh
 import slack_source as ms
 import importlib
 admin = importlib.import_module("admin_server")
+
+
+def _cfg(kiosk_dir, tmp_dir):
+    return refresh.Config(
+        slack_token="xoxb-test", slack_channel="C1", slack_ttl_days=30,
+        kiosk_dir=kiosk_dir, repo_dir=tmp_dir, render_width=1920,
+        slide_seconds=8, poll_seconds=30, skip_slack_poll=True,
+        server_url="http://localhost:8420", admin_contact="@richard",
+        max_images=6, max_pdf_pages=15, max_attachment_mb=25,
+    )
 
 
 def _entry(status="active", remove_at="2026-12-31T00:00:00+00:00"):
@@ -31,7 +42,9 @@ class AdminServerTests(unittest.TestCase):
         self.audit_path = self.kiosk_dir / "data" / "audit.jsonl"
         ms.save_state({"100.1": _entry()}, self.state_path)
 
-        handler_cls = admin.make_handler(self.kiosk_dir, self.state_path, self.audit_path)
+        handler_cls = admin.make_handler(
+            self.kiosk_dir, self.state_path, self.audit_path, _cfg(self.kiosk_dir, self.tmp_dir),
+        )
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), handler_cls)
         self.port = self.server.server_address[1]
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
@@ -155,6 +168,15 @@ class AdminServerTests(unittest.TestCase):
         self.assertEqual(event["action"], "removed")
         self.assertEqual(event["author"], "admin-ui")
 
+    def test_post_remove_rebuilds_manifest_immediately(self):
+        # Nothing else is running a timer anymore (socket_listener.py's
+        # reconciliation pass can be minutes away) -- the admin UI must
+        # trigger its own manifest rebuild so a removal doesn't sit on
+        # screen waiting for that.
+        self._post("/api/entries/100.1/remove")
+        manifest = json.loads((self.kiosk_dir / "data" / "manifest.json").read_text())
+        self.assertEqual(manifest["items"], [])
+
     def test_post_remove_unknown_ts_returns_404(self):
         status, _ = self._post("/api/entries/no-such-ts/remove")
         self.assertEqual(status, 404)
@@ -176,7 +198,7 @@ class AdminServerAuthTests(unittest.TestCase):
         ms.save_state({"100.1": _entry()}, self.state_path)
 
         handler_cls = admin.make_handler(
-            self.kiosk_dir, self.state_path, self.audit_path,
+            self.kiosk_dir, self.state_path, self.audit_path, _cfg(self.kiosk_dir, self.tmp_dir),
             admin_user="alice", admin_pass="secret",
         )
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), handler_cls)

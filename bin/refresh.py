@@ -409,6 +409,47 @@ def write_manifest(manifest: dict, data_dir: Path) -> None:
 
 
 # --------------------------------------------------------------------------
+# Render + manifest pipeline
+# --------------------------------------------------------------------------
+
+def build_and_write_manifest(cfg: Config, state: dict) -> dict:
+    """Render any PDFs/HEIC images in `state`'s active entries and write
+    manifest.json. Shared by refresh.py's manual/CLI run and
+    socket_listener.py's real-time and reconciliation passes -- any new
+    caller should use this rather than re-deriving active_entries/
+    pdf_files/heic_files and calling render_pdfs/build_manifest itself."""
+    active_entries = slack_source.sorted_active_entries(state)
+    pdf_files = [
+        Path(entry["local_files"][0])
+        for _ts, entry in active_entries
+        if entry["kind"] == "attachment" and entry.get("local_files")
+        and Path(entry["local_files"][0]).suffix.lower() == PDF_EXT
+    ]
+    # HEIC images can appear anywhere in local_files (single image or one of
+    # several in a grid post), not just local_files[0] like PDF/video.
+    heic_files = [
+        Path(f)
+        for _ts, entry in active_entries
+        if entry["kind"] == "attachment"
+        for f in entry.get("local_files", [])
+        if Path(f).suffix.lower() in HEIC_EXTS
+    ]
+
+    rendered_pages = render_pdfs(pdf_files, cfg.rendered_dir, cfg.render_width, cfg.max_pdf_pages)
+    cleanup_stale_renders({f.stem for f in pdf_files}, cfg.rendered_dir)
+    heic_rendered = render_heic_images(heic_files, cfg.rendered_dir)
+    cleanup_stale_heic_renders({f.stem for f in heic_files}, cfg.rendered_dir)
+
+    manifest = build_manifest(active_entries, rendered_pages, cfg.kiosk_dir, cfg.slide_seconds, cfg.poll_seconds,
+                               heic_rendered=heic_rendered)
+    write_manifest(manifest, cfg.data_dir)
+
+    log.info("Refresh complete: %d slide(s) from %d active Slack message(s)",
+              len(manifest["items"]), len(active_entries))
+    return manifest
+
+
+# --------------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------------
 
@@ -447,34 +488,7 @@ def main(argv: list[str]) -> int:
             )
             slack_source.save_state(state, state_path)
 
-    active_entries = slack_source.sorted_active_entries(state)
-    pdf_files = [
-        Path(entry["local_files"][0])
-        for _ts, entry in active_entries
-        if entry["kind"] == "attachment" and entry.get("local_files")
-        and Path(entry["local_files"][0]).suffix.lower() == PDF_EXT
-    ]
-    # HEIC images can appear anywhere in local_files (single image or one of
-    # several in a grid post), not just local_files[0] like PDF/video.
-    heic_files = [
-        Path(f)
-        for _ts, entry in active_entries
-        if entry["kind"] == "attachment"
-        for f in entry.get("local_files", [])
-        if Path(f).suffix.lower() in HEIC_EXTS
-    ]
-
-    rendered_pages = render_pdfs(pdf_files, cfg.rendered_dir, cfg.render_width, cfg.max_pdf_pages)
-    cleanup_stale_renders({f.stem for f in pdf_files}, cfg.rendered_dir)
-    heic_rendered = render_heic_images(heic_files, cfg.rendered_dir)
-    cleanup_stale_heic_renders({f.stem for f in heic_files}, cfg.rendered_dir)
-
-    manifest = build_manifest(active_entries, rendered_pages, cfg.kiosk_dir, cfg.slide_seconds, cfg.poll_seconds,
-                               heic_rendered=heic_rendered)
-    write_manifest(manifest, cfg.data_dir)
-
-    log.info("Refresh complete: %d slide(s) from %d active Slack message(s)",
-              len(manifest["items"]), len(active_entries))
+    build_and_write_manifest(cfg, state)
     return 0
 
 
