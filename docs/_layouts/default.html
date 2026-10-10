@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ page.title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="{{ page.description }}" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <a class="brand" href="index.html">Mess TV Bot</a>
+        <a href="index.html"{% if page.nav == "home" %} class="active"{% endif %}>Introduction</a>
+        <a href="commands.html"{% if page.nav == "commands" %} class="active"{% endif %}>Commands</a>
+        <a href="faq.html"{% if page.nav == "faq" %} class="active"{% endif %}>FAQ</a>
+      </div>
+    </nav>
+
+    <main>
+      {{ content }}
+    </main>
+
+    <footer>
+      <a href="https://github.com/d6y/messtvbot">Mess TV Bot on GitHub</a>
+    </footer>
+  </body>
+</html>
