@@ -28,7 +28,7 @@ Most of  Slack's usual text formatting works: `*bold*`, `_italic_`, `~strikethro
 
 Emoji usually work, except for custom ones added to Slack. Maybe one day.
 
-Links: you can't click on the TV, so link don't nake sense. You'll just see the text you've written. Maybe a QR code would be better?
+Links: you can't click on the TV, so link don't make sense. You'll just see the text you've written. Maybe a QR code would be better?
 
 ## How long a post stays up
 
