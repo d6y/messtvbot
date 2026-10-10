@@ -1,0 +1,8308 @@
+{
+ "+1": {
+  "tones": {
+   "2": "1F44D-1F3FB",
+   "3": "1F44D-1F3FC",
+   "4": "1F44D-1F3FD",
+   "5": "1F44D-1F3FE",
+   "6": "1F44D-1F3FF"
+  },
+  "unified": "1F44D"
+ },
+ "-1": {
+  "tones": {
+   "2": "1F44E-1F3FB",
+   "3": "1F44E-1F3FC",
+   "4": "1F44E-1F3FD",
+   "5": "1F44E-1F3FE",
+   "6": "1F44E-1F3FF"
+  },
+  "unified": "1F44E"
+ },
+ "100": {
+  "unified": "1F4AF"
+ },
+ "1234": {
+  "unified": "1F522"
+ },
+ "8ball": {
+  "unified": "1F3B1"
+ },
+ "a": {
+  "unified": "1F170-FE0F"
+ },
+ "ab": {
+  "unified": "1F18E"
+ },
+ "abacus": {
+  "unified": "1F9EE"
+ },
+ "abc": {
+  "unified": "1F524"
+ },
+ "abcd": {
+  "unified": "1F521"
+ },
+ "accept": {
+  "unified": "1F251"
+ },
+ "accordion": {
+  "unified": "1FA97"
+ },
+ "adhesive_bandage": {
+  "unified": "1FA79"
+ },
+ "admission_tickets": {
+  "unified": "1F39F-FE0F"
+ },
+ "adult": {
+  "tones": {
+   "2": "1F9D1-1F3FB",
+   "3": "1F9D1-1F3FC",
+   "4": "1F9D1-1F3FD",
+   "5": "1F9D1-1F3FE",
+   "6": "1F9D1-1F3FF"
+  },
+  "unified": "1F9D1"
+ },
+ "aerial_tramway": {
+  "unified": "1F6A1"
+ },
+ "airplane": {
+  "unified": "2708-FE0F"
+ },
+ "airplane_arriving": {
+  "unified": "1F6EC"
+ },
+ "airplane_departure": {
+  "unified": "1F6EB"
+ },
+ "alarm_clock": {
+  "unified": "23F0"
+ },
+ "alembic": {
+  "unified": "2697-FE0F"
+ },
+ "alien": {
+  "unified": "1F47D"
+ },
+ "ambulance": {
+  "unified": "1F691"
+ },
+ "amphora": {
+  "unified": "1F3FA"
+ },
+ "anatomical_heart": {
+  "unified": "1FAC0"
+ },
+ "anchor": {
+  "unified": "2693"
+ },
+ "angel": {
+  "tones": {
+   "2": "1F47C-1F3FB",
+   "3": "1F47C-1F3FC",
+   "4": "1F47C-1F3FD",
+   "5": "1F47C-1F3FE",
+   "6": "1F47C-1F3FF"
+  },
+  "unified": "1F47C"
+ },
+ "anger": {
+  "unified": "1F4A2"
+ },
+ "angry": {
+  "unified": "1F620"
+ },
+ "anguished": {
+  "unified": "1F627"
+ },
+ "ant": {
+  "unified": "1F41C"
+ },
+ "apple": {
+  "unified": "1F34E"
+ },
+ "aquarius": {
+  "unified": "2652"
+ },
+ "aries": {
+  "unified": "2648"
+ },
+ "arrow_backward": {
+  "unified": "25C0-FE0F"
+ },
+ "arrow_double_down": {
+  "unified": "23EC"
+ },
+ "arrow_double_up": {
+  "unified": "23EB"
+ },
+ "arrow_down": {
+  "unified": "2B07-FE0F"
+ },
+ "arrow_down_small": {
+  "unified": "1F53D"
+ },
+ "arrow_forward": {
+  "unified": "25B6-FE0F"
+ },
+ "arrow_heading_down": {
+  "unified": "2935-FE0F"
+ },
+ "arrow_heading_up": {
+  "unified": "2934-FE0F"
+ },
+ "arrow_left": {
+  "unified": "2B05-FE0F"
+ },
+ "arrow_lower_left": {
+  "unified": "2199-FE0F"
+ },
+ "arrow_lower_right": {
+  "unified": "2198-FE0F"
+ },
+ "arrow_right": {
+  "unified": "27A1-FE0F"
+ },
+ "arrow_right_hook": {
+  "unified": "21AA-FE0F"
+ },
+ "arrow_up": {
+  "unified": "2B06-FE0F"
+ },
+ "arrow_up_down": {
+  "unified": "2195-FE0F"
+ },
+ "arrow_up_small": {
+  "unified": "1F53C"
+ },
+ "arrow_upper_left": {
+  "unified": "2196-FE0F"
+ },
+ "arrow_upper_right": {
+  "unified": "2197-FE0F"
+ },
+ "arrows_clockwise": {
+  "unified": "1F503"
+ },
+ "arrows_counterclockwise": {
+  "unified": "1F504"
+ },
+ "art": {
+  "unified": "1F3A8"
+ },
+ "articulated_lorry": {
+  "unified": "1F69B"
+ },
+ "artist": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F3A8",
+   "3": "1F9D1-1F3FC-200D-1F3A8",
+   "4": "1F9D1-1F3FD-200D-1F3A8",
+   "5": "1F9D1-1F3FE-200D-1F3A8",
+   "6": "1F9D1-1F3FF-200D-1F3A8"
+  },
+  "unified": "1F9D1-200D-1F3A8"
+ },
+ "astonished": {
+  "unified": "1F632"
+ },
+ "astronaut": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F680",
+   "3": "1F9D1-1F3FC-200D-1F680",
+   "4": "1F9D1-1F3FD-200D-1F680",
+   "5": "1F9D1-1F3FE-200D-1F680",
+   "6": "1F9D1-1F3FF-200D-1F680"
+  },
+  "unified": "1F9D1-200D-1F680"
+ },
+ "athletic_shoe": {
+  "unified": "1F45F"
+ },
+ "atm": {
+  "unified": "1F3E7"
+ },
+ "atom_symbol": {
+  "unified": "269B-FE0F"
+ },
+ "auto_rickshaw": {
+  "unified": "1F6FA"
+ },
+ "avocado": {
+  "unified": "1F951"
+ },
+ "axe": {
+  "unified": "1FA93"
+ },
+ "b": {
+  "unified": "1F171-FE0F"
+ },
+ "baby": {
+  "tones": {
+   "2": "1F476-1F3FB",
+   "3": "1F476-1F3FC",
+   "4": "1F476-1F3FD",
+   "5": "1F476-1F3FE",
+   "6": "1F476-1F3FF"
+  },
+  "unified": "1F476"
+ },
+ "baby_bottle": {
+  "unified": "1F37C"
+ },
+ "baby_chick": {
+  "unified": "1F424"
+ },
+ "baby_symbol": {
+  "unified": "1F6BC"
+ },
+ "back": {
+  "unified": "1F519"
+ },
+ "bacon": {
+  "unified": "1F953"
+ },
+ "badger": {
+  "unified": "1F9A1"
+ },
+ "badminton_racquet_and_shuttlecock": {
+  "unified": "1F3F8"
+ },
+ "bagel": {
+  "unified": "1F96F"
+ },
+ "baggage_claim": {
+  "unified": "1F6C4"
+ },
+ "baguette_bread": {
+  "unified": "1F956"
+ },
+ "bald_man": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9B2",
+   "3": "1F468-1F3FC-200D-1F9B2",
+   "4": "1F468-1F3FD-200D-1F9B2",
+   "5": "1F468-1F3FE-200D-1F9B2",
+   "6": "1F468-1F3FF-200D-1F9B2"
+  },
+  "unified": "1F468-200D-1F9B2"
+ },
+ "bald_person": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9B2",
+   "3": "1F9D1-1F3FC-200D-1F9B2",
+   "4": "1F9D1-1F3FD-200D-1F9B2",
+   "5": "1F9D1-1F3FE-200D-1F9B2",
+   "6": "1F9D1-1F3FF-200D-1F9B2"
+  },
+  "unified": "1F9D1-200D-1F9B2"
+ },
+ "bald_woman": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9B2",
+   "3": "1F469-1F3FC-200D-1F9B2",
+   "4": "1F469-1F3FD-200D-1F9B2",
+   "5": "1F469-1F3FE-200D-1F9B2",
+   "6": "1F469-1F3FF-200D-1F9B2"
+  },
+  "unified": "1F469-200D-1F9B2"
+ },
+ "ballet_dancer": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1FA70",
+   "3": "1F9D1-1F3FC-200D-1FA70",
+   "4": "1F9D1-1F3FD-200D-1FA70",
+   "5": "1F9D1-1F3FE-200D-1FA70",
+   "6": "1F9D1-1F3FF-200D-1FA70"
+  },
+  "unified": "1F9D1-200D-1FA70"
+ },
+ "ballet_shoes": {
+  "unified": "1FA70"
+ },
+ "balloon": {
+  "unified": "1F388"
+ },
+ "ballot_box_with_ballot": {
+  "unified": "1F5F3-FE0F"
+ },
+ "ballot_box_with_check": {
+  "unified": "2611-FE0F"
+ },
+ "bamboo": {
+  "unified": "1F38D"
+ },
+ "banana": {
+  "unified": "1F34C"
+ },
+ "bangbang": {
+  "unified": "203C-FE0F"
+ },
+ "banjo": {
+  "unified": "1FA95"
+ },
+ "bank": {
+  "unified": "1F3E6"
+ },
+ "bar_chart": {
+  "unified": "1F4CA"
+ },
+ "barber": {
+  "unified": "1F488"
+ },
+ "barely_sunny": {
+  "unified": "1F325-FE0F"
+ },
+ "baseball": {
+  "unified": "26BE"
+ },
+ "basket": {
+  "unified": "1F9FA"
+ },
+ "basketball": {
+  "unified": "1F3C0"
+ },
+ "bat": {
+  "unified": "1F987"
+ },
+ "bath": {
+  "tones": {
+   "2": "1F6C0-1F3FB",
+   "3": "1F6C0-1F3FC",
+   "4": "1F6C0-1F3FD",
+   "5": "1F6C0-1F3FE",
+   "6": "1F6C0-1F3FF"
+  },
+  "unified": "1F6C0"
+ },
+ "bathtub": {
+  "unified": "1F6C1"
+ },
+ "battery": {
+  "unified": "1F50B"
+ },
+ "beach_with_umbrella": {
+  "unified": "1F3D6-FE0F"
+ },
+ "beans": {
+  "unified": "1FAD8"
+ },
+ "bear": {
+  "unified": "1F43B"
+ },
+ "bearded_person": {
+  "tones": {
+   "2": "1F9D4-1F3FB",
+   "3": "1F9D4-1F3FC",
+   "4": "1F9D4-1F3FD",
+   "5": "1F9D4-1F3FE",
+   "6": "1F9D4-1F3FF"
+  },
+  "unified": "1F9D4"
+ },
+ "beaver": {
+  "unified": "1F9AB"
+ },
+ "bed": {
+  "unified": "1F6CF-FE0F"
+ },
+ "bee": {
+  "unified": "1F41D"
+ },
+ "beer": {
+  "unified": "1F37A"
+ },
+ "beers": {
+  "unified": "1F37B"
+ },
+ "beetle": {
+  "unified": "1FAB2"
+ },
+ "beginner": {
+  "unified": "1F530"
+ },
+ "bell": {
+  "unified": "1F514"
+ },
+ "bell_pepper": {
+  "unified": "1FAD1"
+ },
+ "bellhop_bell": {
+  "unified": "1F6CE-FE0F"
+ },
+ "bento": {
+  "unified": "1F371"
+ },
+ "beverage_box": {
+  "unified": "1F9C3"
+ },
+ "bicyclist": {
+  "tones": {
+   "2": "1F6B4-1F3FB",
+   "3": "1F6B4-1F3FC",
+   "4": "1F6B4-1F3FD",
+   "5": "1F6B4-1F3FE",
+   "6": "1F6B4-1F3FF"
+  },
+  "unified": "1F6B4"
+ },
+ "bike": {
+  "unified": "1F6B2"
+ },
+ "bikini": {
+  "unified": "1F459"
+ },
+ "billed_cap": {
+  "unified": "1F9E2"
+ },
+ "biohazard_sign": {
+  "unified": "2623-FE0F"
+ },
+ "bird": {
+  "unified": "1F426"
+ },
+ "birthday": {
+  "unified": "1F382"
+ },
+ "bison": {
+  "unified": "1F9AC"
+ },
+ "biting_lip": {
+  "unified": "1FAE6"
+ },
+ "black_bird": {
+  "unified": "1F426-200D-2B1B"
+ },
+ "black_cat": {
+  "unified": "1F408-200D-2B1B"
+ },
+ "black_circle": {
+  "unified": "26AB"
+ },
+ "black_circle_for_record": {
+  "unified": "23FA-FE0F"
+ },
+ "black_heart": {
+  "unified": "1F5A4"
+ },
+ "black_joker": {
+  "unified": "1F0CF"
+ },
+ "black_large_square": {
+  "unified": "2B1B"
+ },
+ "black_left_pointing_double_triangle_with_vertical_bar": {
+  "unified": "23EE-FE0F"
+ },
+ "black_medium_small_square": {
+  "unified": "25FE"
+ },
+ "black_medium_square": {
+  "unified": "25FC-FE0F"
+ },
+ "black_nib": {
+  "unified": "2712-FE0F"
+ },
+ "black_right_pointing_double_triangle_with_vertical_bar": {
+  "unified": "23ED-FE0F"
+ },
+ "black_right_pointing_triangle_with_double_vertical_bar": {
+  "unified": "23EF-FE0F"
+ },
+ "black_small_square": {
+  "unified": "25AA-FE0F"
+ },
+ "black_square_button": {
+  "unified": "1F532"
+ },
+ "black_square_for_stop": {
+  "unified": "23F9-FE0F"
+ },
+ "blond-haired-man": {
+  "tones": {
+   "2": "1F471-1F3FB-200D-2642-FE0F",
+   "3": "1F471-1F3FC-200D-2642-FE0F",
+   "4": "1F471-1F3FD-200D-2642-FE0F",
+   "5": "1F471-1F3FE-200D-2642-FE0F",
+   "6": "1F471-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F471-200D-2642-FE0F"
+ },
+ "blond-haired-woman": {
+  "tones": {
+   "2": "1F471-1F3FB-200D-2640-FE0F",
+   "3": "1F471-1F3FC-200D-2640-FE0F",
+   "4": "1F471-1F3FD-200D-2640-FE0F",
+   "5": "1F471-1F3FE-200D-2640-FE0F",
+   "6": "1F471-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F471-200D-2640-FE0F"
+ },
+ "blossom": {
+  "unified": "1F33C"
+ },
+ "blowfish": {
+  "unified": "1F421"
+ },
+ "blue_book": {
+  "unified": "1F4D8"
+ },
+ "blue_car": {
+  "unified": "1F699"
+ },
+ "blue_heart": {
+  "unified": "1F499"
+ },
+ "blueberries": {
+  "unified": "1FAD0"
+ },
+ "blush": {
+  "unified": "1F60A"
+ },
+ "boar": {
+  "unified": "1F417"
+ },
+ "boat": {
+  "unified": "26F5"
+ },
+ "bomb": {
+  "unified": "1F4A3"
+ },
+ "bone": {
+  "unified": "1F9B4"
+ },
+ "book": {
+  "unified": "1F4D6"
+ },
+ "bookmark": {
+  "unified": "1F516"
+ },
+ "bookmark_tabs": {
+  "unified": "1F4D1"
+ },
+ "books": {
+  "unified": "1F4DA"
+ },
+ "boom": {
+  "unified": "1F4A5"
+ },
+ "boomerang": {
+  "unified": "1FA83"
+ },
+ "boot": {
+  "unified": "1F462"
+ },
+ "bouquet": {
+  "unified": "1F490"
+ },
+ "bow": {
+  "tones": {
+   "2": "1F647-1F3FB",
+   "3": "1F647-1F3FC",
+   "4": "1F647-1F3FD",
+   "5": "1F647-1F3FE",
+   "6": "1F647-1F3FF"
+  },
+  "unified": "1F647"
+ },
+ "bow_and_arrow": {
+  "unified": "1F3F9"
+ },
+ "bowl_with_spoon": {
+  "unified": "1F963"
+ },
+ "bowling": {
+  "unified": "1F3B3"
+ },
+ "boxing_glove": {
+  "unified": "1F94A"
+ },
+ "boy": {
+  "tones": {
+   "2": "1F466-1F3FB",
+   "3": "1F466-1F3FC",
+   "4": "1F466-1F3FD",
+   "5": "1F466-1F3FE",
+   "6": "1F466-1F3FF"
+  },
+  "unified": "1F466"
+ },
+ "brain": {
+  "unified": "1F9E0"
+ },
+ "bread": {
+  "unified": "1F35E"
+ },
+ "breast-feeding": {
+  "tones": {
+   "2": "1F931-1F3FB",
+   "3": "1F931-1F3FC",
+   "4": "1F931-1F3FD",
+   "5": "1F931-1F3FE",
+   "6": "1F931-1F3FF"
+  },
+  "unified": "1F931"
+ },
+ "bricks": {
+  "unified": "1F9F1"
+ },
+ "bride_with_veil": {
+  "tones": {
+   "2": "1F470-1F3FB",
+   "3": "1F470-1F3FC",
+   "4": "1F470-1F3FD",
+   "5": "1F470-1F3FE",
+   "6": "1F470-1F3FF"
+  },
+  "unified": "1F470"
+ },
+ "bridge_at_night": {
+  "unified": "1F309"
+ },
+ "briefcase": {
+  "unified": "1F4BC"
+ },
+ "briefs": {
+  "unified": "1FA72"
+ },
+ "broccoli": {
+  "unified": "1F966"
+ },
+ "broken_chain": {
+  "unified": "26D3-FE0F-200D-1F4A5"
+ },
+ "broken_heart": {
+  "unified": "1F494"
+ },
+ "broom": {
+  "unified": "1F9F9"
+ },
+ "brown_heart": {
+  "unified": "1F90E"
+ },
+ "brown_mushroom": {
+  "unified": "1F344-200D-1F7EB"
+ },
+ "bubble_tea": {
+  "unified": "1F9CB"
+ },
+ "bubbles": {
+  "unified": "1FAE7"
+ },
+ "bucket": {
+  "unified": "1FAA3"
+ },
+ "bug": {
+  "unified": "1F41B"
+ },
+ "building_construction": {
+  "unified": "1F3D7-FE0F"
+ },
+ "bulb": {
+  "unified": "1F4A1"
+ },
+ "bullettrain_front": {
+  "unified": "1F685"
+ },
+ "bullettrain_side": {
+  "unified": "1F684"
+ },
+ "burrito": {
+  "unified": "1F32F"
+ },
+ "bus": {
+  "unified": "1F68C"
+ },
+ "busstop": {
+  "unified": "1F68F"
+ },
+ "bust_in_silhouette": {
+  "unified": "1F464"
+ },
+ "busts_in_silhouette": {
+  "unified": "1F465"
+ },
+ "butter": {
+  "unified": "1F9C8"
+ },
+ "butterfly": {
+  "unified": "1F98B"
+ },
+ "cactus": {
+  "unified": "1F335"
+ },
+ "cake": {
+  "unified": "1F370"
+ },
+ "calendar": {
+  "unified": "1F4C6"
+ },
+ "call_me_hand": {
+  "tones": {
+   "2": "1F919-1F3FB",
+   "3": "1F919-1F3FC",
+   "4": "1F919-1F3FD",
+   "5": "1F919-1F3FE",
+   "6": "1F919-1F3FF"
+  },
+  "unified": "1F919"
+ },
+ "calling": {
+  "unified": "1F4F2"
+ },
+ "camel": {
+  "unified": "1F42B"
+ },
+ "camera": {
+  "unified": "1F4F7"
+ },
+ "camera_with_flash": {
+  "unified": "1F4F8"
+ },
+ "camping": {
+  "unified": "1F3D5-FE0F"
+ },
+ "cancer": {
+  "unified": "264B"
+ },
+ "candle": {
+  "unified": "1F56F-FE0F"
+ },
+ "candy": {
+  "unified": "1F36C"
+ },
+ "canned_food": {
+  "unified": "1F96B"
+ },
+ "canoe": {
+  "unified": "1F6F6"
+ },
+ "capital_abcd": {
+  "unified": "1F520"
+ },
+ "capricorn": {
+  "unified": "2651"
+ },
+ "car": {
+  "unified": "1F697"
+ },
+ "card_file_box": {
+  "unified": "1F5C3-FE0F"
+ },
+ "card_index": {
+  "unified": "1F4C7"
+ },
+ "card_index_dividers": {
+  "unified": "1F5C2-FE0F"
+ },
+ "carousel_horse": {
+  "unified": "1F3A0"
+ },
+ "carpentry_saw": {
+  "unified": "1FA9A"
+ },
+ "carrot": {
+  "unified": "1F955"
+ },
+ "cat": {
+  "unified": "1F431"
+ },
+ "cat2": {
+  "unified": "1F408"
+ },
+ "cd": {
+  "unified": "1F4BF"
+ },
+ "chains": {
+  "unified": "26D3-FE0F"
+ },
+ "chair": {
+  "unified": "1FA91"
+ },
+ "champagne": {
+  "unified": "1F37E"
+ },
+ "chart": {
+  "unified": "1F4B9"
+ },
+ "chart_with_downwards_trend": {
+  "unified": "1F4C9"
+ },
+ "chart_with_upwards_trend": {
+  "unified": "1F4C8"
+ },
+ "checkered_flag": {
+  "unified": "1F3C1"
+ },
+ "cheese_wedge": {
+  "unified": "1F9C0"
+ },
+ "cherries": {
+  "unified": "1F352"
+ },
+ "cherry_blossom": {
+  "unified": "1F338"
+ },
+ "chess_pawn": {
+  "unified": "265F-FE0F"
+ },
+ "chestnut": {
+  "unified": "1F330"
+ },
+ "chicken": {
+  "unified": "1F414"
+ },
+ "child": {
+  "tones": {
+   "2": "1F9D2-1F3FB",
+   "3": "1F9D2-1F3FC",
+   "4": "1F9D2-1F3FD",
+   "5": "1F9D2-1F3FE",
+   "6": "1F9D2-1F3FF"
+  },
+  "unified": "1F9D2"
+ },
+ "children_crossing": {
+  "unified": "1F6B8"
+ },
+ "chipmunk": {
+  "unified": "1F43F-FE0F"
+ },
+ "chocolate_bar": {
+  "unified": "1F36B"
+ },
+ "chopsticks": {
+  "unified": "1F962"
+ },
+ "christmas_tree": {
+  "unified": "1F384"
+ },
+ "church": {
+  "unified": "26EA"
+ },
+ "cinema": {
+  "unified": "1F3A6"
+ },
+ "circus_tent": {
+  "unified": "1F3AA"
+ },
+ "city_sunrise": {
+  "unified": "1F307"
+ },
+ "city_sunset": {
+  "unified": "1F306"
+ },
+ "cityscape": {
+  "unified": "1F3D9-FE0F"
+ },
+ "cl": {
+  "unified": "1F191"
+ },
+ "clap": {
+  "tones": {
+   "2": "1F44F-1F3FB",
+   "3": "1F44F-1F3FC",
+   "4": "1F44F-1F3FD",
+   "5": "1F44F-1F3FE",
+   "6": "1F44F-1F3FF"
+  },
+  "unified": "1F44F"
+ },
+ "clapper": {
+  "unified": "1F3AC"
+ },
+ "classical_building": {
+  "unified": "1F3DB-FE0F"
+ },
+ "clinking_glasses": {
+  "unified": "1F942"
+ },
+ "clipboard": {
+  "unified": "1F4CB"
+ },
+ "clock1": {
+  "unified": "1F550"
+ },
+ "clock10": {
+  "unified": "1F559"
+ },
+ "clock1030": {
+  "unified": "1F565"
+ },
+ "clock11": {
+  "unified": "1F55A"
+ },
+ "clock1130": {
+  "unified": "1F566"
+ },
+ "clock12": {
+  "unified": "1F55B"
+ },
+ "clock1230": {
+  "unified": "1F567"
+ },
+ "clock130": {
+  "unified": "1F55C"
+ },
+ "clock2": {
+  "unified": "1F551"
+ },
+ "clock230": {
+  "unified": "1F55D"
+ },
+ "clock3": {
+  "unified": "1F552"
+ },
+ "clock330": {
+  "unified": "1F55E"
+ },
+ "clock4": {
+  "unified": "1F553"
+ },
+ "clock430": {
+  "unified": "1F55F"
+ },
+ "clock5": {
+  "unified": "1F554"
+ },
+ "clock530": {
+  "unified": "1F560"
+ },
+ "clock6": {
+  "unified": "1F555"
+ },
+ "clock630": {
+  "unified": "1F561"
+ },
+ "clock7": {
+  "unified": "1F556"
+ },
+ "clock730": {
+  "unified": "1F562"
+ },
+ "clock8": {
+  "unified": "1F557"
+ },
+ "clock830": {
+  "unified": "1F563"
+ },
+ "clock9": {
+  "unified": "1F558"
+ },
+ "clock930": {
+  "unified": "1F564"
+ },
+ "closed_book": {
+  "unified": "1F4D5"
+ },
+ "closed_lock_with_key": {
+  "unified": "1F510"
+ },
+ "closed_umbrella": {
+  "unified": "1F302"
+ },
+ "cloud": {
+  "unified": "2601-FE0F"
+ },
+ "clown_face": {
+  "unified": "1F921"
+ },
+ "clubs": {
+  "unified": "2663-FE0F"
+ },
+ "cn": {
+  "unified": "1F1E8-1F1F3"
+ },
+ "coat": {
+  "unified": "1F9E5"
+ },
+ "cockroach": {
+  "unified": "1FAB3"
+ },
+ "cocktail": {
+  "unified": "1F378"
+ },
+ "coconut": {
+  "unified": "1F965"
+ },
+ "coffee": {
+  "unified": "2615"
+ },
+ "coffin": {
+  "unified": "26B0-FE0F"
+ },
+ "coin": {
+  "unified": "1FA99"
+ },
+ "cold_face": {
+  "unified": "1F976"
+ },
+ "cold_sweat": {
+  "unified": "1F630"
+ },
+ "collision": {
+  "unified": "1F4A5"
+ },
+ "comet": {
+  "unified": "2604-FE0F"
+ },
+ "compass": {
+  "unified": "1F9ED"
+ },
+ "compression": {
+  "unified": "1F5DC-FE0F"
+ },
+ "computer": {
+  "unified": "1F4BB"
+ },
+ "confetti_ball": {
+  "unified": "1F38A"
+ },
+ "confounded": {
+  "unified": "1F616"
+ },
+ "confused": {
+  "unified": "1F615"
+ },
+ "congratulations": {
+  "unified": "3297-FE0F"
+ },
+ "construction": {
+  "unified": "1F6A7"
+ },
+ "construction_worker": {
+  "tones": {
+   "2": "1F477-1F3FB",
+   "3": "1F477-1F3FC",
+   "4": "1F477-1F3FD",
+   "5": "1F477-1F3FE",
+   "6": "1F477-1F3FF"
+  },
+  "unified": "1F477"
+ },
+ "control_knobs": {
+  "unified": "1F39B-FE0F"
+ },
+ "convenience_store": {
+  "unified": "1F3EA"
+ },
+ "cook": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F373",
+   "3": "1F9D1-1F3FC-200D-1F373",
+   "4": "1F9D1-1F3FD-200D-1F373",
+   "5": "1F9D1-1F3FE-200D-1F373",
+   "6": "1F9D1-1F3FF-200D-1F373"
+  },
+  "unified": "1F9D1-200D-1F373"
+ },
+ "cookie": {
+  "unified": "1F36A"
+ },
+ "cooking": {
+  "unified": "1F373"
+ },
+ "cool": {
+  "unified": "1F192"
+ },
+ "cop": {
+  "tones": {
+   "2": "1F46E-1F3FB",
+   "3": "1F46E-1F3FC",
+   "4": "1F46E-1F3FD",
+   "5": "1F46E-1F3FE",
+   "6": "1F46E-1F3FF"
+  },
+  "unified": "1F46E"
+ },
+ "copyright": {
+  "unified": "00A9-FE0F"
+ },
+ "coral": {
+  "unified": "1FAB8"
+ },
+ "corn": {
+  "unified": "1F33D"
+ },
+ "couch_and_lamp": {
+  "unified": "1F6CB-FE0F"
+ },
+ "couple": {
+  "tones": {
+   "2": "1F46B-1F3FB",
+   "3": "1F46B-1F3FC",
+   "4": "1F46B-1F3FD",
+   "5": "1F46B-1F3FE",
+   "6": "1F46B-1F3FF"
+  },
+  "unified": "1F46B"
+ },
+ "couple_with_heart": {
+  "tones": {
+   "2": "1F491-1F3FB",
+   "3": "1F491-1F3FC",
+   "4": "1F491-1F3FD",
+   "5": "1F491-1F3FE",
+   "6": "1F491-1F3FF"
+  },
+  "unified": "1F491"
+ },
+ "couplekiss": {
+  "tones": {
+   "2": "1F48F-1F3FB",
+   "3": "1F48F-1F3FC",
+   "4": "1F48F-1F3FD",
+   "5": "1F48F-1F3FE",
+   "6": "1F48F-1F3FF"
+  },
+  "unified": "1F48F"
+ },
+ "cow": {
+  "unified": "1F42E"
+ },
+ "cow2": {
+  "unified": "1F404"
+ },
+ "crab": {
+  "unified": "1F980"
+ },
+ "credit_card": {
+  "unified": "1F4B3"
+ },
+ "crescent_moon": {
+  "unified": "1F319"
+ },
+ "cricket": {
+  "unified": "1F997"
+ },
+ "cricket_bat_and_ball": {
+  "unified": "1F3CF"
+ },
+ "crocodile": {
+  "unified": "1F40A"
+ },
+ "croissant": {
+  "unified": "1F950"
+ },
+ "crossed_fingers": {
+  "tones": {
+   "2": "1F91E-1F3FB",
+   "3": "1F91E-1F3FC",
+   "4": "1F91E-1F3FD",
+   "5": "1F91E-1F3FE",
+   "6": "1F91E-1F3FF"
+  },
+  "unified": "1F91E"
+ },
+ "crossed_flags": {
+  "unified": "1F38C"
+ },
+ "crossed_swords": {
+  "unified": "2694-FE0F"
+ },
+ "crown": {
+  "unified": "1F451"
+ },
+ "crutch": {
+  "unified": "1FA7C"
+ },
+ "cry": {
+  "unified": "1F622"
+ },
+ "crying_cat_face": {
+  "unified": "1F63F"
+ },
+ "crystal_ball": {
+  "unified": "1F52E"
+ },
+ "cucumber": {
+  "unified": "1F952"
+ },
+ "cup_with_straw": {
+  "unified": "1F964"
+ },
+ "cupcake": {
+  "unified": "1F9C1"
+ },
+ "cupid": {
+  "unified": "1F498"
+ },
+ "curling_stone": {
+  "unified": "1F94C"
+ },
+ "curly_haired_man": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9B1",
+   "3": "1F468-1F3FC-200D-1F9B1",
+   "4": "1F468-1F3FD-200D-1F9B1",
+   "5": "1F468-1F3FE-200D-1F9B1",
+   "6": "1F468-1F3FF-200D-1F9B1"
+  },
+  "unified": "1F468-200D-1F9B1"
+ },
+ "curly_haired_person": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9B1",
+   "3": "1F9D1-1F3FC-200D-1F9B1",
+   "4": "1F9D1-1F3FD-200D-1F9B1",
+   "5": "1F9D1-1F3FE-200D-1F9B1",
+   "6": "1F9D1-1F3FF-200D-1F9B1"
+  },
+  "unified": "1F9D1-200D-1F9B1"
+ },
+ "curly_haired_woman": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9B1",
+   "3": "1F469-1F3FC-200D-1F9B1",
+   "4": "1F469-1F3FD-200D-1F9B1",
+   "5": "1F469-1F3FE-200D-1F9B1",
+   "6": "1F469-1F3FF-200D-1F9B1"
+  },
+  "unified": "1F469-200D-1F9B1"
+ },
+ "curly_loop": {
+  "unified": "27B0"
+ },
+ "currency_exchange": {
+  "unified": "1F4B1"
+ },
+ "curry": {
+  "unified": "1F35B"
+ },
+ "custard": {
+  "unified": "1F36E"
+ },
+ "customs": {
+  "unified": "1F6C3"
+ },
+ "cut_of_meat": {
+  "unified": "1F969"
+ },
+ "cyclone": {
+  "unified": "1F300"
+ },
+ "dagger_knife": {
+  "unified": "1F5E1-FE0F"
+ },
+ "dancer": {
+  "tones": {
+   "2": "1F483-1F3FB",
+   "3": "1F483-1F3FC",
+   "4": "1F483-1F3FD",
+   "5": "1F483-1F3FE",
+   "6": "1F483-1F3FF"
+  },
+  "unified": "1F483"
+ },
+ "dancers": {
+  "tones": {
+   "2": "1F46F-1F3FB",
+   "3": "1F46F-1F3FC",
+   "4": "1F46F-1F3FD",
+   "5": "1F46F-1F3FE",
+   "6": "1F46F-1F3FF"
+  },
+  "unified": "1F46F"
+ },
+ "dango": {
+  "unified": "1F361"
+ },
+ "dark_sunglasses": {
+  "unified": "1F576-FE0F"
+ },
+ "dart": {
+  "unified": "1F3AF"
+ },
+ "dash": {
+  "unified": "1F4A8"
+ },
+ "date": {
+  "unified": "1F4C5"
+ },
+ "de": {
+  "unified": "1F1E9-1F1EA"
+ },
+ "deaf_man": {
+  "tones": {
+   "2": "1F9CF-1F3FB-200D-2642-FE0F",
+   "3": "1F9CF-1F3FC-200D-2642-FE0F",
+   "4": "1F9CF-1F3FD-200D-2642-FE0F",
+   "5": "1F9CF-1F3FE-200D-2642-FE0F",
+   "6": "1F9CF-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9CF-200D-2642-FE0F"
+ },
+ "deaf_person": {
+  "tones": {
+   "2": "1F9CF-1F3FB",
+   "3": "1F9CF-1F3FC",
+   "4": "1F9CF-1F3FD",
+   "5": "1F9CF-1F3FE",
+   "6": "1F9CF-1F3FF"
+  },
+  "unified": "1F9CF"
+ },
+ "deaf_woman": {
+  "tones": {
+   "2": "1F9CF-1F3FB-200D-2640-FE0F",
+   "3": "1F9CF-1F3FC-200D-2640-FE0F",
+   "4": "1F9CF-1F3FD-200D-2640-FE0F",
+   "5": "1F9CF-1F3FE-200D-2640-FE0F",
+   "6": "1F9CF-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9CF-200D-2640-FE0F"
+ },
+ "deciduous_tree": {
+  "unified": "1F333"
+ },
+ "deer": {
+  "unified": "1F98C"
+ },
+ "department_store": {
+  "unified": "1F3EC"
+ },
+ "derelict_house_building": {
+  "unified": "1F3DA-FE0F"
+ },
+ "desert": {
+  "unified": "1F3DC-FE0F"
+ },
+ "desert_island": {
+  "unified": "1F3DD-FE0F"
+ },
+ "desktop_computer": {
+  "unified": "1F5A5-FE0F"
+ },
+ "diamond_shape_with_a_dot_inside": {
+  "unified": "1F4A0"
+ },
+ "diamonds": {
+  "unified": "2666-FE0F"
+ },
+ "disappointed": {
+  "unified": "1F61E"
+ },
+ "disappointed_relieved": {
+  "unified": "1F625"
+ },
+ "disguised_face": {
+  "unified": "1F978"
+ },
+ "distorted_face": {
+  "unified": "1FAEA"
+ },
+ "diving_mask": {
+  "unified": "1F93F"
+ },
+ "diya_lamp": {
+  "unified": "1FA94"
+ },
+ "dizzy": {
+  "unified": "1F4AB"
+ },
+ "dizzy_face": {
+  "unified": "1F635"
+ },
+ "dna": {
+  "unified": "1F9EC"
+ },
+ "do_not_litter": {
+  "unified": "1F6AF"
+ },
+ "dodo": {
+  "unified": "1F9A4"
+ },
+ "dog": {
+  "unified": "1F436"
+ },
+ "dog2": {
+  "unified": "1F415"
+ },
+ "dollar": {
+  "unified": "1F4B5"
+ },
+ "dolls": {
+  "unified": "1F38E"
+ },
+ "dolphin": {
+  "unified": "1F42C"
+ },
+ "donkey": {
+  "unified": "1FACF"
+ },
+ "door": {
+  "unified": "1F6AA"
+ },
+ "dotted_line_face": {
+  "unified": "1FAE5"
+ },
+ "double_vertical_bar": {
+  "unified": "23F8-FE0F"
+ },
+ "doughnut": {
+  "unified": "1F369"
+ },
+ "dove_of_peace": {
+  "unified": "1F54A-FE0F"
+ },
+ "dragon": {
+  "unified": "1F409"
+ },
+ "dragon_face": {
+  "unified": "1F432"
+ },
+ "dress": {
+  "unified": "1F457"
+ },
+ "dromedary_camel": {
+  "unified": "1F42A"
+ },
+ "drooling_face": {
+  "unified": "1F924"
+ },
+ "drop_of_blood": {
+  "unified": "1FA78"
+ },
+ "droplet": {
+  "unified": "1F4A7"
+ },
+ "drum_with_drumsticks": {
+  "unified": "1F941"
+ },
+ "duck": {
+  "unified": "1F986"
+ },
+ "dumpling": {
+  "unified": "1F95F"
+ },
+ "dvd": {
+  "unified": "1F4C0"
+ },
+ "e-mail": {
+  "unified": "1F4E7"
+ },
+ "eagle": {
+  "unified": "1F985"
+ },
+ "ear": {
+  "tones": {
+   "2": "1F442-1F3FB",
+   "3": "1F442-1F3FC",
+   "4": "1F442-1F3FD",
+   "5": "1F442-1F3FE",
+   "6": "1F442-1F3FF"
+  },
+  "unified": "1F442"
+ },
+ "ear_of_rice": {
+  "unified": "1F33E"
+ },
+ "ear_with_hearing_aid": {
+  "tones": {
+   "2": "1F9BB-1F3FB",
+   "3": "1F9BB-1F3FC",
+   "4": "1F9BB-1F3FD",
+   "5": "1F9BB-1F3FE",
+   "6": "1F9BB-1F3FF"
+  },
+  "unified": "1F9BB"
+ },
+ "earth_africa": {
+  "unified": "1F30D"
+ },
+ "earth_americas": {
+  "unified": "1F30E"
+ },
+ "earth_asia": {
+  "unified": "1F30F"
+ },
+ "egg": {
+  "unified": "1F95A"
+ },
+ "eggplant": {
+  "unified": "1F346"
+ },
+ "eight": {
+  "unified": "0038-FE0F-20E3"
+ },
+ "eight_pointed_black_star": {
+  "unified": "2734-FE0F"
+ },
+ "eight_spoked_asterisk": {
+  "unified": "2733-FE0F"
+ },
+ "eject": {
+  "unified": "23CF-FE0F"
+ },
+ "electric_plug": {
+  "unified": "1F50C"
+ },
+ "elephant": {
+  "unified": "1F418"
+ },
+ "elevator": {
+  "unified": "1F6D7"
+ },
+ "elf": {
+  "tones": {
+   "2": "1F9DD-1F3FB",
+   "3": "1F9DD-1F3FC",
+   "4": "1F9DD-1F3FD",
+   "5": "1F9DD-1F3FE",
+   "6": "1F9DD-1F3FF"
+  },
+  "unified": "1F9DD"
+ },
+ "email": {
+  "unified": "2709-FE0F"
+ },
+ "empty_nest": {
+  "unified": "1FAB9"
+ },
+ "end": {
+  "unified": "1F51A"
+ },
+ "envelope": {
+  "unified": "2709-FE0F"
+ },
+ "envelope_with_arrow": {
+  "unified": "1F4E9"
+ },
+ "es": {
+  "unified": "1F1EA-1F1F8"
+ },
+ "euro": {
+  "unified": "1F4B6"
+ },
+ "european_castle": {
+  "unified": "1F3F0"
+ },
+ "european_post_office": {
+  "unified": "1F3E4"
+ },
+ "evergreen_tree": {
+  "unified": "1F332"
+ },
+ "exclamation": {
+  "unified": "2757"
+ },
+ "exploding_head": {
+  "unified": "1F92F"
+ },
+ "expressionless": {
+  "unified": "1F611"
+ },
+ "eye": {
+  "unified": "1F441-FE0F"
+ },
+ "eye-in-speech-bubble": {
+  "unified": "1F441-FE0F-200D-1F5E8-FE0F"
+ },
+ "eyeglasses": {
+  "unified": "1F453"
+ },
+ "eyes": {
+  "unified": "1F440"
+ },
+ "face_exhaling": {
+  "unified": "1F62E-200D-1F4A8"
+ },
+ "face_holding_back_tears": {
+  "unified": "1F979"
+ },
+ "face_in_clouds": {
+  "unified": "1F636-200D-1F32B-FE0F"
+ },
+ "face_palm": {
+  "tones": {
+   "2": "1F926-1F3FB",
+   "3": "1F926-1F3FC",
+   "4": "1F926-1F3FD",
+   "5": "1F926-1F3FE",
+   "6": "1F926-1F3FF"
+  },
+  "unified": "1F926"
+ },
+ "face_vomiting": {
+  "unified": "1F92E"
+ },
+ "face_with_bags_under_eyes": {
+  "unified": "1FAE9"
+ },
+ "face_with_cowboy_hat": {
+  "unified": "1F920"
+ },
+ "face_with_diagonal_mouth": {
+  "unified": "1FAE4"
+ },
+ "face_with_finger_covering_closed_lips": {
+  "unified": "1F92B"
+ },
+ "face_with_hand_over_mouth": {
+  "unified": "1F92D"
+ },
+ "face_with_head_bandage": {
+  "unified": "1F915"
+ },
+ "face_with_monocle": {
+  "unified": "1F9D0"
+ },
+ "face_with_one_eyebrow_raised": {
+  "unified": "1F928"
+ },
+ "face_with_open_eyes_and_hand_over_mouth": {
+  "unified": "1FAE2"
+ },
+ "face_with_open_mouth_vomiting": {
+  "unified": "1F92E"
+ },
+ "face_with_peeking_eye": {
+  "unified": "1FAE3"
+ },
+ "face_with_raised_eyebrow": {
+  "unified": "1F928"
+ },
+ "face_with_rolling_eyes": {
+  "unified": "1F644"
+ },
+ "face_with_spiral_eyes": {
+  "unified": "1F635-200D-1F4AB"
+ },
+ "face_with_symbols_on_mouth": {
+  "unified": "1F92C"
+ },
+ "face_with_thermometer": {
+  "unified": "1F912"
+ },
+ "facepunch": {
+  "tones": {
+   "2": "1F44A-1F3FB",
+   "3": "1F44A-1F3FC",
+   "4": "1F44A-1F3FD",
+   "5": "1F44A-1F3FE",
+   "6": "1F44A-1F3FF"
+  },
+  "unified": "1F44A"
+ },
+ "factory": {
+  "unified": "1F3ED"
+ },
+ "factory_worker": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F3ED",
+   "3": "1F9D1-1F3FC-200D-1F3ED",
+   "4": "1F9D1-1F3FD-200D-1F3ED",
+   "5": "1F9D1-1F3FE-200D-1F3ED",
+   "6": "1F9D1-1F3FF-200D-1F3ED"
+  },
+  "unified": "1F9D1-200D-1F3ED"
+ },
+ "fairy": {
+  "tones": {
+   "2": "1F9DA-1F3FB",
+   "3": "1F9DA-1F3FC",
+   "4": "1F9DA-1F3FD",
+   "5": "1F9DA-1F3FE",
+   "6": "1F9DA-1F3FF"
+  },
+  "unified": "1F9DA"
+ },
+ "falafel": {
+  "unified": "1F9C6"
+ },
+ "fallen_leaf": {
+  "unified": "1F342"
+ },
+ "family": {
+  "unified": "1F46A"
+ },
+ "family_adult_adult_child": {
+  "unified": "1F9D1-200D-1F9D1-200D-1F9D2"
+ },
+ "family_adult_adult_child_child": {
+  "unified": "1F9D1-200D-1F9D1-200D-1F9D2-200D-1F9D2"
+ },
+ "family_adult_child": {
+  "unified": "1F9D1-200D-1F9D2"
+ },
+ "family_adult_child_child": {
+  "unified": "1F9D1-200D-1F9D2-200D-1F9D2"
+ },
+ "farmer": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F33E",
+   "3": "1F9D1-1F3FC-200D-1F33E",
+   "4": "1F9D1-1F3FD-200D-1F33E",
+   "5": "1F9D1-1F3FE-200D-1F33E",
+   "6": "1F9D1-1F3FF-200D-1F33E"
+  },
+  "unified": "1F9D1-200D-1F33E"
+ },
+ "fast_forward": {
+  "unified": "23E9"
+ },
+ "fax": {
+  "unified": "1F4E0"
+ },
+ "fearful": {
+  "unified": "1F628"
+ },
+ "feather": {
+  "unified": "1FAB6"
+ },
+ "feet": {
+  "unified": "1F43E"
+ },
+ "female-artist": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F3A8",
+   "3": "1F469-1F3FC-200D-1F3A8",
+   "4": "1F469-1F3FD-200D-1F3A8",
+   "5": "1F469-1F3FE-200D-1F3A8",
+   "6": "1F469-1F3FF-200D-1F3A8"
+  },
+  "unified": "1F469-200D-1F3A8"
+ },
+ "female-astronaut": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F680",
+   "3": "1F469-1F3FC-200D-1F680",
+   "4": "1F469-1F3FD-200D-1F680",
+   "5": "1F469-1F3FE-200D-1F680",
+   "6": "1F469-1F3FF-200D-1F680"
+  },
+  "unified": "1F469-200D-1F680"
+ },
+ "female-construction-worker": {
+  "tones": {
+   "2": "1F477-1F3FB-200D-2640-FE0F",
+   "3": "1F477-1F3FC-200D-2640-FE0F",
+   "4": "1F477-1F3FD-200D-2640-FE0F",
+   "5": "1F477-1F3FE-200D-2640-FE0F",
+   "6": "1F477-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F477-200D-2640-FE0F"
+ },
+ "female-cook": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F373",
+   "3": "1F469-1F3FC-200D-1F373",
+   "4": "1F469-1F3FD-200D-1F373",
+   "5": "1F469-1F3FE-200D-1F373",
+   "6": "1F469-1F3FF-200D-1F373"
+  },
+  "unified": "1F469-200D-1F373"
+ },
+ "female-detective": {
+  "tones": {
+   "2": "1F575-1F3FB-200D-2640-FE0F",
+   "3": "1F575-1F3FC-200D-2640-FE0F",
+   "4": "1F575-1F3FD-200D-2640-FE0F",
+   "5": "1F575-1F3FE-200D-2640-FE0F",
+   "6": "1F575-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F575-FE0F-200D-2640-FE0F"
+ },
+ "female-doctor": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-2695-FE0F",
+   "3": "1F469-1F3FC-200D-2695-FE0F",
+   "4": "1F469-1F3FD-200D-2695-FE0F",
+   "5": "1F469-1F3FE-200D-2695-FE0F",
+   "6": "1F469-1F3FF-200D-2695-FE0F"
+  },
+  "unified": "1F469-200D-2695-FE0F"
+ },
+ "female-factory-worker": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F3ED",
+   "3": "1F469-1F3FC-200D-1F3ED",
+   "4": "1F469-1F3FD-200D-1F3ED",
+   "5": "1F469-1F3FE-200D-1F3ED",
+   "6": "1F469-1F3FF-200D-1F3ED"
+  },
+  "unified": "1F469-200D-1F3ED"
+ },
+ "female-farmer": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F33E",
+   "3": "1F469-1F3FC-200D-1F33E",
+   "4": "1F469-1F3FD-200D-1F33E",
+   "5": "1F469-1F3FE-200D-1F33E",
+   "6": "1F469-1F3FF-200D-1F33E"
+  },
+  "unified": "1F469-200D-1F33E"
+ },
+ "female-firefighter": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F692",
+   "3": "1F469-1F3FC-200D-1F692",
+   "4": "1F469-1F3FD-200D-1F692",
+   "5": "1F469-1F3FE-200D-1F692",
+   "6": "1F469-1F3FF-200D-1F692"
+  },
+  "unified": "1F469-200D-1F692"
+ },
+ "female-guard": {
+  "tones": {
+   "2": "1F482-1F3FB-200D-2640-FE0F",
+   "3": "1F482-1F3FC-200D-2640-FE0F",
+   "4": "1F482-1F3FD-200D-2640-FE0F",
+   "5": "1F482-1F3FE-200D-2640-FE0F",
+   "6": "1F482-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F482-200D-2640-FE0F"
+ },
+ "female-judge": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-2696-FE0F",
+   "3": "1F469-1F3FC-200D-2696-FE0F",
+   "4": "1F469-1F3FD-200D-2696-FE0F",
+   "5": "1F469-1F3FE-200D-2696-FE0F",
+   "6": "1F469-1F3FF-200D-2696-FE0F"
+  },
+  "unified": "1F469-200D-2696-FE0F"
+ },
+ "female-mechanic": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F527",
+   "3": "1F469-1F3FC-200D-1F527",
+   "4": "1F469-1F3FD-200D-1F527",
+   "5": "1F469-1F3FE-200D-1F527",
+   "6": "1F469-1F3FF-200D-1F527"
+  },
+  "unified": "1F469-200D-1F527"
+ },
+ "female-office-worker": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F4BC",
+   "3": "1F469-1F3FC-200D-1F4BC",
+   "4": "1F469-1F3FD-200D-1F4BC",
+   "5": "1F469-1F3FE-200D-1F4BC",
+   "6": "1F469-1F3FF-200D-1F4BC"
+  },
+  "unified": "1F469-200D-1F4BC"
+ },
+ "female-pilot": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-2708-FE0F",
+   "3": "1F469-1F3FC-200D-2708-FE0F",
+   "4": "1F469-1F3FD-200D-2708-FE0F",
+   "5": "1F469-1F3FE-200D-2708-FE0F",
+   "6": "1F469-1F3FF-200D-2708-FE0F"
+  },
+  "unified": "1F469-200D-2708-FE0F"
+ },
+ "female-police-officer": {
+  "tones": {
+   "2": "1F46E-1F3FB-200D-2640-FE0F",
+   "3": "1F46E-1F3FC-200D-2640-FE0F",
+   "4": "1F46E-1F3FD-200D-2640-FE0F",
+   "5": "1F46E-1F3FE-200D-2640-FE0F",
+   "6": "1F46E-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F46E-200D-2640-FE0F"
+ },
+ "female-scientist": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F52C",
+   "3": "1F469-1F3FC-200D-1F52C",
+   "4": "1F469-1F3FD-200D-1F52C",
+   "5": "1F469-1F3FE-200D-1F52C",
+   "6": "1F469-1F3FF-200D-1F52C"
+  },
+  "unified": "1F469-200D-1F52C"
+ },
+ "female-singer": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F3A4",
+   "3": "1F469-1F3FC-200D-1F3A4",
+   "4": "1F469-1F3FD-200D-1F3A4",
+   "5": "1F469-1F3FE-200D-1F3A4",
+   "6": "1F469-1F3FF-200D-1F3A4"
+  },
+  "unified": "1F469-200D-1F3A4"
+ },
+ "female-student": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F393",
+   "3": "1F469-1F3FC-200D-1F393",
+   "4": "1F469-1F3FD-200D-1F393",
+   "5": "1F469-1F3FE-200D-1F393",
+   "6": "1F469-1F3FF-200D-1F393"
+  },
+  "unified": "1F469-200D-1F393"
+ },
+ "female-teacher": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F3EB",
+   "3": "1F469-1F3FC-200D-1F3EB",
+   "4": "1F469-1F3FD-200D-1F3EB",
+   "5": "1F469-1F3FE-200D-1F3EB",
+   "6": "1F469-1F3FF-200D-1F3EB"
+  },
+  "unified": "1F469-200D-1F3EB"
+ },
+ "female-technologist": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F4BB",
+   "3": "1F469-1F3FC-200D-1F4BB",
+   "4": "1F469-1F3FD-200D-1F4BB",
+   "5": "1F469-1F3FE-200D-1F4BB",
+   "6": "1F469-1F3FF-200D-1F4BB"
+  },
+  "unified": "1F469-200D-1F4BB"
+ },
+ "female_elf": {
+  "tones": {
+   "2": "1F9DD-1F3FB-200D-2640-FE0F",
+   "3": "1F9DD-1F3FC-200D-2640-FE0F",
+   "4": "1F9DD-1F3FD-200D-2640-FE0F",
+   "5": "1F9DD-1F3FE-200D-2640-FE0F",
+   "6": "1F9DD-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9DD-200D-2640-FE0F"
+ },
+ "female_fairy": {
+  "tones": {
+   "2": "1F9DA-1F3FB-200D-2640-FE0F",
+   "3": "1F9DA-1F3FC-200D-2640-FE0F",
+   "4": "1F9DA-1F3FD-200D-2640-FE0F",
+   "5": "1F9DA-1F3FE-200D-2640-FE0F",
+   "6": "1F9DA-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9DA-200D-2640-FE0F"
+ },
+ "female_genie": {
+  "unified": "1F9DE-200D-2640-FE0F"
+ },
+ "female_mage": {
+  "tones": {
+   "2": "1F9D9-1F3FB-200D-2640-FE0F",
+   "3": "1F9D9-1F3FC-200D-2640-FE0F",
+   "4": "1F9D9-1F3FD-200D-2640-FE0F",
+   "5": "1F9D9-1F3FE-200D-2640-FE0F",
+   "6": "1F9D9-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9D9-200D-2640-FE0F"
+ },
+ "female_sign": {
+  "unified": "2640-FE0F"
+ },
+ "female_superhero": {
+  "tones": {
+   "2": "1F9B8-1F3FB-200D-2640-FE0F",
+   "3": "1F9B8-1F3FC-200D-2640-FE0F",
+   "4": "1F9B8-1F3FD-200D-2640-FE0F",
+   "5": "1F9B8-1F3FE-200D-2640-FE0F",
+   "6": "1F9B8-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9B8-200D-2640-FE0F"
+ },
+ "female_supervillain": {
+  "tones": {
+   "2": "1F9B9-1F3FB-200D-2640-FE0F",
+   "3": "1F9B9-1F3FC-200D-2640-FE0F",
+   "4": "1F9B9-1F3FD-200D-2640-FE0F",
+   "5": "1F9B9-1F3FE-200D-2640-FE0F",
+   "6": "1F9B9-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9B9-200D-2640-FE0F"
+ },
+ "female_vampire": {
+  "tones": {
+   "2": "1F9DB-1F3FB-200D-2640-FE0F",
+   "3": "1F9DB-1F3FC-200D-2640-FE0F",
+   "4": "1F9DB-1F3FD-200D-2640-FE0F",
+   "5": "1F9DB-1F3FE-200D-2640-FE0F",
+   "6": "1F9DB-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9DB-200D-2640-FE0F"
+ },
+ "female_zombie": {
+  "unified": "1F9DF-200D-2640-FE0F"
+ },
+ "fencer": {
+  "unified": "1F93A"
+ },
+ "ferris_wheel": {
+  "unified": "1F3A1"
+ },
+ "ferry": {
+  "unified": "26F4-FE0F"
+ },
+ "field_hockey_stick_and_ball": {
+  "unified": "1F3D1"
+ },
+ "fight_cloud": {
+  "unified": "1FAEF"
+ },
+ "file_cabinet": {
+  "unified": "1F5C4-FE0F"
+ },
+ "file_folder": {
+  "unified": "1F4C1"
+ },
+ "film_frames": {
+  "unified": "1F39E-FE0F"
+ },
+ "film_projector": {
+  "unified": "1F4FD-FE0F"
+ },
+ "fingerprint": {
+  "unified": "1FAC6"
+ },
+ "fire": {
+  "unified": "1F525"
+ },
+ "fire_engine": {
+  "unified": "1F692"
+ },
+ "fire_extinguisher": {
+  "unified": "1F9EF"
+ },
+ "firecracker": {
+  "unified": "1F9E8"
+ },
+ "firefighter": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F692",
+   "3": "1F9D1-1F3FC-200D-1F692",
+   "4": "1F9D1-1F3FD-200D-1F692",
+   "5": "1F9D1-1F3FE-200D-1F692",
+   "6": "1F9D1-1F3FF-200D-1F692"
+  },
+  "unified": "1F9D1-200D-1F692"
+ },
+ "fireworks": {
+  "unified": "1F386"
+ },
+ "first_place_medal": {
+  "unified": "1F947"
+ },
+ "first_quarter_moon": {
+  "unified": "1F313"
+ },
+ "first_quarter_moon_with_face": {
+  "unified": "1F31B"
+ },
+ "fish": {
+  "unified": "1F41F"
+ },
+ "fish_cake": {
+  "unified": "1F365"
+ },
+ "fishing_pole_and_fish": {
+  "unified": "1F3A3"
+ },
+ "fist": {
+  "tones": {
+   "2": "270A-1F3FB",
+   "3": "270A-1F3FC",
+   "4": "270A-1F3FD",
+   "5": "270A-1F3FE",
+   "6": "270A-1F3FF"
+  },
+  "unified": "270A"
+ },
+ "five": {
+  "unified": "0035-FE0F-20E3"
+ },
+ "flag-ac": {
+  "unified": "1F1E6-1F1E8"
+ },
+ "flag-ad": {
+  "unified": "1F1E6-1F1E9"
+ },
+ "flag-ae": {
+  "unified": "1F1E6-1F1EA"
+ },
+ "flag-af": {
+  "unified": "1F1E6-1F1EB"
+ },
+ "flag-ag": {
+  "unified": "1F1E6-1F1EC"
+ },
+ "flag-ai": {
+  "unified": "1F1E6-1F1EE"
+ },
+ "flag-al": {
+  "unified": "1F1E6-1F1F1"
+ },
+ "flag-am": {
+  "unified": "1F1E6-1F1F2"
+ },
+ "flag-ao": {
+  "unified": "1F1E6-1F1F4"
+ },
+ "flag-aq": {
+  "unified": "1F1E6-1F1F6"
+ },
+ "flag-ar": {
+  "unified": "1F1E6-1F1F7"
+ },
+ "flag-as": {
+  "unified": "1F1E6-1F1F8"
+ },
+ "flag-at": {
+  "unified": "1F1E6-1F1F9"
+ },
+ "flag-au": {
+  "unified": "1F1E6-1F1FA"
+ },
+ "flag-aw": {
+  "unified": "1F1E6-1F1FC"
+ },
+ "flag-ax": {
+  "unified": "1F1E6-1F1FD"
+ },
+ "flag-az": {
+  "unified": "1F1E6-1F1FF"
+ },
+ "flag-ba": {
+  "unified": "1F1E7-1F1E6"
+ },
+ "flag-bb": {
+  "unified": "1F1E7-1F1E7"
+ },
+ "flag-bd": {
+  "unified": "1F1E7-1F1E9"
+ },
+ "flag-be": {
+  "unified": "1F1E7-1F1EA"
+ },
+ "flag-bf": {
+  "unified": "1F1E7-1F1EB"
+ },
+ "flag-bg": {
+  "unified": "1F1E7-1F1EC"
+ },
+ "flag-bh": {
+  "unified": "1F1E7-1F1ED"
+ },
+ "flag-bi": {
+  "unified": "1F1E7-1F1EE"
+ },
+ "flag-bj": {
+  "unified": "1F1E7-1F1EF"
+ },
+ "flag-bl": {
+  "unified": "1F1E7-1F1F1"
+ },
+ "flag-bm": {
+  "unified": "1F1E7-1F1F2"
+ },
+ "flag-bn": {
+  "unified": "1F1E7-1F1F3"
+ },
+ "flag-bo": {
+  "unified": "1F1E7-1F1F4"
+ },
+ "flag-bq": {
+  "unified": "1F1E7-1F1F6"
+ },
+ "flag-br": {
+  "unified": "1F1E7-1F1F7"
+ },
+ "flag-bs": {
+  "unified": "1F1E7-1F1F8"
+ },
+ "flag-bt": {
+  "unified": "1F1E7-1F1F9"
+ },
+ "flag-bv": {
+  "unified": "1F1E7-1F1FB"
+ },
+ "flag-bw": {
+  "unified": "1F1E7-1F1FC"
+ },
+ "flag-by": {
+  "unified": "1F1E7-1F1FE"
+ },
+ "flag-bz": {
+  "unified": "1F1E7-1F1FF"
+ },
+ "flag-ca": {
+  "unified": "1F1E8-1F1E6"
+ },
+ "flag-cc": {
+  "unified": "1F1E8-1F1E8"
+ },
+ "flag-cd": {
+  "unified": "1F1E8-1F1E9"
+ },
+ "flag-cf": {
+  "unified": "1F1E8-1F1EB"
+ },
+ "flag-cg": {
+  "unified": "1F1E8-1F1EC"
+ },
+ "flag-ch": {
+  "unified": "1F1E8-1F1ED"
+ },
+ "flag-ci": {
+  "unified": "1F1E8-1F1EE"
+ },
+ "flag-ck": {
+  "unified": "1F1E8-1F1F0"
+ },
+ "flag-cl": {
+  "unified": "1F1E8-1F1F1"
+ },
+ "flag-cm": {
+  "unified": "1F1E8-1F1F2"
+ },
+ "flag-cn": {
+  "unified": "1F1E8-1F1F3"
+ },
+ "flag-co": {
+  "unified": "1F1E8-1F1F4"
+ },
+ "flag-cp": {
+  "unified": "1F1E8-1F1F5"
+ },
+ "flag-cr": {
+  "unified": "1F1E8-1F1F7"
+ },
+ "flag-cu": {
+  "unified": "1F1E8-1F1FA"
+ },
+ "flag-cv": {
+  "unified": "1F1E8-1F1FB"
+ },
+ "flag-cw": {
+  "unified": "1F1E8-1F1FC"
+ },
+ "flag-cx": {
+  "unified": "1F1E8-1F1FD"
+ },
+ "flag-cy": {
+  "unified": "1F1E8-1F1FE"
+ },
+ "flag-cz": {
+  "unified": "1F1E8-1F1FF"
+ },
+ "flag-de": {
+  "unified": "1F1E9-1F1EA"
+ },
+ "flag-dg": {
+  "unified": "1F1E9-1F1EC"
+ },
+ "flag-dj": {
+  "unified": "1F1E9-1F1EF"
+ },
+ "flag-dk": {
+  "unified": "1F1E9-1F1F0"
+ },
+ "flag-dm": {
+  "unified": "1F1E9-1F1F2"
+ },
+ "flag-do": {
+  "unified": "1F1E9-1F1F4"
+ },
+ "flag-dz": {
+  "unified": "1F1E9-1F1FF"
+ },
+ "flag-ea": {
+  "unified": "1F1EA-1F1E6"
+ },
+ "flag-ec": {
+  "unified": "1F1EA-1F1E8"
+ },
+ "flag-ee": {
+  "unified": "1F1EA-1F1EA"
+ },
+ "flag-eg": {
+  "unified": "1F1EA-1F1EC"
+ },
+ "flag-eh": {
+  "unified": "1F1EA-1F1ED"
+ },
+ "flag-england": {
+  "unified": "1F3F4-E0067-E0062-E0065-E006E-E0067-E007F"
+ },
+ "flag-er": {
+  "unified": "1F1EA-1F1F7"
+ },
+ "flag-es": {
+  "unified": "1F1EA-1F1F8"
+ },
+ "flag-et": {
+  "unified": "1F1EA-1F1F9"
+ },
+ "flag-eu": {
+  "unified": "1F1EA-1F1FA"
+ },
+ "flag-fi": {
+  "unified": "1F1EB-1F1EE"
+ },
+ "flag-fj": {
+  "unified": "1F1EB-1F1EF"
+ },
+ "flag-fk": {
+  "unified": "1F1EB-1F1F0"
+ },
+ "flag-fm": {
+  "unified": "1F1EB-1F1F2"
+ },
+ "flag-fo": {
+  "unified": "1F1EB-1F1F4"
+ },
+ "flag-fr": {
+  "unified": "1F1EB-1F1F7"
+ },
+ "flag-ga": {
+  "unified": "1F1EC-1F1E6"
+ },
+ "flag-gb": {
+  "unified": "1F1EC-1F1E7"
+ },
+ "flag-gd": {
+  "unified": "1F1EC-1F1E9"
+ },
+ "flag-ge": {
+  "unified": "1F1EC-1F1EA"
+ },
+ "flag-gf": {
+  "unified": "1F1EC-1F1EB"
+ },
+ "flag-gg": {
+  "unified": "1F1EC-1F1EC"
+ },
+ "flag-gh": {
+  "unified": "1F1EC-1F1ED"
+ },
+ "flag-gi": {
+  "unified": "1F1EC-1F1EE"
+ },
+ "flag-gl": {
+  "unified": "1F1EC-1F1F1"
+ },
+ "flag-gm": {
+  "unified": "1F1EC-1F1F2"
+ },
+ "flag-gn": {
+  "unified": "1F1EC-1F1F3"
+ },
+ "flag-gp": {
+  "unified": "1F1EC-1F1F5"
+ },
+ "flag-gq": {
+  "unified": "1F1EC-1F1F6"
+ },
+ "flag-gr": {
+  "unified": "1F1EC-1F1F7"
+ },
+ "flag-gs": {
+  "unified": "1F1EC-1F1F8"
+ },
+ "flag-gt": {
+  "unified": "1F1EC-1F1F9"
+ },
+ "flag-gu": {
+  "unified": "1F1EC-1F1FA"
+ },
+ "flag-gw": {
+  "unified": "1F1EC-1F1FC"
+ },
+ "flag-gy": {
+  "unified": "1F1EC-1F1FE"
+ },
+ "flag-hk": {
+  "unified": "1F1ED-1F1F0"
+ },
+ "flag-hm": {
+  "unified": "1F1ED-1F1F2"
+ },
+ "flag-hn": {
+  "unified": "1F1ED-1F1F3"
+ },
+ "flag-hr": {
+  "unified": "1F1ED-1F1F7"
+ },
+ "flag-ht": {
+  "unified": "1F1ED-1F1F9"
+ },
+ "flag-hu": {
+  "unified": "1F1ED-1F1FA"
+ },
+ "flag-ic": {
+  "unified": "1F1EE-1F1E8"
+ },
+ "flag-id": {
+  "unified": "1F1EE-1F1E9"
+ },
+ "flag-ie": {
+  "unified": "1F1EE-1F1EA"
+ },
+ "flag-il": {
+  "unified": "1F1EE-1F1F1"
+ },
+ "flag-im": {
+  "unified": "1F1EE-1F1F2"
+ },
+ "flag-in": {
+  "unified": "1F1EE-1F1F3"
+ },
+ "flag-io": {
+  "unified": "1F1EE-1F1F4"
+ },
+ "flag-iq": {
+  "unified": "1F1EE-1F1F6"
+ },
+ "flag-ir": {
+  "unified": "1F1EE-1F1F7"
+ },
+ "flag-is": {
+  "unified": "1F1EE-1F1F8"
+ },
+ "flag-it": {
+  "unified": "1F1EE-1F1F9"
+ },
+ "flag-je": {
+  "unified": "1F1EF-1F1EA"
+ },
+ "flag-jm": {
+  "unified": "1F1EF-1F1F2"
+ },
+ "flag-jo": {
+  "unified": "1F1EF-1F1F4"
+ },
+ "flag-jp": {
+  "unified": "1F1EF-1F1F5"
+ },
+ "flag-ke": {
+  "unified": "1F1F0-1F1EA"
+ },
+ "flag-kg": {
+  "unified": "1F1F0-1F1EC"
+ },
+ "flag-kh": {
+  "unified": "1F1F0-1F1ED"
+ },
+ "flag-ki": {
+  "unified": "1F1F0-1F1EE"
+ },
+ "flag-km": {
+  "unified": "1F1F0-1F1F2"
+ },
+ "flag-kn": {
+  "unified": "1F1F0-1F1F3"
+ },
+ "flag-kp": {
+  "unified": "1F1F0-1F1F5"
+ },
+ "flag-kr": {
+  "unified": "1F1F0-1F1F7"
+ },
+ "flag-kw": {
+  "unified": "1F1F0-1F1FC"
+ },
+ "flag-ky": {
+  "unified": "1F1F0-1F1FE"
+ },
+ "flag-kz": {
+  "unified": "1F1F0-1F1FF"
+ },
+ "flag-la": {
+  "unified": "1F1F1-1F1E6"
+ },
+ "flag-lb": {
+  "unified": "1F1F1-1F1E7"
+ },
+ "flag-lc": {
+  "unified": "1F1F1-1F1E8"
+ },
+ "flag-li": {
+  "unified": "1F1F1-1F1EE"
+ },
+ "flag-lk": {
+  "unified": "1F1F1-1F1F0"
+ },
+ "flag-lr": {
+  "unified": "1F1F1-1F1F7"
+ },
+ "flag-ls": {
+  "unified": "1F1F1-1F1F8"
+ },
+ "flag-lt": {
+  "unified": "1F1F1-1F1F9"
+ },
+ "flag-lu": {
+  "unified": "1F1F1-1F1FA"
+ },
+ "flag-lv": {
+  "unified": "1F1F1-1F1FB"
+ },
+ "flag-ly": {
+  "unified": "1F1F1-1F1FE"
+ },
+ "flag-ma": {
+  "unified": "1F1F2-1F1E6"
+ },
+ "flag-mc": {
+  "unified": "1F1F2-1F1E8"
+ },
+ "flag-md": {
+  "unified": "1F1F2-1F1E9"
+ },
+ "flag-me": {
+  "unified": "1F1F2-1F1EA"
+ },
+ "flag-mf": {
+  "unified": "1F1F2-1F1EB"
+ },
+ "flag-mg": {
+  "unified": "1F1F2-1F1EC"
+ },
+ "flag-mh": {
+  "unified": "1F1F2-1F1ED"
+ },
+ "flag-mk": {
+  "unified": "1F1F2-1F1F0"
+ },
+ "flag-ml": {
+  "unified": "1F1F2-1F1F1"
+ },
+ "flag-mm": {
+  "unified": "1F1F2-1F1F2"
+ },
+ "flag-mn": {
+  "unified": "1F1F2-1F1F3"
+ },
+ "flag-mo": {
+  "unified": "1F1F2-1F1F4"
+ },
+ "flag-mp": {
+  "unified": "1F1F2-1F1F5"
+ },
+ "flag-mq": {
+  "unified": "1F1F2-1F1F6"
+ },
+ "flag-mr": {
+  "unified": "1F1F2-1F1F7"
+ },
+ "flag-ms": {
+  "unified": "1F1F2-1F1F8"
+ },
+ "flag-mt": {
+  "unified": "1F1F2-1F1F9"
+ },
+ "flag-mu": {
+  "unified": "1F1F2-1F1FA"
+ },
+ "flag-mv": {
+  "unified": "1F1F2-1F1FB"
+ },
+ "flag-mw": {
+  "unified": "1F1F2-1F1FC"
+ },
+ "flag-mx": {
+  "unified": "1F1F2-1F1FD"
+ },
+ "flag-my": {
+  "unified": "1F1F2-1F1FE"
+ },
+ "flag-mz": {
+  "unified": "1F1F2-1F1FF"
+ },
+ "flag-na": {
+  "unified": "1F1F3-1F1E6"
+ },
+ "flag-nc": {
+  "unified": "1F1F3-1F1E8"
+ },
+ "flag-ne": {
+  "unified": "1F1F3-1F1EA"
+ },
+ "flag-nf": {
+  "unified": "1F1F3-1F1EB"
+ },
+ "flag-ng": {
+  "unified": "1F1F3-1F1EC"
+ },
+ "flag-ni": {
+  "unified": "1F1F3-1F1EE"
+ },
+ "flag-nl": {
+  "unified": "1F1F3-1F1F1"
+ },
+ "flag-no": {
+  "unified": "1F1F3-1F1F4"
+ },
+ "flag-np": {
+  "unified": "1F1F3-1F1F5"
+ },
+ "flag-nr": {
+  "unified": "1F1F3-1F1F7"
+ },
+ "flag-nu": {
+  "unified": "1F1F3-1F1FA"
+ },
+ "flag-nz": {
+  "unified": "1F1F3-1F1FF"
+ },
+ "flag-om": {
+  "unified": "1F1F4-1F1F2"
+ },
+ "flag-pa": {
+  "unified": "1F1F5-1F1E6"
+ },
+ "flag-pe": {
+  "unified": "1F1F5-1F1EA"
+ },
+ "flag-pf": {
+  "unified": "1F1F5-1F1EB"
+ },
+ "flag-pg": {
+  "unified": "1F1F5-1F1EC"
+ },
+ "flag-ph": {
+  "unified": "1F1F5-1F1ED"
+ },
+ "flag-pk": {
+  "unified": "1F1F5-1F1F0"
+ },
+ "flag-pl": {
+  "unified": "1F1F5-1F1F1"
+ },
+ "flag-pm": {
+  "unified": "1F1F5-1F1F2"
+ },
+ "flag-pn": {
+  "unified": "1F1F5-1F1F3"
+ },
+ "flag-pr": {
+  "unified": "1F1F5-1F1F7"
+ },
+ "flag-ps": {
+  "unified": "1F1F5-1F1F8"
+ },
+ "flag-pt": {
+  "unified": "1F1F5-1F1F9"
+ },
+ "flag-pw": {
+  "unified": "1F1F5-1F1FC"
+ },
+ "flag-py": {
+  "unified": "1F1F5-1F1FE"
+ },
+ "flag-qa": {
+  "unified": "1F1F6-1F1E6"
+ },
+ "flag-re": {
+  "unified": "1F1F7-1F1EA"
+ },
+ "flag-ro": {
+  "unified": "1F1F7-1F1F4"
+ },
+ "flag-rs": {
+  "unified": "1F1F7-1F1F8"
+ },
+ "flag-ru": {
+  "unified": "1F1F7-1F1FA"
+ },
+ "flag-rw": {
+  "unified": "1F1F7-1F1FC"
+ },
+ "flag-sa": {
+  "unified": "1F1F8-1F1E6"
+ },
+ "flag-sark": {
+  "unified": "1F1E8-1F1F6"
+ },
+ "flag-sb": {
+  "unified": "1F1F8-1F1E7"
+ },
+ "flag-sc": {
+  "unified": "1F1F8-1F1E8"
+ },
+ "flag-scotland": {
+  "unified": "1F3F4-E0067-E0062-E0073-E0063-E0074-E007F"
+ },
+ "flag-sd": {
+  "unified": "1F1F8-1F1E9"
+ },
+ "flag-se": {
+  "unified": "1F1F8-1F1EA"
+ },
+ "flag-sg": {
+  "unified": "1F1F8-1F1EC"
+ },
+ "flag-sh": {
+  "unified": "1F1F8-1F1ED"
+ },
+ "flag-si": {
+  "unified": "1F1F8-1F1EE"
+ },
+ "flag-sj": {
+  "unified": "1F1F8-1F1EF"
+ },
+ "flag-sk": {
+  "unified": "1F1F8-1F1F0"
+ },
+ "flag-sl": {
+  "unified": "1F1F8-1F1F1"
+ },
+ "flag-sm": {
+  "unified": "1F1F8-1F1F2"
+ },
+ "flag-sn": {
+  "unified": "1F1F8-1F1F3"
+ },
+ "flag-so": {
+  "unified": "1F1F8-1F1F4"
+ },
+ "flag-sr": {
+  "unified": "1F1F8-1F1F7"
+ },
+ "flag-ss": {
+  "unified": "1F1F8-1F1F8"
+ },
+ "flag-st": {
+  "unified": "1F1F8-1F1F9"
+ },
+ "flag-sv": {
+  "unified": "1F1F8-1F1FB"
+ },
+ "flag-sx": {
+  "unified": "1F1F8-1F1FD"
+ },
+ "flag-sy": {
+  "unified": "1F1F8-1F1FE"
+ },
+ "flag-sz": {
+  "unified": "1F1F8-1F1FF"
+ },
+ "flag-ta": {
+  "unified": "1F1F9-1F1E6"
+ },
+ "flag-tc": {
+  "unified": "1F1F9-1F1E8"
+ },
+ "flag-td": {
+  "unified": "1F1F9-1F1E9"
+ },
+ "flag-tf": {
+  "unified": "1F1F9-1F1EB"
+ },
+ "flag-tg": {
+  "unified": "1F1F9-1F1EC"
+ },
+ "flag-th": {
+  "unified": "1F1F9-1F1ED"
+ },
+ "flag-tj": {
+  "unified": "1F1F9-1F1EF"
+ },
+ "flag-tk": {
+  "unified": "1F1F9-1F1F0"
+ },
+ "flag-tl": {
+  "unified": "1F1F9-1F1F1"
+ },
+ "flag-tm": {
+  "unified": "1F1F9-1F1F2"
+ },
+ "flag-tn": {
+  "unified": "1F1F9-1F1F3"
+ },
+ "flag-to": {
+  "unified": "1F1F9-1F1F4"
+ },
+ "flag-tr": {
+  "unified": "1F1F9-1F1F7"
+ },
+ "flag-tt": {
+  "unified": "1F1F9-1F1F9"
+ },
+ "flag-tv": {
+  "unified": "1F1F9-1F1FB"
+ },
+ "flag-tw": {
+  "unified": "1F1F9-1F1FC"
+ },
+ "flag-tz": {
+  "unified": "1F1F9-1F1FF"
+ },
+ "flag-ua": {
+  "unified": "1F1FA-1F1E6"
+ },
+ "flag-ug": {
+  "unified": "1F1FA-1F1EC"
+ },
+ "flag-um": {
+  "unified": "1F1FA-1F1F2"
+ },
+ "flag-un": {
+  "unified": "1F1FA-1F1F3"
+ },
+ "flag-us": {
+  "unified": "1F1FA-1F1F8"
+ },
+ "flag-uy": {
+  "unified": "1F1FA-1F1FE"
+ },
+ "flag-uz": {
+  "unified": "1F1FA-1F1FF"
+ },
+ "flag-va": {
+  "unified": "1F1FB-1F1E6"
+ },
+ "flag-vc": {
+  "unified": "1F1FB-1F1E8"
+ },
+ "flag-ve": {
+  "unified": "1F1FB-1F1EA"
+ },
+ "flag-vg": {
+  "unified": "1F1FB-1F1EC"
+ },
+ "flag-vi": {
+  "unified": "1F1FB-1F1EE"
+ },
+ "flag-vn": {
+  "unified": "1F1FB-1F1F3"
+ },
+ "flag-vu": {
+  "unified": "1F1FB-1F1FA"
+ },
+ "flag-wales": {
+  "unified": "1F3F4-E0067-E0062-E0077-E006C-E0073-E007F"
+ },
+ "flag-wf": {
+  "unified": "1F1FC-1F1EB"
+ },
+ "flag-ws": {
+  "unified": "1F1FC-1F1F8"
+ },
+ "flag-xk": {
+  "unified": "1F1FD-1F1F0"
+ },
+ "flag-ye": {
+  "unified": "1F1FE-1F1EA"
+ },
+ "flag-yt": {
+  "unified": "1F1FE-1F1F9"
+ },
+ "flag-za": {
+  "unified": "1F1FF-1F1E6"
+ },
+ "flag-zm": {
+  "unified": "1F1FF-1F1F2"
+ },
+ "flag-zw": {
+  "unified": "1F1FF-1F1FC"
+ },
+ "flags": {
+  "unified": "1F38F"
+ },
+ "flamingo": {
+  "unified": "1F9A9"
+ },
+ "flashlight": {
+  "unified": "1F526"
+ },
+ "flatbread": {
+  "unified": "1FAD3"
+ },
+ "fleur_de_lis": {
+  "unified": "269C-FE0F"
+ },
+ "flipper": {
+  "unified": "1F42C"
+ },
+ "floppy_disk": {
+  "unified": "1F4BE"
+ },
+ "flower_playing_cards": {
+  "unified": "1F3B4"
+ },
+ "flushed": {
+  "unified": "1F633"
+ },
+ "flute": {
+  "unified": "1FA88"
+ },
+ "fly": {
+  "unified": "1FAB0"
+ },
+ "flying_disc": {
+  "unified": "1F94F"
+ },
+ "flying_saucer": {
+  "unified": "1F6F8"
+ },
+ "fog": {
+  "unified": "1F32B-FE0F"
+ },
+ "foggy": {
+  "unified": "1F301"
+ },
+ "folding_hand_fan": {
+  "unified": "1FAAD"
+ },
+ "fondue": {
+  "unified": "1FAD5"
+ },
+ "foot": {
+  "tones": {
+   "2": "1F9B6-1F3FB",
+   "3": "1F9B6-1F3FC",
+   "4": "1F9B6-1F3FD",
+   "5": "1F9B6-1F3FE",
+   "6": "1F9B6-1F3FF"
+  },
+  "unified": "1F9B6"
+ },
+ "football": {
+  "unified": "1F3C8"
+ },
+ "footprints": {
+  "unified": "1F463"
+ },
+ "fork_and_knife": {
+  "unified": "1F374"
+ },
+ "fortune_cookie": {
+  "unified": "1F960"
+ },
+ "fountain": {
+  "unified": "26F2"
+ },
+ "four": {
+  "unified": "0034-FE0F-20E3"
+ },
+ "four_leaf_clover": {
+  "unified": "1F340"
+ },
+ "fox_face": {
+  "unified": "1F98A"
+ },
+ "fr": {
+  "unified": "1F1EB-1F1F7"
+ },
+ "frame_with_picture": {
+  "unified": "1F5BC-FE0F"
+ },
+ "free": {
+  "unified": "1F193"
+ },
+ "fried_egg": {
+  "unified": "1F373"
+ },
+ "fried_shrimp": {
+  "unified": "1F364"
+ },
+ "fries": {
+  "unified": "1F35F"
+ },
+ "frog": {
+  "unified": "1F438"
+ },
+ "frowning": {
+  "unified": "1F626"
+ },
+ "fuelpump": {
+  "unified": "26FD"
+ },
+ "full_moon": {
+  "unified": "1F315"
+ },
+ "full_moon_with_face": {
+  "unified": "1F31D"
+ },
+ "funeral_urn": {
+  "unified": "26B1-FE0F"
+ },
+ "game_die": {
+  "unified": "1F3B2"
+ },
+ "garlic": {
+  "unified": "1F9C4"
+ },
+ "gb": {
+  "unified": "1F1EC-1F1E7"
+ },
+ "gear": {
+  "unified": "2699-FE0F"
+ },
+ "gem": {
+  "unified": "1F48E"
+ },
+ "gemini": {
+  "unified": "264A"
+ },
+ "genie": {
+  "unified": "1F9DE"
+ },
+ "ghost": {
+  "unified": "1F47B"
+ },
+ "gift": {
+  "unified": "1F381"
+ },
+ "gift_heart": {
+  "unified": "1F49D"
+ },
+ "ginger_root": {
+  "unified": "1FADA"
+ },
+ "giraffe_face": {
+  "unified": "1F992"
+ },
+ "girl": {
+  "tones": {
+   "2": "1F467-1F3FB",
+   "3": "1F467-1F3FC",
+   "4": "1F467-1F3FD",
+   "5": "1F467-1F3FE",
+   "6": "1F467-1F3FF"
+  },
+  "unified": "1F467"
+ },
+ "glass_of_milk": {
+  "unified": "1F95B"
+ },
+ "globe_with_meridians": {
+  "unified": "1F310"
+ },
+ "gloves": {
+  "unified": "1F9E4"
+ },
+ "goal_net": {
+  "unified": "1F945"
+ },
+ "goat": {
+  "unified": "1F410"
+ },
+ "goggles": {
+  "unified": "1F97D"
+ },
+ "golf": {
+  "unified": "26F3"
+ },
+ "golfer": {
+  "tones": {
+   "2": "1F3CC-1F3FB",
+   "3": "1F3CC-1F3FC",
+   "4": "1F3CC-1F3FD",
+   "5": "1F3CC-1F3FE",
+   "6": "1F3CC-1F3FF"
+  },
+  "unified": "1F3CC-FE0F"
+ },
+ "goose": {
+  "unified": "1FABF"
+ },
+ "gorilla": {
+  "unified": "1F98D"
+ },
+ "grapes": {
+  "unified": "1F347"
+ },
+ "green_apple": {
+  "unified": "1F34F"
+ },
+ "green_book": {
+  "unified": "1F4D7"
+ },
+ "green_heart": {
+  "unified": "1F49A"
+ },
+ "green_salad": {
+  "unified": "1F957"
+ },
+ "grey_exclamation": {
+  "unified": "2755"
+ },
+ "grey_heart": {
+  "unified": "1FA76"
+ },
+ "grey_question": {
+  "unified": "2754"
+ },
+ "grimacing": {
+  "unified": "1F62C"
+ },
+ "grin": {
+  "unified": "1F601"
+ },
+ "grinning": {
+  "unified": "1F600"
+ },
+ "grinning_face_with_one_large_and_one_small_eye": {
+  "unified": "1F92A"
+ },
+ "grinning_face_with_star_eyes": {
+  "unified": "1F929"
+ },
+ "guardsman": {
+  "tones": {
+   "2": "1F482-1F3FB",
+   "3": "1F482-1F3FC",
+   "4": "1F482-1F3FD",
+   "5": "1F482-1F3FE",
+   "6": "1F482-1F3FF"
+  },
+  "unified": "1F482"
+ },
+ "guide_dog": {
+  "unified": "1F9AE"
+ },
+ "guitar": {
+  "unified": "1F3B8"
+ },
+ "gun": {
+  "unified": "1F52B"
+ },
+ "hair_pick": {
+  "unified": "1FAAE"
+ },
+ "haircut": {
+  "tones": {
+   "2": "1F487-1F3FB",
+   "3": "1F487-1F3FC",
+   "4": "1F487-1F3FD",
+   "5": "1F487-1F3FE",
+   "6": "1F487-1F3FF"
+  },
+  "unified": "1F487"
+ },
+ "hairy_creature": {
+  "unified": "1FAC8"
+ },
+ "hamburger": {
+  "unified": "1F354"
+ },
+ "hammer": {
+  "unified": "1F528"
+ },
+ "hammer_and_pick": {
+  "unified": "2692-FE0F"
+ },
+ "hammer_and_wrench": {
+  "unified": "1F6E0-FE0F"
+ },
+ "hamsa": {
+  "unified": "1FAAC"
+ },
+ "hamster": {
+  "unified": "1F439"
+ },
+ "hand": {
+  "tones": {
+   "2": "270B-1F3FB",
+   "3": "270B-1F3FC",
+   "4": "270B-1F3FD",
+   "5": "270B-1F3FE",
+   "6": "270B-1F3FF"
+  },
+  "unified": "270B"
+ },
+ "hand_with_index_and_middle_fingers_crossed": {
+  "tones": {
+   "2": "1F91E-1F3FB",
+   "3": "1F91E-1F3FC",
+   "4": "1F91E-1F3FD",
+   "5": "1F91E-1F3FE",
+   "6": "1F91E-1F3FF"
+  },
+  "unified": "1F91E"
+ },
+ "hand_with_index_finger_and_thumb_crossed": {
+  "tones": {
+   "2": "1FAF0-1F3FB",
+   "3": "1FAF0-1F3FC",
+   "4": "1FAF0-1F3FD",
+   "5": "1FAF0-1F3FE",
+   "6": "1FAF0-1F3FF"
+  },
+  "unified": "1FAF0"
+ },
+ "handbag": {
+  "unified": "1F45C"
+ },
+ "handball": {
+  "tones": {
+   "2": "1F93E-1F3FB",
+   "3": "1F93E-1F3FC",
+   "4": "1F93E-1F3FD",
+   "5": "1F93E-1F3FE",
+   "6": "1F93E-1F3FF"
+  },
+  "unified": "1F93E"
+ },
+ "handshake": {
+  "tones": {
+   "2": "1F91D-1F3FB",
+   "3": "1F91D-1F3FC",
+   "4": "1F91D-1F3FD",
+   "5": "1F91D-1F3FE",
+   "6": "1F91D-1F3FF"
+  },
+  "unified": "1F91D"
+ },
+ "hankey": {
+  "unified": "1F4A9"
+ },
+ "harp": {
+  "unified": "1FA89"
+ },
+ "hash": {
+  "unified": "0023-FE0F-20E3"
+ },
+ "hatched_chick": {
+  "unified": "1F425"
+ },
+ "hatching_chick": {
+  "unified": "1F423"
+ },
+ "head_shaking_horizontally": {
+  "unified": "1F642-200D-2194-FE0F"
+ },
+ "head_shaking_vertically": {
+  "unified": "1F642-200D-2195-FE0F"
+ },
+ "headphones": {
+  "unified": "1F3A7"
+ },
+ "headstone": {
+  "unified": "1FAA6"
+ },
+ "health_worker": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-2695-FE0F",
+   "3": "1F9D1-1F3FC-200D-2695-FE0F",
+   "4": "1F9D1-1F3FD-200D-2695-FE0F",
+   "5": "1F9D1-1F3FE-200D-2695-FE0F",
+   "6": "1F9D1-1F3FF-200D-2695-FE0F"
+  },
+  "unified": "1F9D1-200D-2695-FE0F"
+ },
+ "hear_no_evil": {
+  "unified": "1F649"
+ },
+ "heart": {
+  "unified": "2764-FE0F"
+ },
+ "heart_decoration": {
+  "unified": "1F49F"
+ },
+ "heart_eyes": {
+  "unified": "1F60D"
+ },
+ "heart_eyes_cat": {
+  "unified": "1F63B"
+ },
+ "heart_hands": {
+  "tones": {
+   "2": "1FAF6-1F3FB",
+   "3": "1FAF6-1F3FC",
+   "4": "1FAF6-1F3FD",
+   "5": "1FAF6-1F3FE",
+   "6": "1FAF6-1F3FF"
+  },
+  "unified": "1FAF6"
+ },
+ "heart_on_fire": {
+  "unified": "2764-FE0F-200D-1F525"
+ },
+ "heartbeat": {
+  "unified": "1F493"
+ },
+ "heartpulse": {
+  "unified": "1F497"
+ },
+ "hearts": {
+  "unified": "2665-FE0F"
+ },
+ "heavy_check_mark": {
+  "unified": "2714-FE0F"
+ },
+ "heavy_division_sign": {
+  "unified": "2797"
+ },
+ "heavy_dollar_sign": {
+  "unified": "1F4B2"
+ },
+ "heavy_equals_sign": {
+  "unified": "1F7F0"
+ },
+ "heavy_exclamation_mark": {
+  "unified": "2757"
+ },
+ "heavy_heart_exclamation_mark_ornament": {
+  "unified": "2763-FE0F"
+ },
+ "heavy_minus_sign": {
+  "unified": "2796"
+ },
+ "heavy_multiplication_x": {
+  "unified": "2716-FE0F"
+ },
+ "heavy_plus_sign": {
+  "unified": "2795"
+ },
+ "hedgehog": {
+  "unified": "1F994"
+ },
+ "helicopter": {
+  "unified": "1F681"
+ },
+ "helmet_with_white_cross": {
+  "unified": "26D1-FE0F"
+ },
+ "herb": {
+  "unified": "1F33F"
+ },
+ "hibiscus": {
+  "unified": "1F33A"
+ },
+ "high_brightness": {
+  "unified": "1F506"
+ },
+ "high_heel": {
+  "unified": "1F460"
+ },
+ "hiking_boot": {
+  "unified": "1F97E"
+ },
+ "hindu_temple": {
+  "unified": "1F6D5"
+ },
+ "hippopotamus": {
+  "unified": "1F99B"
+ },
+ "hocho": {
+  "unified": "1F52A"
+ },
+ "hole": {
+  "unified": "1F573-FE0F"
+ },
+ "honey_pot": {
+  "unified": "1F36F"
+ },
+ "honeybee": {
+  "unified": "1F41D"
+ },
+ "hook": {
+  "unified": "1FA9D"
+ },
+ "horse": {
+  "unified": "1F434"
+ },
+ "horse_racing": {
+  "tones": {
+   "2": "1F3C7-1F3FB",
+   "3": "1F3C7-1F3FC",
+   "4": "1F3C7-1F3FD",
+   "5": "1F3C7-1F3FE",
+   "6": "1F3C7-1F3FF"
+  },
+  "unified": "1F3C7"
+ },
+ "hospital": {
+  "unified": "1F3E5"
+ },
+ "hot_face": {
+  "unified": "1F975"
+ },
+ "hot_pepper": {
+  "unified": "1F336-FE0F"
+ },
+ "hotdog": {
+  "unified": "1F32D"
+ },
+ "hotel": {
+  "unified": "1F3E8"
+ },
+ "hotsprings": {
+  "unified": "2668-FE0F"
+ },
+ "hourglass": {
+  "unified": "231B"
+ },
+ "hourglass_flowing_sand": {
+  "unified": "23F3"
+ },
+ "house": {
+  "unified": "1F3E0"
+ },
+ "house_buildings": {
+  "unified": "1F3D8-FE0F"
+ },
+ "house_with_garden": {
+  "unified": "1F3E1"
+ },
+ "hugging_face": {
+  "unified": "1F917"
+ },
+ "hushed": {
+  "unified": "1F62F"
+ },
+ "hut": {
+  "unified": "1F6D6"
+ },
+ "hyacinth": {
+  "unified": "1FABB"
+ },
+ "i_love_you_hand_sign": {
+  "tones": {
+   "2": "1F91F-1F3FB",
+   "3": "1F91F-1F3FC",
+   "4": "1F91F-1F3FD",
+   "5": "1F91F-1F3FE",
+   "6": "1F91F-1F3FF"
+  },
+  "unified": "1F91F"
+ },
+ "ice_cream": {
+  "unified": "1F368"
+ },
+ "ice_cube": {
+  "unified": "1F9CA"
+ },
+ "ice_hockey_stick_and_puck": {
+  "unified": "1F3D2"
+ },
+ "ice_skate": {
+  "unified": "26F8-FE0F"
+ },
+ "icecream": {
+  "unified": "1F366"
+ },
+ "id": {
+  "unified": "1F194"
+ },
+ "identification_card": {
+  "unified": "1FAAA"
+ },
+ "ideograph_advantage": {
+  "unified": "1F250"
+ },
+ "imp": {
+  "unified": "1F47F"
+ },
+ "inbox_tray": {
+  "unified": "1F4E5"
+ },
+ "incoming_envelope": {
+  "unified": "1F4E8"
+ },
+ "index_pointing_at_the_viewer": {
+  "tones": {
+   "2": "1FAF5-1F3FB",
+   "3": "1FAF5-1F3FC",
+   "4": "1FAF5-1F3FD",
+   "5": "1FAF5-1F3FE",
+   "6": "1FAF5-1F3FF"
+  },
+  "unified": "1FAF5"
+ },
+ "infinity": {
+  "unified": "267E-FE0F"
+ },
+ "information_desk_person": {
+  "tones": {
+   "2": "1F481-1F3FB",
+   "3": "1F481-1F3FC",
+   "4": "1F481-1F3FD",
+   "5": "1F481-1F3FE",
+   "6": "1F481-1F3FF"
+  },
+  "unified": "1F481"
+ },
+ "information_source": {
+  "unified": "2139-FE0F"
+ },
+ "innocent": {
+  "unified": "1F607"
+ },
+ "interrobang": {
+  "unified": "2049-FE0F"
+ },
+ "iphone": {
+  "unified": "1F4F1"
+ },
+ "it": {
+  "unified": "1F1EE-1F1F9"
+ },
+ "izakaya_lantern": {
+  "unified": "1F3EE"
+ },
+ "jack_o_lantern": {
+  "unified": "1F383"
+ },
+ "japan": {
+  "unified": "1F5FE"
+ },
+ "japanese_castle": {
+  "unified": "1F3EF"
+ },
+ "japanese_goblin": {
+  "unified": "1F47A"
+ },
+ "japanese_ogre": {
+  "unified": "1F479"
+ },
+ "jar": {
+  "unified": "1FAD9"
+ },
+ "jeans": {
+  "unified": "1F456"
+ },
+ "jellyfish": {
+  "unified": "1FABC"
+ },
+ "jigsaw": {
+  "unified": "1F9E9"
+ },
+ "joy": {
+  "unified": "1F602"
+ },
+ "joy_cat": {
+  "unified": "1F639"
+ },
+ "joystick": {
+  "unified": "1F579-FE0F"
+ },
+ "jp": {
+  "unified": "1F1EF-1F1F5"
+ },
+ "judge": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-2696-FE0F",
+   "3": "1F9D1-1F3FC-200D-2696-FE0F",
+   "4": "1F9D1-1F3FD-200D-2696-FE0F",
+   "5": "1F9D1-1F3FE-200D-2696-FE0F",
+   "6": "1F9D1-1F3FF-200D-2696-FE0F"
+  },
+  "unified": "1F9D1-200D-2696-FE0F"
+ },
+ "juggling": {
+  "tones": {
+   "2": "1F939-1F3FB",
+   "3": "1F939-1F3FC",
+   "4": "1F939-1F3FD",
+   "5": "1F939-1F3FE",
+   "6": "1F939-1F3FF"
+  },
+  "unified": "1F939"
+ },
+ "kaaba": {
+  "unified": "1F54B"
+ },
+ "kangaroo": {
+  "unified": "1F998"
+ },
+ "key": {
+  "unified": "1F511"
+ },
+ "keyboard": {
+  "unified": "2328-FE0F"
+ },
+ "keycap_star": {
+  "unified": "002A-FE0F-20E3"
+ },
+ "keycap_ten": {
+  "unified": "1F51F"
+ },
+ "khanda": {
+  "unified": "1FAAF"
+ },
+ "kimono": {
+  "unified": "1F458"
+ },
+ "kiss": {
+  "unified": "1F48B"
+ },
+ "kissing": {
+  "unified": "1F617"
+ },
+ "kissing_cat": {
+  "unified": "1F63D"
+ },
+ "kissing_closed_eyes": {
+  "unified": "1F61A"
+ },
+ "kissing_heart": {
+  "unified": "1F618"
+ },
+ "kissing_smiling_eyes": {
+  "unified": "1F619"
+ },
+ "kite": {
+  "unified": "1FA81"
+ },
+ "kiwifruit": {
+  "unified": "1F95D"
+ },
+ "kneeling_person": {
+  "tones": {
+   "2": "1F9CE-1F3FB",
+   "3": "1F9CE-1F3FC",
+   "4": "1F9CE-1F3FD",
+   "5": "1F9CE-1F3FE",
+   "6": "1F9CE-1F3FF"
+  },
+  "unified": "1F9CE"
+ },
+ "knife": {
+  "unified": "1F52A"
+ },
+ "knife_fork_plate": {
+  "unified": "1F37D-FE0F"
+ },
+ "knot": {
+  "unified": "1FAA2"
+ },
+ "koala": {
+  "unified": "1F428"
+ },
+ "koko": {
+  "unified": "1F201"
+ },
+ "kr": {
+  "unified": "1F1F0-1F1F7"
+ },
+ "lab_coat": {
+  "unified": "1F97C"
+ },
+ "label": {
+  "unified": "1F3F7-FE0F"
+ },
+ "lacrosse": {
+  "unified": "1F94D"
+ },
+ "ladder": {
+  "unified": "1FA9C"
+ },
+ "lady_beetle": {
+  "unified": "1F41E"
+ },
+ "ladybug": {
+  "unified": "1F41E"
+ },
+ "landslide": {
+  "unified": "1F6D8"
+ },
+ "lantern": {
+  "unified": "1F3EE"
+ },
+ "large_blue_circle": {
+  "unified": "1F535"
+ },
+ "large_blue_diamond": {
+  "unified": "1F537"
+ },
+ "large_blue_square": {
+  "unified": "1F7E6"
+ },
+ "large_brown_circle": {
+  "unified": "1F7E4"
+ },
+ "large_brown_square": {
+  "unified": "1F7EB"
+ },
+ "large_green_circle": {
+  "unified": "1F7E2"
+ },
+ "large_green_square": {
+  "unified": "1F7E9"
+ },
+ "large_orange_circle": {
+  "unified": "1F7E0"
+ },
+ "large_orange_diamond": {
+  "unified": "1F536"
+ },
+ "large_orange_square": {
+  "unified": "1F7E7"
+ },
+ "large_purple_circle": {
+  "unified": "1F7E3"
+ },
+ "large_purple_square": {
+  "unified": "1F7EA"
+ },
+ "large_red_square": {
+  "unified": "1F7E5"
+ },
+ "large_yellow_circle": {
+  "unified": "1F7E1"
+ },
+ "large_yellow_square": {
+  "unified": "1F7E8"
+ },
+ "last_quarter_moon": {
+  "unified": "1F317"
+ },
+ "last_quarter_moon_with_face": {
+  "unified": "1F31C"
+ },
+ "latin_cross": {
+  "unified": "271D-FE0F"
+ },
+ "laughing": {
+  "unified": "1F606"
+ },
+ "leafless_tree": {
+  "unified": "1FABE"
+ },
+ "leafy_green": {
+  "unified": "1F96C"
+ },
+ "leaves": {
+  "unified": "1F343"
+ },
+ "ledger": {
+  "unified": "1F4D2"
+ },
+ "left-facing_fist": {
+  "tones": {
+   "2": "1F91B-1F3FB",
+   "3": "1F91B-1F3FC",
+   "4": "1F91B-1F3FD",
+   "5": "1F91B-1F3FE",
+   "6": "1F91B-1F3FF"
+  },
+  "unified": "1F91B"
+ },
+ "left_luggage": {
+  "unified": "1F6C5"
+ },
+ "left_right_arrow": {
+  "unified": "2194-FE0F"
+ },
+ "left_speech_bubble": {
+  "unified": "1F5E8-FE0F"
+ },
+ "leftwards_arrow_with_hook": {
+  "unified": "21A9-FE0F"
+ },
+ "leftwards_hand": {
+  "tones": {
+   "2": "1FAF2-1F3FB",
+   "3": "1FAF2-1F3FC",
+   "4": "1FAF2-1F3FD",
+   "5": "1FAF2-1F3FE",
+   "6": "1FAF2-1F3FF"
+  },
+  "unified": "1FAF2"
+ },
+ "leftwards_pushing_hand": {
+  "tones": {
+   "2": "1FAF7-1F3FB",
+   "3": "1FAF7-1F3FC",
+   "4": "1FAF7-1F3FD",
+   "5": "1FAF7-1F3FE",
+   "6": "1FAF7-1F3FF"
+  },
+  "unified": "1FAF7"
+ },
+ "leg": {
+  "tones": {
+   "2": "1F9B5-1F3FB",
+   "3": "1F9B5-1F3FC",
+   "4": "1F9B5-1F3FD",
+   "5": "1F9B5-1F3FE",
+   "6": "1F9B5-1F3FF"
+  },
+  "unified": "1F9B5"
+ },
+ "lemon": {
+  "unified": "1F34B"
+ },
+ "leo": {
+  "unified": "264C"
+ },
+ "leopard": {
+  "unified": "1F406"
+ },
+ "level_slider": {
+  "unified": "1F39A-FE0F"
+ },
+ "libra": {
+  "unified": "264E"
+ },
+ "light_blue_heart": {
+  "unified": "1FA75"
+ },
+ "light_rail": {
+  "unified": "1F688"
+ },
+ "lightning": {
+  "unified": "1F329-FE0F"
+ },
+ "lightning_cloud": {
+  "unified": "1F329-FE0F"
+ },
+ "lime": {
+  "unified": "1F34B-200D-1F7E9"
+ },
+ "link": {
+  "unified": "1F517"
+ },
+ "linked_paperclips": {
+  "unified": "1F587-FE0F"
+ },
+ "lion_face": {
+  "unified": "1F981"
+ },
+ "lips": {
+  "unified": "1F444"
+ },
+ "lipstick": {
+  "unified": "1F484"
+ },
+ "lizard": {
+  "unified": "1F98E"
+ },
+ "llama": {
+  "unified": "1F999"
+ },
+ "lobster": {
+  "unified": "1F99E"
+ },
+ "lock": {
+  "unified": "1F512"
+ },
+ "lock_with_ink_pen": {
+  "unified": "1F50F"
+ },
+ "lollipop": {
+  "unified": "1F36D"
+ },
+ "long_drum": {
+  "unified": "1FA98"
+ },
+ "loop": {
+  "unified": "27BF"
+ },
+ "lotion_bottle": {
+  "unified": "1F9F4"
+ },
+ "lotus": {
+  "unified": "1FAB7"
+ },
+ "loud_sound": {
+  "unified": "1F50A"
+ },
+ "loudspeaker": {
+  "unified": "1F4E2"
+ },
+ "love_hotel": {
+  "unified": "1F3E9"
+ },
+ "love_letter": {
+  "unified": "1F48C"
+ },
+ "low_battery": {
+  "unified": "1FAAB"
+ },
+ "low_brightness": {
+  "unified": "1F505"
+ },
+ "lower_left_ballpoint_pen": {
+  "unified": "1F58A-FE0F"
+ },
+ "lower_left_crayon": {
+  "unified": "1F58D-FE0F"
+ },
+ "lower_left_fountain_pen": {
+  "unified": "1F58B-FE0F"
+ },
+ "lower_left_paintbrush": {
+  "unified": "1F58C-FE0F"
+ },
+ "luggage": {
+  "unified": "1F9F3"
+ },
+ "lungs": {
+  "unified": "1FAC1"
+ },
+ "lying_face": {
+  "unified": "1F925"
+ },
+ "m": {
+  "unified": "24C2-FE0F"
+ },
+ "mag": {
+  "unified": "1F50D"
+ },
+ "mag_right": {
+  "unified": "1F50E"
+ },
+ "mage": {
+  "tones": {
+   "2": "1F9D9-1F3FB",
+   "3": "1F9D9-1F3FC",
+   "4": "1F9D9-1F3FD",
+   "5": "1F9D9-1F3FE",
+   "6": "1F9D9-1F3FF"
+  },
+  "unified": "1F9D9"
+ },
+ "magic_wand": {
+  "unified": "1FA84"
+ },
+ "magnet": {
+  "unified": "1F9F2"
+ },
+ "mahjong": {
+  "unified": "1F004"
+ },
+ "mailbox": {
+  "unified": "1F4EB"
+ },
+ "mailbox_closed": {
+  "unified": "1F4EA"
+ },
+ "mailbox_with_mail": {
+  "unified": "1F4EC"
+ },
+ "mailbox_with_no_mail": {
+  "unified": "1F4ED"
+ },
+ "male-artist": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F3A8",
+   "3": "1F468-1F3FC-200D-1F3A8",
+   "4": "1F468-1F3FD-200D-1F3A8",
+   "5": "1F468-1F3FE-200D-1F3A8",
+   "6": "1F468-1F3FF-200D-1F3A8"
+  },
+  "unified": "1F468-200D-1F3A8"
+ },
+ "male-astronaut": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F680",
+   "3": "1F468-1F3FC-200D-1F680",
+   "4": "1F468-1F3FD-200D-1F680",
+   "5": "1F468-1F3FE-200D-1F680",
+   "6": "1F468-1F3FF-200D-1F680"
+  },
+  "unified": "1F468-200D-1F680"
+ },
+ "male-construction-worker": {
+  "tones": {
+   "2": "1F477-1F3FB-200D-2642-FE0F",
+   "3": "1F477-1F3FC-200D-2642-FE0F",
+   "4": "1F477-1F3FD-200D-2642-FE0F",
+   "5": "1F477-1F3FE-200D-2642-FE0F",
+   "6": "1F477-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F477-200D-2642-FE0F"
+ },
+ "male-cook": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F373",
+   "3": "1F468-1F3FC-200D-1F373",
+   "4": "1F468-1F3FD-200D-1F373",
+   "5": "1F468-1F3FE-200D-1F373",
+   "6": "1F468-1F3FF-200D-1F373"
+  },
+  "unified": "1F468-200D-1F373"
+ },
+ "male-detective": {
+  "tones": {
+   "2": "1F575-1F3FB-200D-2642-FE0F",
+   "3": "1F575-1F3FC-200D-2642-FE0F",
+   "4": "1F575-1F3FD-200D-2642-FE0F",
+   "5": "1F575-1F3FE-200D-2642-FE0F",
+   "6": "1F575-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F575-FE0F-200D-2642-FE0F"
+ },
+ "male-doctor": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-2695-FE0F",
+   "3": "1F468-1F3FC-200D-2695-FE0F",
+   "4": "1F468-1F3FD-200D-2695-FE0F",
+   "5": "1F468-1F3FE-200D-2695-FE0F",
+   "6": "1F468-1F3FF-200D-2695-FE0F"
+  },
+  "unified": "1F468-200D-2695-FE0F"
+ },
+ "male-factory-worker": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F3ED",
+   "3": "1F468-1F3FC-200D-1F3ED",
+   "4": "1F468-1F3FD-200D-1F3ED",
+   "5": "1F468-1F3FE-200D-1F3ED",
+   "6": "1F468-1F3FF-200D-1F3ED"
+  },
+  "unified": "1F468-200D-1F3ED"
+ },
+ "male-farmer": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F33E",
+   "3": "1F468-1F3FC-200D-1F33E",
+   "4": "1F468-1F3FD-200D-1F33E",
+   "5": "1F468-1F3FE-200D-1F33E",
+   "6": "1F468-1F3FF-200D-1F33E"
+  },
+  "unified": "1F468-200D-1F33E"
+ },
+ "male-firefighter": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F692",
+   "3": "1F468-1F3FC-200D-1F692",
+   "4": "1F468-1F3FD-200D-1F692",
+   "5": "1F468-1F3FE-200D-1F692",
+   "6": "1F468-1F3FF-200D-1F692"
+  },
+  "unified": "1F468-200D-1F692"
+ },
+ "male-guard": {
+  "tones": {
+   "2": "1F482-1F3FB-200D-2642-FE0F",
+   "3": "1F482-1F3FC-200D-2642-FE0F",
+   "4": "1F482-1F3FD-200D-2642-FE0F",
+   "5": "1F482-1F3FE-200D-2642-FE0F",
+   "6": "1F482-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F482-200D-2642-FE0F"
+ },
+ "male-judge": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-2696-FE0F",
+   "3": "1F468-1F3FC-200D-2696-FE0F",
+   "4": "1F468-1F3FD-200D-2696-FE0F",
+   "5": "1F468-1F3FE-200D-2696-FE0F",
+   "6": "1F468-1F3FF-200D-2696-FE0F"
+  },
+  "unified": "1F468-200D-2696-FE0F"
+ },
+ "male-mechanic": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F527",
+   "3": "1F468-1F3FC-200D-1F527",
+   "4": "1F468-1F3FD-200D-1F527",
+   "5": "1F468-1F3FE-200D-1F527",
+   "6": "1F468-1F3FF-200D-1F527"
+  },
+  "unified": "1F468-200D-1F527"
+ },
+ "male-office-worker": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F4BC",
+   "3": "1F468-1F3FC-200D-1F4BC",
+   "4": "1F468-1F3FD-200D-1F4BC",
+   "5": "1F468-1F3FE-200D-1F4BC",
+   "6": "1F468-1F3FF-200D-1F4BC"
+  },
+  "unified": "1F468-200D-1F4BC"
+ },
+ "male-pilot": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-2708-FE0F",
+   "3": "1F468-1F3FC-200D-2708-FE0F",
+   "4": "1F468-1F3FD-200D-2708-FE0F",
+   "5": "1F468-1F3FE-200D-2708-FE0F",
+   "6": "1F468-1F3FF-200D-2708-FE0F"
+  },
+  "unified": "1F468-200D-2708-FE0F"
+ },
+ "male-police-officer": {
+  "tones": {
+   "2": "1F46E-1F3FB-200D-2642-FE0F",
+   "3": "1F46E-1F3FC-200D-2642-FE0F",
+   "4": "1F46E-1F3FD-200D-2642-FE0F",
+   "5": "1F46E-1F3FE-200D-2642-FE0F",
+   "6": "1F46E-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F46E-200D-2642-FE0F"
+ },
+ "male-scientist": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F52C",
+   "3": "1F468-1F3FC-200D-1F52C",
+   "4": "1F468-1F3FD-200D-1F52C",
+   "5": "1F468-1F3FE-200D-1F52C",
+   "6": "1F468-1F3FF-200D-1F52C"
+  },
+  "unified": "1F468-200D-1F52C"
+ },
+ "male-singer": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F3A4",
+   "3": "1F468-1F3FC-200D-1F3A4",
+   "4": "1F468-1F3FD-200D-1F3A4",
+   "5": "1F468-1F3FE-200D-1F3A4",
+   "6": "1F468-1F3FF-200D-1F3A4"
+  },
+  "unified": "1F468-200D-1F3A4"
+ },
+ "male-student": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F393",
+   "3": "1F468-1F3FC-200D-1F393",
+   "4": "1F468-1F3FD-200D-1F393",
+   "5": "1F468-1F3FE-200D-1F393",
+   "6": "1F468-1F3FF-200D-1F393"
+  },
+  "unified": "1F468-200D-1F393"
+ },
+ "male-teacher": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F3EB",
+   "3": "1F468-1F3FC-200D-1F3EB",
+   "4": "1F468-1F3FD-200D-1F3EB",
+   "5": "1F468-1F3FE-200D-1F3EB",
+   "6": "1F468-1F3FF-200D-1F3EB"
+  },
+  "unified": "1F468-200D-1F3EB"
+ },
+ "male-technologist": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F4BB",
+   "3": "1F468-1F3FC-200D-1F4BB",
+   "4": "1F468-1F3FD-200D-1F4BB",
+   "5": "1F468-1F3FE-200D-1F4BB",
+   "6": "1F468-1F3FF-200D-1F4BB"
+  },
+  "unified": "1F468-200D-1F4BB"
+ },
+ "male_elf": {
+  "tones": {
+   "2": "1F9DD-1F3FB-200D-2642-FE0F",
+   "3": "1F9DD-1F3FC-200D-2642-FE0F",
+   "4": "1F9DD-1F3FD-200D-2642-FE0F",
+   "5": "1F9DD-1F3FE-200D-2642-FE0F",
+   "6": "1F9DD-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9DD-200D-2642-FE0F"
+ },
+ "male_fairy": {
+  "tones": {
+   "2": "1F9DA-1F3FB-200D-2642-FE0F",
+   "3": "1F9DA-1F3FC-200D-2642-FE0F",
+   "4": "1F9DA-1F3FD-200D-2642-FE0F",
+   "5": "1F9DA-1F3FE-200D-2642-FE0F",
+   "6": "1F9DA-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9DA-200D-2642-FE0F"
+ },
+ "male_genie": {
+  "unified": "1F9DE-200D-2642-FE0F"
+ },
+ "male_mage": {
+  "tones": {
+   "2": "1F9D9-1F3FB-200D-2642-FE0F",
+   "3": "1F9D9-1F3FC-200D-2642-FE0F",
+   "4": "1F9D9-1F3FD-200D-2642-FE0F",
+   "5": "1F9D9-1F3FE-200D-2642-FE0F",
+   "6": "1F9D9-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9D9-200D-2642-FE0F"
+ },
+ "male_sign": {
+  "unified": "2642-FE0F"
+ },
+ "male_superhero": {
+  "tones": {
+   "2": "1F9B8-1F3FB-200D-2642-FE0F",
+   "3": "1F9B8-1F3FC-200D-2642-FE0F",
+   "4": "1F9B8-1F3FD-200D-2642-FE0F",
+   "5": "1F9B8-1F3FE-200D-2642-FE0F",
+   "6": "1F9B8-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9B8-200D-2642-FE0F"
+ },
+ "male_supervillain": {
+  "tones": {
+   "2": "1F9B9-1F3FB-200D-2642-FE0F",
+   "3": "1F9B9-1F3FC-200D-2642-FE0F",
+   "4": "1F9B9-1F3FD-200D-2642-FE0F",
+   "5": "1F9B9-1F3FE-200D-2642-FE0F",
+   "6": "1F9B9-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9B9-200D-2642-FE0F"
+ },
+ "male_vampire": {
+  "tones": {
+   "2": "1F9DB-1F3FB-200D-2642-FE0F",
+   "3": "1F9DB-1F3FC-200D-2642-FE0F",
+   "4": "1F9DB-1F3FD-200D-2642-FE0F",
+   "5": "1F9DB-1F3FE-200D-2642-FE0F",
+   "6": "1F9DB-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9DB-200D-2642-FE0F"
+ },
+ "male_zombie": {
+  "unified": "1F9DF-200D-2642-FE0F"
+ },
+ "mammoth": {
+  "unified": "1F9A3"
+ },
+ "man": {
+  "tones": {
+   "2": "1F468-1F3FB",
+   "3": "1F468-1F3FC",
+   "4": "1F468-1F3FD",
+   "5": "1F468-1F3FE",
+   "6": "1F468-1F3FF"
+  },
+  "unified": "1F468"
+ },
+ "man-biking": {
+  "tones": {
+   "2": "1F6B4-1F3FB-200D-2642-FE0F",
+   "3": "1F6B4-1F3FC-200D-2642-FE0F",
+   "4": "1F6B4-1F3FD-200D-2642-FE0F",
+   "5": "1F6B4-1F3FE-200D-2642-FE0F",
+   "6": "1F6B4-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F6B4-200D-2642-FE0F"
+ },
+ "man-bouncing-ball": {
+  "tones": {
+   "2": "26F9-1F3FB-200D-2642-FE0F",
+   "3": "26F9-1F3FC-200D-2642-FE0F",
+   "4": "26F9-1F3FD-200D-2642-FE0F",
+   "5": "26F9-1F3FE-200D-2642-FE0F",
+   "6": "26F9-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "26F9-FE0F-200D-2642-FE0F"
+ },
+ "man-bowing": {
+  "tones": {
+   "2": "1F647-1F3FB-200D-2642-FE0F",
+   "3": "1F647-1F3FC-200D-2642-FE0F",
+   "4": "1F647-1F3FD-200D-2642-FE0F",
+   "5": "1F647-1F3FE-200D-2642-FE0F",
+   "6": "1F647-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F647-200D-2642-FE0F"
+ },
+ "man-boy": {
+  "unified": "1F468-200D-1F466"
+ },
+ "man-boy-boy": {
+  "unified": "1F468-200D-1F466-200D-1F466"
+ },
+ "man-cartwheeling": {
+  "tones": {
+   "2": "1F938-1F3FB-200D-2642-FE0F",
+   "3": "1F938-1F3FC-200D-2642-FE0F",
+   "4": "1F938-1F3FD-200D-2642-FE0F",
+   "5": "1F938-1F3FE-200D-2642-FE0F",
+   "6": "1F938-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F938-200D-2642-FE0F"
+ },
+ "man-facepalming": {
+  "tones": {
+   "2": "1F926-1F3FB-200D-2642-FE0F",
+   "3": "1F926-1F3FC-200D-2642-FE0F",
+   "4": "1F926-1F3FD-200D-2642-FE0F",
+   "5": "1F926-1F3FE-200D-2642-FE0F",
+   "6": "1F926-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F926-200D-2642-FE0F"
+ },
+ "man-frowning": {
+  "tones": {
+   "2": "1F64D-1F3FB-200D-2642-FE0F",
+   "3": "1F64D-1F3FC-200D-2642-FE0F",
+   "4": "1F64D-1F3FD-200D-2642-FE0F",
+   "5": "1F64D-1F3FE-200D-2642-FE0F",
+   "6": "1F64D-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F64D-200D-2642-FE0F"
+ },
+ "man-gesturing-no": {
+  "tones": {
+   "2": "1F645-1F3FB-200D-2642-FE0F",
+   "3": "1F645-1F3FC-200D-2642-FE0F",
+   "4": "1F645-1F3FD-200D-2642-FE0F",
+   "5": "1F645-1F3FE-200D-2642-FE0F",
+   "6": "1F645-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F645-200D-2642-FE0F"
+ },
+ "man-gesturing-ok": {
+  "tones": {
+   "2": "1F646-1F3FB-200D-2642-FE0F",
+   "3": "1F646-1F3FC-200D-2642-FE0F",
+   "4": "1F646-1F3FD-200D-2642-FE0F",
+   "5": "1F646-1F3FE-200D-2642-FE0F",
+   "6": "1F646-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F646-200D-2642-FE0F"
+ },
+ "man-getting-haircut": {
+  "tones": {
+   "2": "1F487-1F3FB-200D-2642-FE0F",
+   "3": "1F487-1F3FC-200D-2642-FE0F",
+   "4": "1F487-1F3FD-200D-2642-FE0F",
+   "5": "1F487-1F3FE-200D-2642-FE0F",
+   "6": "1F487-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F487-200D-2642-FE0F"
+ },
+ "man-getting-massage": {
+  "tones": {
+   "2": "1F486-1F3FB-200D-2642-FE0F",
+   "3": "1F486-1F3FC-200D-2642-FE0F",
+   "4": "1F486-1F3FD-200D-2642-FE0F",
+   "5": "1F486-1F3FE-200D-2642-FE0F",
+   "6": "1F486-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F486-200D-2642-FE0F"
+ },
+ "man-girl": {
+  "unified": "1F468-200D-1F467"
+ },
+ "man-girl-boy": {
+  "unified": "1F468-200D-1F467-200D-1F466"
+ },
+ "man-girl-girl": {
+  "unified": "1F468-200D-1F467-200D-1F467"
+ },
+ "man-golfing": {
+  "tones": {
+   "2": "1F3CC-1F3FB-200D-2642-FE0F",
+   "3": "1F3CC-1F3FC-200D-2642-FE0F",
+   "4": "1F3CC-1F3FD-200D-2642-FE0F",
+   "5": "1F3CC-1F3FE-200D-2642-FE0F",
+   "6": "1F3CC-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F3CC-FE0F-200D-2642-FE0F"
+ },
+ "man-heart-man": {
+  "unified": "1F468-200D-2764-FE0F-200D-1F468"
+ },
+ "man-juggling": {
+  "tones": {
+   "2": "1F939-1F3FB-200D-2642-FE0F",
+   "3": "1F939-1F3FC-200D-2642-FE0F",
+   "4": "1F939-1F3FD-200D-2642-FE0F",
+   "5": "1F939-1F3FE-200D-2642-FE0F",
+   "6": "1F939-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F939-200D-2642-FE0F"
+ },
+ "man-kiss-man": {
+  "unified": "1F468-200D-2764-FE0F-200D-1F48B-200D-1F468"
+ },
+ "man-lifting-weights": {
+  "tones": {
+   "2": "1F3CB-1F3FB-200D-2642-FE0F",
+   "3": "1F3CB-1F3FC-200D-2642-FE0F",
+   "4": "1F3CB-1F3FD-200D-2642-FE0F",
+   "5": "1F3CB-1F3FE-200D-2642-FE0F",
+   "6": "1F3CB-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F3CB-FE0F-200D-2642-FE0F"
+ },
+ "man-man-boy": {
+  "unified": "1F468-200D-1F468-200D-1F466"
+ },
+ "man-man-boy-boy": {
+  "unified": "1F468-200D-1F468-200D-1F466-200D-1F466"
+ },
+ "man-man-girl": {
+  "unified": "1F468-200D-1F468-200D-1F467"
+ },
+ "man-man-girl-boy": {
+  "unified": "1F468-200D-1F468-200D-1F467-200D-1F466"
+ },
+ "man-man-girl-girl": {
+  "unified": "1F468-200D-1F468-200D-1F467-200D-1F467"
+ },
+ "man-mountain-biking": {
+  "tones": {
+   "2": "1F6B5-1F3FB-200D-2642-FE0F",
+   "3": "1F6B5-1F3FC-200D-2642-FE0F",
+   "4": "1F6B5-1F3FD-200D-2642-FE0F",
+   "5": "1F6B5-1F3FE-200D-2642-FE0F",
+   "6": "1F6B5-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F6B5-200D-2642-FE0F"
+ },
+ "man-playing-handball": {
+  "tones": {
+   "2": "1F93E-1F3FB-200D-2642-FE0F",
+   "3": "1F93E-1F3FC-200D-2642-FE0F",
+   "4": "1F93E-1F3FD-200D-2642-FE0F",
+   "5": "1F93E-1F3FE-200D-2642-FE0F",
+   "6": "1F93E-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F93E-200D-2642-FE0F"
+ },
+ "man-playing-water-polo": {
+  "tones": {
+   "2": "1F93D-1F3FB-200D-2642-FE0F",
+   "3": "1F93D-1F3FC-200D-2642-FE0F",
+   "4": "1F93D-1F3FD-200D-2642-FE0F",
+   "5": "1F93D-1F3FE-200D-2642-FE0F",
+   "6": "1F93D-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F93D-200D-2642-FE0F"
+ },
+ "man-pouting": {
+  "tones": {
+   "2": "1F64E-1F3FB-200D-2642-FE0F",
+   "3": "1F64E-1F3FC-200D-2642-FE0F",
+   "4": "1F64E-1F3FD-200D-2642-FE0F",
+   "5": "1F64E-1F3FE-200D-2642-FE0F",
+   "6": "1F64E-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F64E-200D-2642-FE0F"
+ },
+ "man-raising-hand": {
+  "tones": {
+   "2": "1F64B-1F3FB-200D-2642-FE0F",
+   "3": "1F64B-1F3FC-200D-2642-FE0F",
+   "4": "1F64B-1F3FD-200D-2642-FE0F",
+   "5": "1F64B-1F3FE-200D-2642-FE0F",
+   "6": "1F64B-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F64B-200D-2642-FE0F"
+ },
+ "man-rowing-boat": {
+  "tones": {
+   "2": "1F6A3-1F3FB-200D-2642-FE0F",
+   "3": "1F6A3-1F3FC-200D-2642-FE0F",
+   "4": "1F6A3-1F3FD-200D-2642-FE0F",
+   "5": "1F6A3-1F3FE-200D-2642-FE0F",
+   "6": "1F6A3-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F6A3-200D-2642-FE0F"
+ },
+ "man-running": {
+  "tones": {
+   "2": "1F3C3-1F3FB-200D-2642-FE0F",
+   "3": "1F3C3-1F3FC-200D-2642-FE0F",
+   "4": "1F3C3-1F3FD-200D-2642-FE0F",
+   "5": "1F3C3-1F3FE-200D-2642-FE0F",
+   "6": "1F3C3-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F3C3-200D-2642-FE0F"
+ },
+ "man-shrugging": {
+  "tones": {
+   "2": "1F937-1F3FB-200D-2642-FE0F",
+   "3": "1F937-1F3FC-200D-2642-FE0F",
+   "4": "1F937-1F3FD-200D-2642-FE0F",
+   "5": "1F937-1F3FE-200D-2642-FE0F",
+   "6": "1F937-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F937-200D-2642-FE0F"
+ },
+ "man-surfing": {
+  "tones": {
+   "2": "1F3C4-1F3FB-200D-2642-FE0F",
+   "3": "1F3C4-1F3FC-200D-2642-FE0F",
+   "4": "1F3C4-1F3FD-200D-2642-FE0F",
+   "5": "1F3C4-1F3FE-200D-2642-FE0F",
+   "6": "1F3C4-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F3C4-200D-2642-FE0F"
+ },
+ "man-swimming": {
+  "tones": {
+   "2": "1F3CA-1F3FB-200D-2642-FE0F",
+   "3": "1F3CA-1F3FC-200D-2642-FE0F",
+   "4": "1F3CA-1F3FD-200D-2642-FE0F",
+   "5": "1F3CA-1F3FE-200D-2642-FE0F",
+   "6": "1F3CA-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F3CA-200D-2642-FE0F"
+ },
+ "man-tipping-hand": {
+  "tones": {
+   "2": "1F481-1F3FB-200D-2642-FE0F",
+   "3": "1F481-1F3FC-200D-2642-FE0F",
+   "4": "1F481-1F3FD-200D-2642-FE0F",
+   "5": "1F481-1F3FE-200D-2642-FE0F",
+   "6": "1F481-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F481-200D-2642-FE0F"
+ },
+ "man-walking": {
+  "tones": {
+   "2": "1F6B6-1F3FB-200D-2642-FE0F",
+   "3": "1F6B6-1F3FC-200D-2642-FE0F",
+   "4": "1F6B6-1F3FD-200D-2642-FE0F",
+   "5": "1F6B6-1F3FE-200D-2642-FE0F",
+   "6": "1F6B6-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F6B6-200D-2642-FE0F"
+ },
+ "man-wearing-turban": {
+  "tones": {
+   "2": "1F473-1F3FB-200D-2642-FE0F",
+   "3": "1F473-1F3FC-200D-2642-FE0F",
+   "4": "1F473-1F3FD-200D-2642-FE0F",
+   "5": "1F473-1F3FE-200D-2642-FE0F",
+   "6": "1F473-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F473-200D-2642-FE0F"
+ },
+ "man-with-bunny-ears-partying": {
+  "tones": {
+   "2": "1F46F-1F3FB-200D-2642-FE0F",
+   "3": "1F46F-1F3FC-200D-2642-FE0F",
+   "4": "1F46F-1F3FD-200D-2642-FE0F",
+   "5": "1F46F-1F3FE-200D-2642-FE0F",
+   "6": "1F46F-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F46F-200D-2642-FE0F"
+ },
+ "man-woman-boy": {
+  "unified": "1F468-200D-1F469-200D-1F466"
+ },
+ "man-woman-boy-boy": {
+  "unified": "1F468-200D-1F469-200D-1F466-200D-1F466"
+ },
+ "man-woman-girl": {
+  "unified": "1F468-200D-1F469-200D-1F467"
+ },
+ "man-woman-girl-boy": {
+  "unified": "1F468-200D-1F469-200D-1F467-200D-1F466"
+ },
+ "man-woman-girl-girl": {
+  "unified": "1F468-200D-1F469-200D-1F467-200D-1F467"
+ },
+ "man-wrestling": {
+  "tones": {
+   "2": "1F93C-1F3FB-200D-2642-FE0F",
+   "3": "1F93C-1F3FC-200D-2642-FE0F",
+   "4": "1F93C-1F3FD-200D-2642-FE0F",
+   "5": "1F93C-1F3FE-200D-2642-FE0F",
+   "6": "1F93C-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F93C-200D-2642-FE0F"
+ },
+ "man_and_woman_holding_hands": {
+  "tones": {
+   "2": "1F46B-1F3FB",
+   "3": "1F46B-1F3FC",
+   "4": "1F46B-1F3FD",
+   "5": "1F46B-1F3FE",
+   "6": "1F46B-1F3FF"
+  },
+  "unified": "1F46B"
+ },
+ "man_climbing": {
+  "tones": {
+   "2": "1F9D7-1F3FB-200D-2642-FE0F",
+   "3": "1F9D7-1F3FC-200D-2642-FE0F",
+   "4": "1F9D7-1F3FD-200D-2642-FE0F",
+   "5": "1F9D7-1F3FE-200D-2642-FE0F",
+   "6": "1F9D7-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9D7-200D-2642-FE0F"
+ },
+ "man_dancing": {
+  "tones": {
+   "2": "1F57A-1F3FB",
+   "3": "1F57A-1F3FC",
+   "4": "1F57A-1F3FD",
+   "5": "1F57A-1F3FE",
+   "6": "1F57A-1F3FF"
+  },
+  "unified": "1F57A"
+ },
+ "man_feeding_baby": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F37C",
+   "3": "1F468-1F3FC-200D-1F37C",
+   "4": "1F468-1F3FD-200D-1F37C",
+   "5": "1F468-1F3FE-200D-1F37C",
+   "6": "1F468-1F3FF-200D-1F37C"
+  },
+  "unified": "1F468-200D-1F37C"
+ },
+ "man_in_business_suit_levitating": {
+  "tones": {
+   "2": "1F574-1F3FB",
+   "3": "1F574-1F3FC",
+   "4": "1F574-1F3FD",
+   "5": "1F574-1F3FE",
+   "6": "1F574-1F3FF"
+  },
+  "unified": "1F574-FE0F"
+ },
+ "man_in_lotus_position": {
+  "tones": {
+   "2": "1F9D8-1F3FB-200D-2642-FE0F",
+   "3": "1F9D8-1F3FC-200D-2642-FE0F",
+   "4": "1F9D8-1F3FD-200D-2642-FE0F",
+   "5": "1F9D8-1F3FE-200D-2642-FE0F",
+   "6": "1F9D8-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9D8-200D-2642-FE0F"
+ },
+ "man_in_manual_wheelchair": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9BD",
+   "3": "1F468-1F3FC-200D-1F9BD",
+   "4": "1F468-1F3FD-200D-1F9BD",
+   "5": "1F468-1F3FE-200D-1F9BD",
+   "6": "1F468-1F3FF-200D-1F9BD"
+  },
+  "unified": "1F468-200D-1F9BD"
+ },
+ "man_in_manual_wheelchair_facing_right": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9BD-200D-27A1-FE0F",
+   "3": "1F468-1F3FC-200D-1F9BD-200D-27A1-FE0F",
+   "4": "1F468-1F3FD-200D-1F9BD-200D-27A1-FE0F",
+   "5": "1F468-1F3FE-200D-1F9BD-200D-27A1-FE0F",
+   "6": "1F468-1F3FF-200D-1F9BD-200D-27A1-FE0F"
+  },
+  "unified": "1F468-200D-1F9BD-200D-27A1-FE0F"
+ },
+ "man_in_motorized_wheelchair": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9BC",
+   "3": "1F468-1F3FC-200D-1F9BC",
+   "4": "1F468-1F3FD-200D-1F9BC",
+   "5": "1F468-1F3FE-200D-1F9BC",
+   "6": "1F468-1F3FF-200D-1F9BC"
+  },
+  "unified": "1F468-200D-1F9BC"
+ },
+ "man_in_motorized_wheelchair_facing_right": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9BC-200D-27A1-FE0F",
+   "3": "1F468-1F3FC-200D-1F9BC-200D-27A1-FE0F",
+   "4": "1F468-1F3FD-200D-1F9BC-200D-27A1-FE0F",
+   "5": "1F468-1F3FE-200D-1F9BC-200D-27A1-FE0F",
+   "6": "1F468-1F3FF-200D-1F9BC-200D-27A1-FE0F"
+  },
+  "unified": "1F468-200D-1F9BC-200D-27A1-FE0F"
+ },
+ "man_in_steamy_room": {
+  "tones": {
+   "2": "1F9D6-1F3FB-200D-2642-FE0F",
+   "3": "1F9D6-1F3FC-200D-2642-FE0F",
+   "4": "1F9D6-1F3FD-200D-2642-FE0F",
+   "5": "1F9D6-1F3FE-200D-2642-FE0F",
+   "6": "1F9D6-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9D6-200D-2642-FE0F"
+ },
+ "man_in_tuxedo": {
+  "tones": {
+   "2": "1F935-1F3FB-200D-2642-FE0F",
+   "3": "1F935-1F3FC-200D-2642-FE0F",
+   "4": "1F935-1F3FD-200D-2642-FE0F",
+   "5": "1F935-1F3FE-200D-2642-FE0F",
+   "6": "1F935-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F935-200D-2642-FE0F"
+ },
+ "man_kneeling": {
+  "tones": {
+   "2": "1F9CE-1F3FB-200D-2642-FE0F",
+   "3": "1F9CE-1F3FC-200D-2642-FE0F",
+   "4": "1F9CE-1F3FD-200D-2642-FE0F",
+   "5": "1F9CE-1F3FE-200D-2642-FE0F",
+   "6": "1F9CE-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9CE-200D-2642-FE0F"
+ },
+ "man_kneeling_facing_right": {
+  "tones": {
+   "2": "1F9CE-1F3FB-200D-2642-FE0F-200D-27A1-FE0F",
+   "3": "1F9CE-1F3FC-200D-2642-FE0F-200D-27A1-FE0F",
+   "4": "1F9CE-1F3FD-200D-2642-FE0F-200D-27A1-FE0F",
+   "5": "1F9CE-1F3FE-200D-2642-FE0F-200D-27A1-FE0F",
+   "6": "1F9CE-1F3FF-200D-2642-FE0F-200D-27A1-FE0F"
+  },
+  "unified": "1F9CE-200D-2642-FE0F-200D-27A1-FE0F"
+ },
+ "man_running_facing_right": {
+  "tones": {
+   "2": "1F3C3-1F3FB-200D-2642-FE0F-200D-27A1-FE0F",
+   "3": "1F3C3-1F3FC-200D-2642-FE0F-200D-27A1-FE0F",
+   "4": "1F3C3-1F3FD-200D-2642-FE0F-200D-27A1-FE0F",
+   "5": "1F3C3-1F3FE-200D-2642-FE0F-200D-27A1-FE0F",
+   "6": "1F3C3-1F3FF-200D-2642-FE0F-200D-27A1-FE0F"
+  },
+  "unified": "1F3C3-200D-2642-FE0F-200D-27A1-FE0F"
+ },
+ "man_standing": {
+  "tones": {
+   "2": "1F9CD-1F3FB-200D-2642-FE0F",
+   "3": "1F9CD-1F3FC-200D-2642-FE0F",
+   "4": "1F9CD-1F3FD-200D-2642-FE0F",
+   "5": "1F9CD-1F3FE-200D-2642-FE0F",
+   "6": "1F9CD-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9CD-200D-2642-FE0F"
+ },
+ "man_walking_facing_right": {
+  "tones": {
+   "2": "1F6B6-1F3FB-200D-2642-FE0F-200D-27A1-FE0F",
+   "3": "1F6B6-1F3FC-200D-2642-FE0F-200D-27A1-FE0F",
+   "4": "1F6B6-1F3FD-200D-2642-FE0F-200D-27A1-FE0F",
+   "5": "1F6B6-1F3FE-200D-2642-FE0F-200D-27A1-FE0F",
+   "6": "1F6B6-1F3FF-200D-2642-FE0F-200D-27A1-FE0F"
+  },
+  "unified": "1F6B6-200D-2642-FE0F-200D-27A1-FE0F"
+ },
+ "man_with_beard": {
+  "tones": {
+   "2": "1F9D4-1F3FB-200D-2642-FE0F",
+   "3": "1F9D4-1F3FC-200D-2642-FE0F",
+   "4": "1F9D4-1F3FD-200D-2642-FE0F",
+   "5": "1F9D4-1F3FE-200D-2642-FE0F",
+   "6": "1F9D4-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9D4-200D-2642-FE0F"
+ },
+ "man_with_gua_pi_mao": {
+  "tones": {
+   "2": "1F472-1F3FB",
+   "3": "1F472-1F3FC",
+   "4": "1F472-1F3FD",
+   "5": "1F472-1F3FE",
+   "6": "1F472-1F3FF"
+  },
+  "unified": "1F472"
+ },
+ "man_with_probing_cane": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9AF",
+   "3": "1F468-1F3FC-200D-1F9AF",
+   "4": "1F468-1F3FD-200D-1F9AF",
+   "5": "1F468-1F3FE-200D-1F9AF",
+   "6": "1F468-1F3FF-200D-1F9AF"
+  },
+  "unified": "1F468-200D-1F9AF"
+ },
+ "man_with_turban": {
+  "tones": {
+   "2": "1F473-1F3FB",
+   "3": "1F473-1F3FC",
+   "4": "1F473-1F3FD",
+   "5": "1F473-1F3FE",
+   "6": "1F473-1F3FF"
+  },
+  "unified": "1F473"
+ },
+ "man_with_veil": {
+  "tones": {
+   "2": "1F470-1F3FB-200D-2642-FE0F",
+   "3": "1F470-1F3FC-200D-2642-FE0F",
+   "4": "1F470-1F3FD-200D-2642-FE0F",
+   "5": "1F470-1F3FE-200D-2642-FE0F",
+   "6": "1F470-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F470-200D-2642-FE0F"
+ },
+ "man_with_white_cane_facing_right": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9AF-200D-27A1-FE0F",
+   "3": "1F468-1F3FC-200D-1F9AF-200D-27A1-FE0F",
+   "4": "1F468-1F3FD-200D-1F9AF-200D-27A1-FE0F",
+   "5": "1F468-1F3FE-200D-1F9AF-200D-27A1-FE0F",
+   "6": "1F468-1F3FF-200D-1F9AF-200D-27A1-FE0F"
+  },
+  "unified": "1F468-200D-1F9AF-200D-27A1-FE0F"
+ },
+ "mango": {
+  "unified": "1F96D"
+ },
+ "mans_shoe": {
+  "unified": "1F45E"
+ },
+ "mantelpiece_clock": {
+  "unified": "1F570-FE0F"
+ },
+ "manual_wheelchair": {
+  "unified": "1F9BD"
+ },
+ "maple_leaf": {
+  "unified": "1F341"
+ },
+ "maracas": {
+  "unified": "1FA87"
+ },
+ "martial_arts_uniform": {
+  "unified": "1F94B"
+ },
+ "mask": {
+  "unified": "1F637"
+ },
+ "massage": {
+  "tones": {
+   "2": "1F486-1F3FB",
+   "3": "1F486-1F3FC",
+   "4": "1F486-1F3FD",
+   "5": "1F486-1F3FE",
+   "6": "1F486-1F3FF"
+  },
+  "unified": "1F486"
+ },
+ "mate_drink": {
+  "unified": "1F9C9"
+ },
+ "meat_on_bone": {
+  "unified": "1F356"
+ },
+ "mechanic": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F527",
+   "3": "1F9D1-1F3FC-200D-1F527",
+   "4": "1F9D1-1F3FD-200D-1F527",
+   "5": "1F9D1-1F3FE-200D-1F527",
+   "6": "1F9D1-1F3FF-200D-1F527"
+  },
+  "unified": "1F9D1-200D-1F527"
+ },
+ "mechanical_arm": {
+  "unified": "1F9BE"
+ },
+ "mechanical_leg": {
+  "unified": "1F9BF"
+ },
+ "medal": {
+  "unified": "1F396-FE0F"
+ },
+ "medical_symbol": {
+  "unified": "2695-FE0F"
+ },
+ "mega": {
+  "unified": "1F4E3"
+ },
+ "melon": {
+  "unified": "1F348"
+ },
+ "melting_face": {
+  "unified": "1FAE0"
+ },
+ "memo": {
+  "unified": "1F4DD"
+ },
+ "men-with-bunny-ears-partying": {
+  "tones": {
+   "2": "1F46F-1F3FB-200D-2642-FE0F",
+   "3": "1F46F-1F3FC-200D-2642-FE0F",
+   "4": "1F46F-1F3FD-200D-2642-FE0F",
+   "5": "1F46F-1F3FE-200D-2642-FE0F",
+   "6": "1F46F-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F46F-200D-2642-FE0F"
+ },
+ "men_holding_hands": {
+  "tones": {
+   "2": "1F46C-1F3FB",
+   "3": "1F46C-1F3FC",
+   "4": "1F46C-1F3FD",
+   "5": "1F46C-1F3FE",
+   "6": "1F46C-1F3FF"
+  },
+  "unified": "1F46C"
+ },
+ "mending_heart": {
+  "unified": "2764-FE0F-200D-1FA79"
+ },
+ "menorah_with_nine_branches": {
+  "unified": "1F54E"
+ },
+ "mens": {
+  "unified": "1F6B9"
+ },
+ "mermaid": {
+  "tones": {
+   "2": "1F9DC-1F3FB-200D-2640-FE0F",
+   "3": "1F9DC-1F3FC-200D-2640-FE0F",
+   "4": "1F9DC-1F3FD-200D-2640-FE0F",
+   "5": "1F9DC-1F3FE-200D-2640-FE0F",
+   "6": "1F9DC-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9DC-200D-2640-FE0F"
+ },
+ "merman": {
+  "tones": {
+   "2": "1F9DC-1F3FB-200D-2642-FE0F",
+   "3": "1F9DC-1F3FC-200D-2642-FE0F",
+   "4": "1F9DC-1F3FD-200D-2642-FE0F",
+   "5": "1F9DC-1F3FE-200D-2642-FE0F",
+   "6": "1F9DC-1F3FF-200D-2642-FE0F"
+  },
+  "unified": "1F9DC-200D-2642-FE0F"
+ },
+ "merperson": {
+  "tones": {
+   "2": "1F9DC-1F3FB",
+   "3": "1F9DC-1F3FC",
+   "4": "1F9DC-1F3FD",
+   "5": "1F9DC-1F3FE",
+   "6": "1F9DC-1F3FF"
+  },
+  "unified": "1F9DC"
+ },
+ "metro": {
+  "unified": "1F687"
+ },
+ "microbe": {
+  "unified": "1F9A0"
+ },
+ "microphone": {
+  "unified": "1F3A4"
+ },
+ "microscope": {
+  "unified": "1F52C"
+ },
+ "middle_finger": {
+  "tones": {
+   "2": "1F595-1F3FB",
+   "3": "1F595-1F3FC",
+   "4": "1F595-1F3FD",
+   "5": "1F595-1F3FE",
+   "6": "1F595-1F3FF"
+  },
+  "unified": "1F595"
+ },
+ "military_helmet": {
+  "unified": "1FA96"
+ },
+ "milky_way": {
+  "unified": "1F30C"
+ },
+ "minibus": {
+  "unified": "1F690"
+ },
+ "minidisc": {
+  "unified": "1F4BD"
+ },
+ "mirror": {
+  "unified": "1FA9E"
+ },
+ "mirror_ball": {
+  "unified": "1FAA9"
+ },
+ "mobile_phone_off": {
+  "unified": "1F4F4"
+ },
+ "money_mouth_face": {
+  "unified": "1F911"
+ },
+ "money_with_wings": {
+  "unified": "1F4B8"
+ },
+ "moneybag": {
+  "unified": "1F4B0"
+ },
+ "monkey": {
+  "unified": "1F412"
+ },
+ "monkey_face": {
+  "unified": "1F435"
+ },
+ "monorail": {
+  "unified": "1F69D"
+ },
+ "moon": {
+  "unified": "1F314"
+ },
+ "moon_cake": {
+  "unified": "1F96E"
+ },
+ "moose": {
+  "unified": "1FACE"
+ },
+ "mortar_board": {
+  "unified": "1F393"
+ },
+ "mosque": {
+  "unified": "1F54C"
+ },
+ "mosquito": {
+  "unified": "1F99F"
+ },
+ "mostly_sunny": {
+  "unified": "1F324-FE0F"
+ },
+ "mother_christmas": {
+  "tones": {
+   "2": "1F936-1F3FB",
+   "3": "1F936-1F3FC",
+   "4": "1F936-1F3FD",
+   "5": "1F936-1F3FE",
+   "6": "1F936-1F3FF"
+  },
+  "unified": "1F936"
+ },
+ "motor_boat": {
+  "unified": "1F6E5-FE0F"
+ },
+ "motor_scooter": {
+  "unified": "1F6F5"
+ },
+ "motorized_wheelchair": {
+  "unified": "1F9BC"
+ },
+ "motorway": {
+  "unified": "1F6E3-FE0F"
+ },
+ "mount_fuji": {
+  "unified": "1F5FB"
+ },
+ "mountain": {
+  "unified": "26F0-FE0F"
+ },
+ "mountain_bicyclist": {
+  "tones": {
+   "2": "1F6B5-1F3FB",
+   "3": "1F6B5-1F3FC",
+   "4": "1F6B5-1F3FD",
+   "5": "1F6B5-1F3FE",
+   "6": "1F6B5-1F3FF"
+  },
+  "unified": "1F6B5"
+ },
+ "mountain_cableway": {
+  "unified": "1F6A0"
+ },
+ "mountain_railway": {
+  "unified": "1F69E"
+ },
+ "mouse": {
+  "unified": "1F42D"
+ },
+ "mouse2": {
+  "unified": "1F401"
+ },
+ "mouse_trap": {
+  "unified": "1FAA4"
+ },
+ "movie_camera": {
+  "unified": "1F3A5"
+ },
+ "moyai": {
+  "unified": "1F5FF"
+ },
+ "mrs_claus": {
+  "tones": {
+   "2": "1F936-1F3FB",
+   "3": "1F936-1F3FC",
+   "4": "1F936-1F3FD",
+   "5": "1F936-1F3FE",
+   "6": "1F936-1F3FF"
+  },
+  "unified": "1F936"
+ },
+ "muscle": {
+  "tones": {
+   "2": "1F4AA-1F3FB",
+   "3": "1F4AA-1F3FC",
+   "4": "1F4AA-1F3FD",
+   "5": "1F4AA-1F3FE",
+   "6": "1F4AA-1F3FF"
+  },
+  "unified": "1F4AA"
+ },
+ "mushroom": {
+  "unified": "1F344"
+ },
+ "musical_keyboard": {
+  "unified": "1F3B9"
+ },
+ "musical_note": {
+  "unified": "1F3B5"
+ },
+ "musical_score": {
+  "unified": "1F3BC"
+ },
+ "mute": {
+  "unified": "1F507"
+ },
+ "mx_claus": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F384",
+   "3": "1F9D1-1F3FC-200D-1F384",
+   "4": "1F9D1-1F3FD-200D-1F384",
+   "5": "1F9D1-1F3FE-200D-1F384",
+   "6": "1F9D1-1F3FF-200D-1F384"
+  },
+  "unified": "1F9D1-200D-1F384"
+ },
+ "nail_care": {
+  "tones": {
+   "2": "1F485-1F3FB",
+   "3": "1F485-1F3FC",
+   "4": "1F485-1F3FD",
+   "5": "1F485-1F3FE",
+   "6": "1F485-1F3FF"
+  },
+  "unified": "1F485"
+ },
+ "name_badge": {
+  "unified": "1F4DB"
+ },
+ "national_park": {
+  "unified": "1F3DE-FE0F"
+ },
+ "nauseated_face": {
+  "unified": "1F922"
+ },
+ "nazar_amulet": {
+  "unified": "1F9FF"
+ },
+ "necktie": {
+  "unified": "1F454"
+ },
+ "negative_squared_cross_mark": {
+  "unified": "274E"
+ },
+ "nerd_face": {
+  "unified": "1F913"
+ },
+ "nest_with_eggs": {
+  "unified": "1FABA"
+ },
+ "nesting_dolls": {
+  "unified": "1FA86"
+ },
+ "neutral_face": {
+  "unified": "1F610"
+ },
+ "new": {
+  "unified": "1F195"
+ },
+ "new_moon": {
+  "unified": "1F311"
+ },
+ "new_moon_with_face": {
+  "unified": "1F31A"
+ },
+ "newspaper": {
+  "unified": "1F4F0"
+ },
+ "ng": {
+  "unified": "1F196"
+ },
+ "night_with_stars": {
+  "unified": "1F303"
+ },
+ "nine": {
+  "unified": "0039-FE0F-20E3"
+ },
+ "ninja": {
+  "tones": {
+   "2": "1F977-1F3FB",
+   "3": "1F977-1F3FC",
+   "4": "1F977-1F3FD",
+   "5": "1F977-1F3FE",
+   "6": "1F977-1F3FF"
+  },
+  "unified": "1F977"
+ },
+ "no_bell": {
+  "unified": "1F515"
+ },
+ "no_bicycles": {
+  "unified": "1F6B3"
+ },
+ "no_entry": {
+  "unified": "26D4"
+ },
+ "no_entry_sign": {
+  "unified": "1F6AB"
+ },
+ "no_good": {
+  "tones": {
+   "2": "1F645-1F3FB",
+   "3": "1F645-1F3FC",
+   "4": "1F645-1F3FD",
+   "5": "1F645-1F3FE",
+   "6": "1F645-1F3FF"
+  },
+  "unified": "1F645"
+ },
+ "no_mobile_phones": {
+  "unified": "1F4F5"
+ },
+ "no_mouth": {
+  "unified": "1F636"
+ },
+ "no_pedestrians": {
+  "unified": "1F6B7"
+ },
+ "no_smoking": {
+  "unified": "1F6AD"
+ },
+ "non-potable_water": {
+  "unified": "1F6B1"
+ },
+ "nose": {
+  "tones": {
+   "2": "1F443-1F3FB",
+   "3": "1F443-1F3FC",
+   "4": "1F443-1F3FD",
+   "5": "1F443-1F3FE",
+   "6": "1F443-1F3FF"
+  },
+  "unified": "1F443"
+ },
+ "notebook": {
+  "unified": "1F4D3"
+ },
+ "notebook_with_decorative_cover": {
+  "unified": "1F4D4"
+ },
+ "notes": {
+  "unified": "1F3B6"
+ },
+ "nut_and_bolt": {
+  "unified": "1F529"
+ },
+ "o": {
+  "unified": "2B55"
+ },
+ "o2": {
+  "unified": "1F17E-FE0F"
+ },
+ "ocean": {
+  "unified": "1F30A"
+ },
+ "octagonal_sign": {
+  "unified": "1F6D1"
+ },
+ "octopus": {
+  "unified": "1F419"
+ },
+ "oden": {
+  "unified": "1F362"
+ },
+ "office": {
+  "unified": "1F3E2"
+ },
+ "office_worker": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F4BC",
+   "3": "1F9D1-1F3FC-200D-1F4BC",
+   "4": "1F9D1-1F3FD-200D-1F4BC",
+   "5": "1F9D1-1F3FE-200D-1F4BC",
+   "6": "1F9D1-1F3FF-200D-1F4BC"
+  },
+  "unified": "1F9D1-200D-1F4BC"
+ },
+ "oil_drum": {
+  "unified": "1F6E2-FE0F"
+ },
+ "ok": {
+  "unified": "1F197"
+ },
+ "ok_hand": {
+  "tones": {
+   "2": "1F44C-1F3FB",
+   "3": "1F44C-1F3FC",
+   "4": "1F44C-1F3FD",
+   "5": "1F44C-1F3FE",
+   "6": "1F44C-1F3FF"
+  },
+  "unified": "1F44C"
+ },
+ "ok_woman": {
+  "tones": {
+   "2": "1F646-1F3FB",
+   "3": "1F646-1F3FC",
+   "4": "1F646-1F3FD",
+   "5": "1F646-1F3FE",
+   "6": "1F646-1F3FF"
+  },
+  "unified": "1F646"
+ },
+ "old_key": {
+  "unified": "1F5DD-FE0F"
+ },
+ "older_adult": {
+  "tones": {
+   "2": "1F9D3-1F3FB",
+   "3": "1F9D3-1F3FC",
+   "4": "1F9D3-1F3FD",
+   "5": "1F9D3-1F3FE",
+   "6": "1F9D3-1F3FF"
+  },
+  "unified": "1F9D3"
+ },
+ "older_man": {
+  "tones": {
+   "2": "1F474-1F3FB",
+   "3": "1F474-1F3FC",
+   "4": "1F474-1F3FD",
+   "5": "1F474-1F3FE",
+   "6": "1F474-1F3FF"
+  },
+  "unified": "1F474"
+ },
+ "older_woman": {
+  "tones": {
+   "2": "1F475-1F3FB",
+   "3": "1F475-1F3FC",
+   "4": "1F475-1F3FD",
+   "5": "1F475-1F3FE",
+   "6": "1F475-1F3FF"
+  },
+  "unified": "1F475"
+ },
+ "olive": {
+  "unified": "1FAD2"
+ },
+ "om_symbol": {
+  "unified": "1F549-FE0F"
+ },
+ "on": {
+  "unified": "1F51B"
+ },
+ "oncoming_automobile": {
+  "unified": "1F698"
+ },
+ "oncoming_bus": {
+  "unified": "1F68D"
+ },
+ "oncoming_police_car": {
+  "unified": "1F694"
+ },
+ "oncoming_taxi": {
+  "unified": "1F696"
+ },
+ "one": {
+  "unified": "0031-FE0F-20E3"
+ },
+ "one-piece_swimsuit": {
+  "unified": "1FA71"
+ },
+ "onion": {
+  "unified": "1F9C5"
+ },
+ "open_book": {
+  "unified": "1F4D6"
+ },
+ "open_file_folder": {
+  "unified": "1F4C2"
+ },
+ "open_hands": {
+  "tones": {
+   "2": "1F450-1F3FB",
+   "3": "1F450-1F3FC",
+   "4": "1F450-1F3FD",
+   "5": "1F450-1F3FE",
+   "6": "1F450-1F3FF"
+  },
+  "unified": "1F450"
+ },
+ "open_mouth": {
+  "unified": "1F62E"
+ },
+ "ophiuchus": {
+  "unified": "26CE"
+ },
+ "orange_book": {
+  "unified": "1F4D9"
+ },
+ "orange_heart": {
+  "unified": "1F9E1"
+ },
+ "orangutan": {
+  "unified": "1F9A7"
+ },
+ "orca": {
+  "unified": "1FACD"
+ },
+ "orthodox_cross": {
+  "unified": "2626-FE0F"
+ },
+ "otter": {
+  "unified": "1F9A6"
+ },
+ "outbox_tray": {
+  "unified": "1F4E4"
+ },
+ "owl": {
+  "unified": "1F989"
+ },
+ "ox": {
+  "unified": "1F402"
+ },
+ "oyster": {
+  "unified": "1F9AA"
+ },
+ "package": {
+  "unified": "1F4E6"
+ },
+ "page_facing_up": {
+  "unified": "1F4C4"
+ },
+ "page_with_curl": {
+  "unified": "1F4C3"
+ },
+ "pager": {
+  "unified": "1F4DF"
+ },
+ "palm_down_hand": {
+  "tones": {
+   "2": "1FAF3-1F3FB",
+   "3": "1FAF3-1F3FC",
+   "4": "1FAF3-1F3FD",
+   "5": "1FAF3-1F3FE",
+   "6": "1FAF3-1F3FF"
+  },
+  "unified": "1FAF3"
+ },
+ "palm_tree": {
+  "unified": "1F334"
+ },
+ "palm_up_hand": {
+  "tones": {
+   "2": "1FAF4-1F3FB",
+   "3": "1FAF4-1F3FC",
+   "4": "1FAF4-1F3FD",
+   "5": "1FAF4-1F3FE",
+   "6": "1FAF4-1F3FF"
+  },
+  "unified": "1FAF4"
+ },
+ "palms_up_together": {
+  "tones": {
+   "2": "1F932-1F3FB",
+   "3": "1F932-1F3FC",
+   "4": "1F932-1F3FD",
+   "5": "1F932-1F3FE",
+   "6": "1F932-1F3FF"
+  },
+  "unified": "1F932"
+ },
+ "pancakes": {
+  "unified": "1F95E"
+ },
+ "panda_face": {
+  "unified": "1F43C"
+ },
+ "paperclip": {
+  "unified": "1F4CE"
+ },
+ "parachute": {
+  "unified": "1FA82"
+ },
+ "parking": {
+  "unified": "1F17F-FE0F"
+ },
+ "parrot": {
+  "unified": "1F99C"
+ },
+ "part_alternation_mark": {
+  "unified": "303D-FE0F"
+ },
+ "partly_sunny": {
+  "unified": "26C5"
+ },
+ "partly_sunny_rain": {
+  "unified": "1F326-FE0F"
+ },
+ "partying_face": {
+  "unified": "1F973"
+ },
+ "passenger_ship": {
+  "unified": "1F6F3-FE0F"
+ },
+ "passport_control": {
+  "unified": "1F6C2"
+ },
+ "paw_prints": {
+  "unified": "1F43E"
+ },
+ "pea_pod": {
+  "unified": "1FADB"
+ },
+ "peace_symbol": {
+  "unified": "262E-FE0F"
+ },
+ "peach": {
+  "unified": "1F351"
+ },
+ "peacock": {
+  "unified": "1F99A"
+ },
+ "peanuts": {
+  "unified": "1F95C"
+ },
+ "pear": {
+  "unified": "1F350"
+ },
+ "pencil": {
+  "unified": "1F4DD"
+ },
+ "pencil2": {
+  "unified": "270F-FE0F"
+ },
+ "penguin": {
+  "unified": "1F427"
+ },
+ "pensive": {
+  "unified": "1F614"
+ },
+ "people_holding_hands": {
+  "unified": "1F9D1-200D-1F91D-200D-1F9D1"
+ },
+ "people_hugging": {
+  "unified": "1FAC2"
+ },
+ "performing_arts": {
+  "unified": "1F3AD"
+ },
+ "persevere": {
+  "unified": "1F623"
+ },
+ "person_climbing": {
+  "tones": {
+   "2": "1F9D7-1F3FB",
+   "3": "1F9D7-1F3FC",
+   "4": "1F9D7-1F3FD",
+   "5": "1F9D7-1F3FE",
+   "6": "1F9D7-1F3FF"
+  },
+  "unified": "1F9D7"
+ },
+ "person_doing_cartwheel": {
+  "tones": {
+   "2": "1F938-1F3FB",
+   "3": "1F938-1F3FC",
+   "4": "1F938-1F3FD",
+   "5": "1F938-1F3FE",
+   "6": "1F938-1F3FF"
+  },
+  "unified": "1F938"
+ },
+ "person_feeding_baby": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F37C",
+   "3": "1F9D1-1F3FC-200D-1F37C",
+   "4": "1F9D1-1F3FD-200D-1F37C",
+   "5": "1F9D1-1F3FE-200D-1F37C",
+   "6": "1F9D1-1F3FF-200D-1F37C"
+  },
+  "unified": "1F9D1-200D-1F37C"
+ },
+ "person_frowning": {
+  "tones": {
+   "2": "1F64D-1F3FB",
+   "3": "1F64D-1F3FC",
+   "4": "1F64D-1F3FD",
+   "5": "1F64D-1F3FE",
+   "6": "1F64D-1F3FF"
+  },
+  "unified": "1F64D"
+ },
+ "person_in_lotus_position": {
+  "tones": {
+   "2": "1F9D8-1F3FB",
+   "3": "1F9D8-1F3FC",
+   "4": "1F9D8-1F3FD",
+   "5": "1F9D8-1F3FE",
+   "6": "1F9D8-1F3FF"
+  },
+  "unified": "1F9D8"
+ },
+ "person_in_manual_wheelchair": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9BD",
+   "3": "1F9D1-1F3FC-200D-1F9BD",
+   "4": "1F9D1-1F3FD-200D-1F9BD",
+   "5": "1F9D1-1F3FE-200D-1F9BD",
+   "6": "1F9D1-1F3FF-200D-1F9BD"
+  },
+  "unified": "1F9D1-200D-1F9BD"
+ },
+ "person_in_manual_wheelchair_facing_right": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9BD-200D-27A1-FE0F",
+   "3": "1F9D1-1F3FC-200D-1F9BD-200D-27A1-FE0F",
+   "4": "1F9D1-1F3FD-200D-1F9BD-200D-27A1-FE0F",
+   "5": "1F9D1-1F3FE-200D-1F9BD-200D-27A1-FE0F",
+   "6": "1F9D1-1F3FF-200D-1F9BD-200D-27A1-FE0F"
+  },
+  "unified": "1F9D1-200D-1F9BD-200D-27A1-FE0F"
+ },
+ "person_in_motorized_wheelchair": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9BC",
+   "3": "1F9D1-1F3FC-200D-1F9BC",
+   "4": "1F9D1-1F3FD-200D-1F9BC",
+   "5": "1F9D1-1F3FE-200D-1F9BC",
+   "6": "1F9D1-1F3FF-200D-1F9BC"
+  },
+  "unified": "1F9D1-200D-1F9BC"
+ },
+ "person_in_motorized_wheelchair_facing_right": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9BC-200D-27A1-FE0F",
+   "3": "1F9D1-1F3FC-200D-1F9BC-200D-27A1-FE0F",
+   "4": "1F9D1-1F3FD-200D-1F9BC-200D-27A1-FE0F",
+   "5": "1F9D1-1F3FE-200D-1F9BC-200D-27A1-FE0F",
+   "6": "1F9D1-1F3FF-200D-1F9BC-200D-27A1-FE0F"
+  },
+  "unified": "1F9D1-200D-1F9BC-200D-27A1-FE0F"
+ },
+ "person_in_steamy_room": {
+  "tones": {
+   "2": "1F9D6-1F3FB",
+   "3": "1F9D6-1F3FC",
+   "4": "1F9D6-1F3FD",
+   "5": "1F9D6-1F3FE",
+   "6": "1F9D6-1F3FF"
+  },
+  "unified": "1F9D6"
+ },
+ "person_in_tuxedo": {
+  "tones": {
+   "2": "1F935-1F3FB",
+   "3": "1F935-1F3FC",
+   "4": "1F935-1F3FD",
+   "5": "1F935-1F3FE",
+   "6": "1F935-1F3FF"
+  },
+  "unified": "1F935"
+ },
+ "person_kneeling_facing_right": {
+  "tones": {
+   "2": "1F9CE-1F3FB-200D-27A1-FE0F",
+   "3": "1F9CE-1F3FC-200D-27A1-FE0F",
+   "4": "1F9CE-1F3FD-200D-27A1-FE0F",
+   "5": "1F9CE-1F3FE-200D-27A1-FE0F",
+   "6": "1F9CE-1F3FF-200D-27A1-FE0F"
+  },
+  "unified": "1F9CE-200D-27A1-FE0F"
+ },
+ "person_running_facing_right": {
+  "tones": {
+   "2": "1F3C3-1F3FB-200D-27A1-FE0F",
+   "3": "1F3C3-1F3FC-200D-27A1-FE0F",
+   "4": "1F3C3-1F3FD-200D-27A1-FE0F",
+   "5": "1F3C3-1F3FE-200D-27A1-FE0F",
+   "6": "1F3C3-1F3FF-200D-27A1-FE0F"
+  },
+  "unified": "1F3C3-200D-27A1-FE0F"
+ },
+ "person_walking_facing_right": {
+  "tones": {
+   "2": "1F6B6-1F3FB-200D-27A1-FE0F",
+   "3": "1F6B6-1F3FC-200D-27A1-FE0F",
+   "4": "1F6B6-1F3FD-200D-27A1-FE0F",
+   "5": "1F6B6-1F3FE-200D-27A1-FE0F",
+   "6": "1F6B6-1F3FF-200D-27A1-FE0F"
+  },
+  "unified": "1F6B6-200D-27A1-FE0F"
+ },
+ "person_with_ball": {
+  "tones": {
+   "2": "26F9-1F3FB",
+   "3": "26F9-1F3FC",
+   "4": "26F9-1F3FD",
+   "5": "26F9-1F3FE",
+   "6": "26F9-1F3FF"
+  },
+  "unified": "26F9-FE0F"
+ },
+ "person_with_blond_hair": {
+  "tones": {
+   "2": "1F471-1F3FB",
+   "3": "1F471-1F3FC",
+   "4": "1F471-1F3FD",
+   "5": "1F471-1F3FE",
+   "6": "1F471-1F3FF"
+  },
+  "unified": "1F471"
+ },
+ "person_with_crown": {
+  "tones": {
+   "2": "1FAC5-1F3FB",
+   "3": "1FAC5-1F3FC",
+   "4": "1FAC5-1F3FD",
+   "5": "1FAC5-1F3FE",
+   "6": "1FAC5-1F3FF"
+  },
+  "unified": "1FAC5"
+ },
+ "person_with_headscarf": {
+  "tones": {
+   "2": "1F9D5-1F3FB",
+   "3": "1F9D5-1F3FC",
+   "4": "1F9D5-1F3FD",
+   "5": "1F9D5-1F3FE",
+   "6": "1F9D5-1F3FF"
+  },
+  "unified": "1F9D5"
+ },
+ "person_with_pouting_face": {
+  "tones": {
+   "2": "1F64E-1F3FB",
+   "3": "1F64E-1F3FC",
+   "4": "1F64E-1F3FD",
+   "5": "1F64E-1F3FE",
+   "6": "1F64E-1F3FF"
+  },
+  "unified": "1F64E"
+ },
+ "person_with_probing_cane": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9AF",
+   "3": "1F9D1-1F3FC-200D-1F9AF",
+   "4": "1F9D1-1F3FD-200D-1F9AF",
+   "5": "1F9D1-1F3FE-200D-1F9AF",
+   "6": "1F9D1-1F3FF-200D-1F9AF"
+  },
+  "unified": "1F9D1-200D-1F9AF"
+ },
+ "person_with_white_cane_facing_right": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9AF-200D-27A1-FE0F",
+   "3": "1F9D1-1F3FC-200D-1F9AF-200D-27A1-FE0F",
+   "4": "1F9D1-1F3FD-200D-1F9AF-200D-27A1-FE0F",
+   "5": "1F9D1-1F3FE-200D-1F9AF-200D-27A1-FE0F",
+   "6": "1F9D1-1F3FF-200D-1F9AF-200D-27A1-FE0F"
+  },
+  "unified": "1F9D1-200D-1F9AF-200D-27A1-FE0F"
+ },
+ "petri_dish": {
+  "unified": "1F9EB"
+ },
+ "phoenix": {
+  "unified": "1F426-200D-1F525"
+ },
+ "phone": {
+  "unified": "260E-FE0F"
+ },
+ "pick": {
+  "unified": "26CF-FE0F"
+ },
+ "pickup_truck": {
+  "unified": "1F6FB"
+ },
+ "pie": {
+  "unified": "1F967"
+ },
+ "pig": {
+  "unified": "1F437"
+ },
+ "pig2": {
+  "unified": "1F416"
+ },
+ "pig_nose": {
+  "unified": "1F43D"
+ },
+ "pill": {
+  "unified": "1F48A"
+ },
+ "pilot": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-2708-FE0F",
+   "3": "1F9D1-1F3FC-200D-2708-FE0F",
+   "4": "1F9D1-1F3FD-200D-2708-FE0F",
+   "5": "1F9D1-1F3FE-200D-2708-FE0F",
+   "6": "1F9D1-1F3FF-200D-2708-FE0F"
+  },
+  "unified": "1F9D1-200D-2708-FE0F"
+ },
+ "pinata": {
+  "unified": "1FA85"
+ },
+ "pinched_fingers": {
+  "tones": {
+   "2": "1F90C-1F3FB",
+   "3": "1F90C-1F3FC",
+   "4": "1F90C-1F3FD",
+   "5": "1F90C-1F3FE",
+   "6": "1F90C-1F3FF"
+  },
+  "unified": "1F90C"
+ },
+ "pinching_hand": {
+  "tones": {
+   "2": "1F90F-1F3FB",
+   "3": "1F90F-1F3FC",
+   "4": "1F90F-1F3FD",
+   "5": "1F90F-1F3FE",
+   "6": "1F90F-1F3FF"
+  },
+  "unified": "1F90F"
+ },
+ "pineapple": {
+  "unified": "1F34D"
+ },
+ "pink_heart": {
+  "unified": "1FA77"
+ },
+ "pirate_flag": {
+  "unified": "1F3F4-200D-2620-FE0F"
+ },
+ "pisces": {
+  "unified": "2653"
+ },
+ "pizza": {
+  "unified": "1F355"
+ },
+ "placard": {
+  "unified": "1FAA7"
+ },
+ "place_of_worship": {
+  "unified": "1F6D0"
+ },
+ "playground_slide": {
+  "unified": "1F6DD"
+ },
+ "pleading_face": {
+  "unified": "1F97A"
+ },
+ "plunger": {
+  "unified": "1FAA0"
+ },
+ "point_down": {
+  "tones": {
+   "2": "1F447-1F3FB",
+   "3": "1F447-1F3FC",
+   "4": "1F447-1F3FD",
+   "5": "1F447-1F3FE",
+   "6": "1F447-1F3FF"
+  },
+  "unified": "1F447"
+ },
+ "point_left": {
+  "tones": {
+   "2": "1F448-1F3FB",
+   "3": "1F448-1F3FC",
+   "4": "1F448-1F3FD",
+   "5": "1F448-1F3FE",
+   "6": "1F448-1F3FF"
+  },
+  "unified": "1F448"
+ },
+ "point_right": {
+  "tones": {
+   "2": "1F449-1F3FB",
+   "3": "1F449-1F3FC",
+   "4": "1F449-1F3FD",
+   "5": "1F449-1F3FE",
+   "6": "1F449-1F3FF"
+  },
+  "unified": "1F449"
+ },
+ "point_up": {
+  "tones": {
+   "2": "261D-1F3FB",
+   "3": "261D-1F3FC",
+   "4": "261D-1F3FD",
+   "5": "261D-1F3FE",
+   "6": "261D-1F3FF"
+  },
+  "unified": "261D-FE0F"
+ },
+ "point_up_2": {
+  "tones": {
+   "2": "1F446-1F3FB",
+   "3": "1F446-1F3FC",
+   "4": "1F446-1F3FD",
+   "5": "1F446-1F3FE",
+   "6": "1F446-1F3FF"
+  },
+  "unified": "1F446"
+ },
+ "polar_bear": {
+  "unified": "1F43B-200D-2744-FE0F"
+ },
+ "police_car": {
+  "unified": "1F693"
+ },
+ "poodle": {
+  "unified": "1F429"
+ },
+ "poop": {
+  "unified": "1F4A9"
+ },
+ "popcorn": {
+  "unified": "1F37F"
+ },
+ "post_office": {
+  "unified": "1F3E3"
+ },
+ "postal_horn": {
+  "unified": "1F4EF"
+ },
+ "postbox": {
+  "unified": "1F4EE"
+ },
+ "potable_water": {
+  "unified": "1F6B0"
+ },
+ "potato": {
+  "unified": "1F954"
+ },
+ "potted_plant": {
+  "unified": "1FAB4"
+ },
+ "pouch": {
+  "unified": "1F45D"
+ },
+ "poultry_leg": {
+  "unified": "1F357"
+ },
+ "pound": {
+  "unified": "1F4B7"
+ },
+ "pouring_liquid": {
+  "unified": "1FAD7"
+ },
+ "pouting_cat": {
+  "unified": "1F63E"
+ },
+ "pray": {
+  "tones": {
+   "2": "1F64F-1F3FB",
+   "3": "1F64F-1F3FC",
+   "4": "1F64F-1F3FD",
+   "5": "1F64F-1F3FE",
+   "6": "1F64F-1F3FF"
+  },
+  "unified": "1F64F"
+ },
+ "prayer_beads": {
+  "unified": "1F4FF"
+ },
+ "pregnant_man": {
+  "tones": {
+   "2": "1FAC3-1F3FB",
+   "3": "1FAC3-1F3FC",
+   "4": "1FAC3-1F3FD",
+   "5": "1FAC3-1F3FE",
+   "6": "1FAC3-1F3FF"
+  },
+  "unified": "1FAC3"
+ },
+ "pregnant_person": {
+  "tones": {
+   "2": "1FAC4-1F3FB",
+   "3": "1FAC4-1F3FC",
+   "4": "1FAC4-1F3FD",
+   "5": "1FAC4-1F3FE",
+   "6": "1FAC4-1F3FF"
+  },
+  "unified": "1FAC4"
+ },
+ "pregnant_woman": {
+  "tones": {
+   "2": "1F930-1F3FB",
+   "3": "1F930-1F3FC",
+   "4": "1F930-1F3FD",
+   "5": "1F930-1F3FE",
+   "6": "1F930-1F3FF"
+  },
+  "unified": "1F930"
+ },
+ "pretzel": {
+  "unified": "1F968"
+ },
+ "prince": {
+  "tones": {
+   "2": "1F934-1F3FB",
+   "3": "1F934-1F3FC",
+   "4": "1F934-1F3FD",
+   "5": "1F934-1F3FE",
+   "6": "1F934-1F3FF"
+  },
+  "unified": "1F934"
+ },
+ "princess": {
+  "tones": {
+   "2": "1F478-1F3FB",
+   "3": "1F478-1F3FC",
+   "4": "1F478-1F3FD",
+   "5": "1F478-1F3FE",
+   "6": "1F478-1F3FF"
+  },
+  "unified": "1F478"
+ },
+ "printer": {
+  "unified": "1F5A8-FE0F"
+ },
+ "probing_cane": {
+  "unified": "1F9AF"
+ },
+ "punch": {
+  "tones": {
+   "2": "1F44A-1F3FB",
+   "3": "1F44A-1F3FC",
+   "4": "1F44A-1F3FD",
+   "5": "1F44A-1F3FE",
+   "6": "1F44A-1F3FF"
+  },
+  "unified": "1F44A"
+ },
+ "purple_heart": {
+  "unified": "1F49C"
+ },
+ "purse": {
+  "unified": "1F45B"
+ },
+ "pushpin": {
+  "unified": "1F4CC"
+ },
+ "put_litter_in_its_place": {
+  "unified": "1F6AE"
+ },
+ "question": {
+  "unified": "2753"
+ },
+ "rabbit": {
+  "unified": "1F430"
+ },
+ "rabbit2": {
+  "unified": "1F407"
+ },
+ "raccoon": {
+  "unified": "1F99D"
+ },
+ "racehorse": {
+  "unified": "1F40E"
+ },
+ "racing_car": {
+  "unified": "1F3CE-FE0F"
+ },
+ "racing_motorcycle": {
+  "unified": "1F3CD-FE0F"
+ },
+ "radio": {
+  "unified": "1F4FB"
+ },
+ "radio_button": {
+  "unified": "1F518"
+ },
+ "radioactive_sign": {
+  "unified": "2622-FE0F"
+ },
+ "rage": {
+  "unified": "1F621"
+ },
+ "railway_car": {
+  "unified": "1F683"
+ },
+ "railway_track": {
+  "unified": "1F6E4-FE0F"
+ },
+ "rain_cloud": {
+  "unified": "1F327-FE0F"
+ },
+ "rainbow": {
+  "unified": "1F308"
+ },
+ "rainbow-flag": {
+  "unified": "1F3F3-FE0F-200D-1F308"
+ },
+ "raised_back_of_hand": {
+  "tones": {
+   "2": "1F91A-1F3FB",
+   "3": "1F91A-1F3FC",
+   "4": "1F91A-1F3FD",
+   "5": "1F91A-1F3FE",
+   "6": "1F91A-1F3FF"
+  },
+  "unified": "1F91A"
+ },
+ "raised_hand": {
+  "tones": {
+   "2": "270B-1F3FB",
+   "3": "270B-1F3FC",
+   "4": "270B-1F3FD",
+   "5": "270B-1F3FE",
+   "6": "270B-1F3FF"
+  },
+  "unified": "270B"
+ },
+ "raised_hand_with_fingers_splayed": {
+  "tones": {
+   "2": "1F590-1F3FB",
+   "3": "1F590-1F3FC",
+   "4": "1F590-1F3FD",
+   "5": "1F590-1F3FE",
+   "6": "1F590-1F3FF"
+  },
+  "unified": "1F590-FE0F"
+ },
+ "raised_hands": {
+  "tones": {
+   "2": "1F64C-1F3FB",
+   "3": "1F64C-1F3FC",
+   "4": "1F64C-1F3FD",
+   "5": "1F64C-1F3FE",
+   "6": "1F64C-1F3FF"
+  },
+  "unified": "1F64C"
+ },
+ "raising_hand": {
+  "tones": {
+   "2": "1F64B-1F3FB",
+   "3": "1F64B-1F3FC",
+   "4": "1F64B-1F3FD",
+   "5": "1F64B-1F3FE",
+   "6": "1F64B-1F3FF"
+  },
+  "unified": "1F64B"
+ },
+ "ram": {
+  "unified": "1F40F"
+ },
+ "ramen": {
+  "unified": "1F35C"
+ },
+ "rat": {
+  "unified": "1F400"
+ },
+ "razor": {
+  "unified": "1FA92"
+ },
+ "receipt": {
+  "unified": "1F9FE"
+ },
+ "recycle": {
+  "unified": "267B-FE0F"
+ },
+ "red_car": {
+  "unified": "1F697"
+ },
+ "red_circle": {
+  "unified": "1F534"
+ },
+ "red_envelope": {
+  "unified": "1F9E7"
+ },
+ "red_haired_man": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9B0",
+   "3": "1F468-1F3FC-200D-1F9B0",
+   "4": "1F468-1F3FD-200D-1F9B0",
+   "5": "1F468-1F3FE-200D-1F9B0",
+   "6": "1F468-1F3FF-200D-1F9B0"
+  },
+  "unified": "1F468-200D-1F9B0"
+ },
+ "red_haired_person": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9B0",
+   "3": "1F9D1-1F3FC-200D-1F9B0",
+   "4": "1F9D1-1F3FD-200D-1F9B0",
+   "5": "1F9D1-1F3FE-200D-1F9B0",
+   "6": "1F9D1-1F3FF-200D-1F9B0"
+  },
+  "unified": "1F9D1-200D-1F9B0"
+ },
+ "red_haired_woman": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9B0",
+   "3": "1F469-1F3FC-200D-1F9B0",
+   "4": "1F469-1F3FD-200D-1F9B0",
+   "5": "1F469-1F3FE-200D-1F9B0",
+   "6": "1F469-1F3FF-200D-1F9B0"
+  },
+  "unified": "1F469-200D-1F9B0"
+ },
+ "registered": {
+  "unified": "00AE-FE0F"
+ },
+ "relaxed": {
+  "unified": "263A-FE0F"
+ },
+ "relieved": {
+  "unified": "1F60C"
+ },
+ "reminder_ribbon": {
+  "unified": "1F397-FE0F"
+ },
+ "repeat": {
+  "unified": "1F501"
+ },
+ "repeat_one": {
+  "unified": "1F502"
+ },
+ "restroom": {
+  "unified": "1F6BB"
+ },
+ "reversed_hand_with_middle_finger_extended": {
+  "tones": {
+   "2": "1F595-1F3FB",
+   "3": "1F595-1F3FC",
+   "4": "1F595-1F3FD",
+   "5": "1F595-1F3FE",
+   "6": "1F595-1F3FF"
+  },
+  "unified": "1F595"
+ },
+ "revolving_hearts": {
+  "unified": "1F49E"
+ },
+ "rewind": {
+  "unified": "23EA"
+ },
+ "rhinoceros": {
+  "unified": "1F98F"
+ },
+ "ribbon": {
+  "unified": "1F380"
+ },
+ "rice": {
+  "unified": "1F35A"
+ },
+ "rice_ball": {
+  "unified": "1F359"
+ },
+ "rice_cracker": {
+  "unified": "1F358"
+ },
+ "rice_scene": {
+  "unified": "1F391"
+ },
+ "right-facing_fist": {
+  "tones": {
+   "2": "1F91C-1F3FB",
+   "3": "1F91C-1F3FC",
+   "4": "1F91C-1F3FD",
+   "5": "1F91C-1F3FE",
+   "6": "1F91C-1F3FF"
+  },
+  "unified": "1F91C"
+ },
+ "right_anger_bubble": {
+  "unified": "1F5EF-FE0F"
+ },
+ "rightwards_hand": {
+  "tones": {
+   "2": "1FAF1-1F3FB",
+   "3": "1FAF1-1F3FC",
+   "4": "1FAF1-1F3FD",
+   "5": "1FAF1-1F3FE",
+   "6": "1FAF1-1F3FF"
+  },
+  "unified": "1FAF1"
+ },
+ "rightwards_pushing_hand": {
+  "tones": {
+   "2": "1FAF8-1F3FB",
+   "3": "1FAF8-1F3FC",
+   "4": "1FAF8-1F3FD",
+   "5": "1FAF8-1F3FE",
+   "6": "1FAF8-1F3FF"
+  },
+  "unified": "1FAF8"
+ },
+ "ring": {
+  "unified": "1F48D"
+ },
+ "ring_buoy": {
+  "unified": "1F6DF"
+ },
+ "ringed_planet": {
+  "unified": "1FA90"
+ },
+ "robot_face": {
+  "unified": "1F916"
+ },
+ "rock": {
+  "unified": "1FAA8"
+ },
+ "rocket": {
+  "unified": "1F680"
+ },
+ "roll_of_paper": {
+  "unified": "1F9FB"
+ },
+ "rolled_up_newspaper": {
+  "unified": "1F5DE-FE0F"
+ },
+ "roller_coaster": {
+  "unified": "1F3A2"
+ },
+ "roller_skate": {
+  "unified": "1F6FC"
+ },
+ "rolling_on_the_floor_laughing": {
+  "unified": "1F923"
+ },
+ "rooster": {
+  "unified": "1F413"
+ },
+ "root_vegetable": {
+  "unified": "1FADC"
+ },
+ "rose": {
+  "unified": "1F339"
+ },
+ "rosette": {
+  "unified": "1F3F5-FE0F"
+ },
+ "rotating_light": {
+  "unified": "1F6A8"
+ },
+ "round_pushpin": {
+  "unified": "1F4CD"
+ },
+ "rowboat": {
+  "tones": {
+   "2": "1F6A3-1F3FB",
+   "3": "1F6A3-1F3FC",
+   "4": "1F6A3-1F3FD",
+   "5": "1F6A3-1F3FE",
+   "6": "1F6A3-1F3FF"
+  },
+  "unified": "1F6A3"
+ },
+ "ru": {
+  "unified": "1F1F7-1F1FA"
+ },
+ "rugby_football": {
+  "unified": "1F3C9"
+ },
+ "runner": {
+  "tones": {
+   "2": "1F3C3-1F3FB",
+   "3": "1F3C3-1F3FC",
+   "4": "1F3C3-1F3FD",
+   "5": "1F3C3-1F3FE",
+   "6": "1F3C3-1F3FF"
+  },
+  "unified": "1F3C3"
+ },
+ "running": {
+  "tones": {
+   "2": "1F3C3-1F3FB",
+   "3": "1F3C3-1F3FC",
+   "4": "1F3C3-1F3FD",
+   "5": "1F3C3-1F3FE",
+   "6": "1F3C3-1F3FF"
+  },
+  "unified": "1F3C3"
+ },
+ "running_shirt_with_sash": {
+  "unified": "1F3BD"
+ },
+ "sa": {
+  "unified": "1F202-FE0F"
+ },
+ "safety_pin": {
+  "unified": "1F9F7"
+ },
+ "safety_vest": {
+  "unified": "1F9BA"
+ },
+ "sagittarius": {
+  "unified": "2650"
+ },
+ "sailboat": {
+  "unified": "26F5"
+ },
+ "sake": {
+  "unified": "1F376"
+ },
+ "salt": {
+  "unified": "1F9C2"
+ },
+ "saluting_face": {
+  "unified": "1FAE1"
+ },
+ "sandal": {
+  "unified": "1F461"
+ },
+ "sandwich": {
+  "unified": "1F96A"
+ },
+ "santa": {
+  "tones": {
+   "2": "1F385-1F3FB",
+   "3": "1F385-1F3FC",
+   "4": "1F385-1F3FD",
+   "5": "1F385-1F3FE",
+   "6": "1F385-1F3FF"
+  },
+  "unified": "1F385"
+ },
+ "sari": {
+  "unified": "1F97B"
+ },
+ "satellite": {
+  "unified": "1F6F0-FE0F"
+ },
+ "satellite_antenna": {
+  "unified": "1F4E1"
+ },
+ "satisfied": {
+  "unified": "1F606"
+ },
+ "sauropod": {
+  "unified": "1F995"
+ },
+ "saxophone": {
+  "unified": "1F3B7"
+ },
+ "scales": {
+  "unified": "2696-FE0F"
+ },
+ "scarf": {
+  "unified": "1F9E3"
+ },
+ "school": {
+  "unified": "1F3EB"
+ },
+ "school_satchel": {
+  "unified": "1F392"
+ },
+ "scientist": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F52C",
+   "3": "1F9D1-1F3FC-200D-1F52C",
+   "4": "1F9D1-1F3FD-200D-1F52C",
+   "5": "1F9D1-1F3FE-200D-1F52C",
+   "6": "1F9D1-1F3FF-200D-1F52C"
+  },
+  "unified": "1F9D1-200D-1F52C"
+ },
+ "scissors": {
+  "unified": "2702-FE0F"
+ },
+ "scooter": {
+  "unified": "1F6F4"
+ },
+ "scorpion": {
+  "unified": "1F982"
+ },
+ "scorpius": {
+  "unified": "264F"
+ },
+ "scream": {
+  "unified": "1F631"
+ },
+ "scream_cat": {
+  "unified": "1F640"
+ },
+ "screwdriver": {
+  "unified": "1FA9B"
+ },
+ "scroll": {
+  "unified": "1F4DC"
+ },
+ "seal": {
+  "unified": "1F9AD"
+ },
+ "seat": {
+  "unified": "1F4BA"
+ },
+ "second_place_medal": {
+  "unified": "1F948"
+ },
+ "secret": {
+  "unified": "3299-FE0F"
+ },
+ "see_no_evil": {
+  "unified": "1F648"
+ },
+ "seedling": {
+  "unified": "1F331"
+ },
+ "selfie": {
+  "tones": {
+   "2": "1F933-1F3FB",
+   "3": "1F933-1F3FC",
+   "4": "1F933-1F3FD",
+   "5": "1F933-1F3FE",
+   "6": "1F933-1F3FF"
+  },
+  "unified": "1F933"
+ },
+ "serious_face_with_symbols_covering_mouth": {
+  "unified": "1F92C"
+ },
+ "service_dog": {
+  "unified": "1F415-200D-1F9BA"
+ },
+ "seven": {
+  "unified": "0037-FE0F-20E3"
+ },
+ "sewing_needle": {
+  "unified": "1FAA1"
+ },
+ "shaking_face": {
+  "unified": "1FAE8"
+ },
+ "shallow_pan_of_food": {
+  "unified": "1F958"
+ },
+ "shamrock": {
+  "unified": "2618-FE0F"
+ },
+ "shark": {
+  "unified": "1F988"
+ },
+ "shaved_ice": {
+  "unified": "1F367"
+ },
+ "sheep": {
+  "unified": "1F411"
+ },
+ "shell": {
+  "unified": "1F41A"
+ },
+ "shield": {
+  "unified": "1F6E1-FE0F"
+ },
+ "shinto_shrine": {
+  "unified": "26E9-FE0F"
+ },
+ "ship": {
+  "unified": "1F6A2"
+ },
+ "shirt": {
+  "unified": "1F455"
+ },
+ "shit": {
+  "unified": "1F4A9"
+ },
+ "shocked_face_with_exploding_head": {
+  "unified": "1F92F"
+ },
+ "shoe": {
+  "unified": "1F45E"
+ },
+ "shopping_bags": {
+  "unified": "1F6CD-FE0F"
+ },
+ "shopping_trolley": {
+  "unified": "1F6D2"
+ },
+ "shorts": {
+  "unified": "1FA73"
+ },
+ "shovel": {
+  "unified": "1FA8F"
+ },
+ "shower": {
+  "unified": "1F6BF"
+ },
+ "shrimp": {
+  "unified": "1F990"
+ },
+ "shrug": {
+  "tones": {
+   "2": "1F937-1F3FB",
+   "3": "1F937-1F3FC",
+   "4": "1F937-1F3FD",
+   "5": "1F937-1F3FE",
+   "6": "1F937-1F3FF"
+  },
+  "unified": "1F937"
+ },
+ "shushing_face": {
+  "unified": "1F92B"
+ },
+ "sign_of_the_horns": {
+  "tones": {
+   "2": "1F918-1F3FB",
+   "3": "1F918-1F3FC",
+   "4": "1F918-1F3FD",
+   "5": "1F918-1F3FE",
+   "6": "1F918-1F3FF"
+  },
+  "unified": "1F918"
+ },
+ "signal_strength": {
+  "unified": "1F4F6"
+ },
+ "singer": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F3A4",
+   "3": "1F9D1-1F3FC-200D-1F3A4",
+   "4": "1F9D1-1F3FD-200D-1F3A4",
+   "5": "1F9D1-1F3FE-200D-1F3A4",
+   "6": "1F9D1-1F3FF-200D-1F3A4"
+  },
+  "unified": "1F9D1-200D-1F3A4"
+ },
+ "six": {
+  "unified": "0036-FE0F-20E3"
+ },
+ "six_pointed_star": {
+  "unified": "1F52F"
+ },
+ "skateboard": {
+  "unified": "1F6F9"
+ },
+ "ski": {
+  "unified": "1F3BF"
+ },
+ "skier": {
+  "unified": "26F7-FE0F"
+ },
+ "skin-tone-2": {
+  "unified": "1F3FB"
+ },
+ "skin-tone-3": {
+  "unified": "1F3FC"
+ },
+ "skin-tone-4": {
+  "unified": "1F3FD"
+ },
+ "skin-tone-5": {
+  "unified": "1F3FE"
+ },
+ "skin-tone-6": {
+  "unified": "1F3FF"
+ },
+ "skull": {
+  "unified": "1F480"
+ },
+ "skull_and_crossbones": {
+  "unified": "2620-FE0F"
+ },
+ "skunk": {
+  "unified": "1F9A8"
+ },
+ "sled": {
+  "unified": "1F6F7"
+ },
+ "sleeping": {
+  "unified": "1F634"
+ },
+ "sleeping_accommodation": {
+  "tones": {
+   "2": "1F6CC-1F3FB",
+   "3": "1F6CC-1F3FC",
+   "4": "1F6CC-1F3FD",
+   "5": "1F6CC-1F3FE",
+   "6": "1F6CC-1F3FF"
+  },
+  "unified": "1F6CC"
+ },
+ "sleepy": {
+  "unified": "1F62A"
+ },
+ "sleuth_or_spy": {
+  "tones": {
+   "2": "1F575-1F3FB",
+   "3": "1F575-1F3FC",
+   "4": "1F575-1F3FD",
+   "5": "1F575-1F3FE",
+   "6": "1F575-1F3FF"
+  },
+  "unified": "1F575-FE0F"
+ },
+ "slightly_frowning_face": {
+  "unified": "1F641"
+ },
+ "slightly_smiling_face": {
+  "unified": "1F642"
+ },
+ "slot_machine": {
+  "unified": "1F3B0"
+ },
+ "sloth": {
+  "unified": "1F9A5"
+ },
+ "small_airplane": {
+  "unified": "1F6E9-FE0F"
+ },
+ "small_blue_diamond": {
+  "unified": "1F539"
+ },
+ "small_orange_diamond": {
+  "unified": "1F538"
+ },
+ "small_red_triangle": {
+  "unified": "1F53A"
+ },
+ "small_red_triangle_down": {
+  "unified": "1F53B"
+ },
+ "smile": {
+  "unified": "1F604"
+ },
+ "smile_cat": {
+  "unified": "1F638"
+ },
+ "smiley": {
+  "unified": "1F603"
+ },
+ "smiley_cat": {
+  "unified": "1F63A"
+ },
+ "smiling_face_with_3_hearts": {
+  "unified": "1F970"
+ },
+ "smiling_face_with_smiling_eyes_and_hand_covering_mouth": {
+  "unified": "1F92D"
+ },
+ "smiling_face_with_tear": {
+  "unified": "1F972"
+ },
+ "smiling_imp": {
+  "unified": "1F608"
+ },
+ "smirk": {
+  "unified": "1F60F"
+ },
+ "smirk_cat": {
+  "unified": "1F63C"
+ },
+ "smoking": {
+  "unified": "1F6AC"
+ },
+ "snail": {
+  "unified": "1F40C"
+ },
+ "snake": {
+  "unified": "1F40D"
+ },
+ "sneezing_face": {
+  "unified": "1F927"
+ },
+ "snow_capped_mountain": {
+  "unified": "1F3D4-FE0F"
+ },
+ "snow_cloud": {
+  "unified": "1F328-FE0F"
+ },
+ "snowboarder": {
+  "tones": {
+   "2": "1F3C2-1F3FB",
+   "3": "1F3C2-1F3FC",
+   "4": "1F3C2-1F3FD",
+   "5": "1F3C2-1F3FE",
+   "6": "1F3C2-1F3FF"
+  },
+  "unified": "1F3C2"
+ },
+ "snowflake": {
+  "unified": "2744-FE0F"
+ },
+ "snowman": {
+  "unified": "2603-FE0F"
+ },
+ "snowman_without_snow": {
+  "unified": "26C4"
+ },
+ "soap": {
+  "unified": "1F9FC"
+ },
+ "sob": {
+  "unified": "1F62D"
+ },
+ "soccer": {
+  "unified": "26BD"
+ },
+ "socks": {
+  "unified": "1F9E6"
+ },
+ "softball": {
+  "unified": "1F94E"
+ },
+ "soon": {
+  "unified": "1F51C"
+ },
+ "sos": {
+  "unified": "1F198"
+ },
+ "sound": {
+  "unified": "1F509"
+ },
+ "space_invader": {
+  "unified": "1F47E"
+ },
+ "spades": {
+  "unified": "2660-FE0F"
+ },
+ "spaghetti": {
+  "unified": "1F35D"
+ },
+ "sparkle": {
+  "unified": "2747-FE0F"
+ },
+ "sparkler": {
+  "unified": "1F387"
+ },
+ "sparkles": {
+  "unified": "2728"
+ },
+ "sparkling_heart": {
+  "unified": "1F496"
+ },
+ "speak_no_evil": {
+  "unified": "1F64A"
+ },
+ "speaker": {
+  "unified": "1F508"
+ },
+ "speaking_head_in_silhouette": {
+  "unified": "1F5E3-FE0F"
+ },
+ "speech_balloon": {
+  "unified": "1F4AC"
+ },
+ "speedboat": {
+  "unified": "1F6A4"
+ },
+ "spider": {
+  "unified": "1F577-FE0F"
+ },
+ "spider_web": {
+  "unified": "1F578-FE0F"
+ },
+ "spiral_calendar_pad": {
+  "unified": "1F5D3-FE0F"
+ },
+ "spiral_note_pad": {
+  "unified": "1F5D2-FE0F"
+ },
+ "splatter": {
+  "unified": "1FADF"
+ },
+ "spock-hand": {
+  "tones": {
+   "2": "1F596-1F3FB",
+   "3": "1F596-1F3FC",
+   "4": "1F596-1F3FD",
+   "5": "1F596-1F3FE",
+   "6": "1F596-1F3FF"
+  },
+  "unified": "1F596"
+ },
+ "sponge": {
+  "unified": "1F9FD"
+ },
+ "spoon": {
+  "unified": "1F944"
+ },
+ "sports_medal": {
+  "unified": "1F3C5"
+ },
+ "squid": {
+  "unified": "1F991"
+ },
+ "stadium": {
+  "unified": "1F3DF-FE0F"
+ },
+ "staff_of_aesculapius": {
+  "unified": "2695-FE0F"
+ },
+ "standing_person": {
+  "tones": {
+   "2": "1F9CD-1F3FB",
+   "3": "1F9CD-1F3FC",
+   "4": "1F9CD-1F3FD",
+   "5": "1F9CD-1F3FE",
+   "6": "1F9CD-1F3FF"
+  },
+  "unified": "1F9CD"
+ },
+ "star": {
+  "unified": "2B50"
+ },
+ "star-struck": {
+  "unified": "1F929"
+ },
+ "star2": {
+  "unified": "1F31F"
+ },
+ "star_and_crescent": {
+  "unified": "262A-FE0F"
+ },
+ "star_of_david": {
+  "unified": "2721-FE0F"
+ },
+ "stars": {
+  "unified": "1F320"
+ },
+ "station": {
+  "unified": "1F689"
+ },
+ "statue_of_liberty": {
+  "unified": "1F5FD"
+ },
+ "steam_locomotive": {
+  "unified": "1F682"
+ },
+ "stethoscope": {
+  "unified": "1FA7A"
+ },
+ "stew": {
+  "unified": "1F372"
+ },
+ "stopwatch": {
+  "unified": "23F1-FE0F"
+ },
+ "straight_ruler": {
+  "unified": "1F4CF"
+ },
+ "strawberry": {
+  "unified": "1F353"
+ },
+ "stuck_out_tongue": {
+  "unified": "1F61B"
+ },
+ "stuck_out_tongue_closed_eyes": {
+  "unified": "1F61D"
+ },
+ "stuck_out_tongue_winking_eye": {
+  "unified": "1F61C"
+ },
+ "student": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F393",
+   "3": "1F9D1-1F3FC-200D-1F393",
+   "4": "1F9D1-1F3FD-200D-1F393",
+   "5": "1F9D1-1F3FE-200D-1F393",
+   "6": "1F9D1-1F3FF-200D-1F393"
+  },
+  "unified": "1F9D1-200D-1F393"
+ },
+ "studio_microphone": {
+  "unified": "1F399-FE0F"
+ },
+ "stuffed_flatbread": {
+  "unified": "1F959"
+ },
+ "sun_behind_cloud": {
+  "unified": "1F325-FE0F"
+ },
+ "sun_behind_rain_cloud": {
+  "unified": "1F326-FE0F"
+ },
+ "sun_small_cloud": {
+  "unified": "1F324-FE0F"
+ },
+ "sun_with_face": {
+  "unified": "1F31E"
+ },
+ "sunflower": {
+  "unified": "1F33B"
+ },
+ "sunglasses": {
+  "unified": "1F60E"
+ },
+ "sunny": {
+  "unified": "2600-FE0F"
+ },
+ "sunrise": {
+  "unified": "1F305"
+ },
+ "sunrise_over_mountains": {
+  "unified": "1F304"
+ },
+ "superhero": {
+  "tones": {
+   "2": "1F9B8-1F3FB",
+   "3": "1F9B8-1F3FC",
+   "4": "1F9B8-1F3FD",
+   "5": "1F9B8-1F3FE",
+   "6": "1F9B8-1F3FF"
+  },
+  "unified": "1F9B8"
+ },
+ "supervillain": {
+  "tones": {
+   "2": "1F9B9-1F3FB",
+   "3": "1F9B9-1F3FC",
+   "4": "1F9B9-1F3FD",
+   "5": "1F9B9-1F3FE",
+   "6": "1F9B9-1F3FF"
+  },
+  "unified": "1F9B9"
+ },
+ "surfer": {
+  "tones": {
+   "2": "1F3C4-1F3FB",
+   "3": "1F3C4-1F3FC",
+   "4": "1F3C4-1F3FD",
+   "5": "1F3C4-1F3FE",
+   "6": "1F3C4-1F3FF"
+  },
+  "unified": "1F3C4"
+ },
+ "sushi": {
+  "unified": "1F363"
+ },
+ "suspension_railway": {
+  "unified": "1F69F"
+ },
+ "swan": {
+  "unified": "1F9A2"
+ },
+ "sweat": {
+  "unified": "1F613"
+ },
+ "sweat_drops": {
+  "unified": "1F4A6"
+ },
+ "sweat_smile": {
+  "unified": "1F605"
+ },
+ "sweet_potato": {
+  "unified": "1F360"
+ },
+ "swimmer": {
+  "tones": {
+   "2": "1F3CA-1F3FB",
+   "3": "1F3CA-1F3FC",
+   "4": "1F3CA-1F3FD",
+   "5": "1F3CA-1F3FE",
+   "6": "1F3CA-1F3FF"
+  },
+  "unified": "1F3CA"
+ },
+ "symbols": {
+  "unified": "1F523"
+ },
+ "synagogue": {
+  "unified": "1F54D"
+ },
+ "syringe": {
+  "unified": "1F489"
+ },
+ "t-rex": {
+  "unified": "1F996"
+ },
+ "table_tennis_paddle_and_ball": {
+  "unified": "1F3D3"
+ },
+ "taco": {
+  "unified": "1F32E"
+ },
+ "tada": {
+  "unified": "1F389"
+ },
+ "takeout_box": {
+  "unified": "1F961"
+ },
+ "tamale": {
+  "unified": "1FAD4"
+ },
+ "tanabata_tree": {
+  "unified": "1F38B"
+ },
+ "tangerine": {
+  "unified": "1F34A"
+ },
+ "taurus": {
+  "unified": "2649"
+ },
+ "taxi": {
+  "unified": "1F695"
+ },
+ "tea": {
+  "unified": "1F375"
+ },
+ "teacher": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F3EB",
+   "3": "1F9D1-1F3FC-200D-1F3EB",
+   "4": "1F9D1-1F3FD-200D-1F3EB",
+   "5": "1F9D1-1F3FE-200D-1F3EB",
+   "6": "1F9D1-1F3FF-200D-1F3EB"
+  },
+  "unified": "1F9D1-200D-1F3EB"
+ },
+ "teapot": {
+  "unified": "1FAD6"
+ },
+ "technologist": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F4BB",
+   "3": "1F9D1-1F3FC-200D-1F4BB",
+   "4": "1F9D1-1F3FD-200D-1F4BB",
+   "5": "1F9D1-1F3FE-200D-1F4BB",
+   "6": "1F9D1-1F3FF-200D-1F4BB"
+  },
+  "unified": "1F9D1-200D-1F4BB"
+ },
+ "teddy_bear": {
+  "unified": "1F9F8"
+ },
+ "telephone": {
+  "unified": "260E-FE0F"
+ },
+ "telephone_receiver": {
+  "unified": "1F4DE"
+ },
+ "telescope": {
+  "unified": "1F52D"
+ },
+ "tennis": {
+  "unified": "1F3BE"
+ },
+ "tent": {
+  "unified": "26FA"
+ },
+ "test_tube": {
+  "unified": "1F9EA"
+ },
+ "the_horns": {
+  "tones": {
+   "2": "1F918-1F3FB",
+   "3": "1F918-1F3FC",
+   "4": "1F918-1F3FD",
+   "5": "1F918-1F3FE",
+   "6": "1F918-1F3FF"
+  },
+  "unified": "1F918"
+ },
+ "thermometer": {
+  "unified": "1F321-FE0F"
+ },
+ "thinking_face": {
+  "unified": "1F914"
+ },
+ "third_place_medal": {
+  "unified": "1F949"
+ },
+ "thong_sandal": {
+  "unified": "1FA74"
+ },
+ "thought_balloon": {
+  "unified": "1F4AD"
+ },
+ "thread": {
+  "unified": "1F9F5"
+ },
+ "three": {
+  "unified": "0033-FE0F-20E3"
+ },
+ "three_button_mouse": {
+  "unified": "1F5B1-FE0F"
+ },
+ "thumbsdown": {
+  "tones": {
+   "2": "1F44E-1F3FB",
+   "3": "1F44E-1F3FC",
+   "4": "1F44E-1F3FD",
+   "5": "1F44E-1F3FE",
+   "6": "1F44E-1F3FF"
+  },
+  "unified": "1F44E"
+ },
+ "thumbsup": {
+  "tones": {
+   "2": "1F44D-1F3FB",
+   "3": "1F44D-1F3FC",
+   "4": "1F44D-1F3FD",
+   "5": "1F44D-1F3FE",
+   "6": "1F44D-1F3FF"
+  },
+  "unified": "1F44D"
+ },
+ "thunder_cloud_and_rain": {
+  "unified": "26C8-FE0F"
+ },
+ "ticket": {
+  "unified": "1F3AB"
+ },
+ "tiger": {
+  "unified": "1F42F"
+ },
+ "tiger2": {
+  "unified": "1F405"
+ },
+ "timer_clock": {
+  "unified": "23F2-FE0F"
+ },
+ "tired_face": {
+  "unified": "1F62B"
+ },
+ "tm": {
+  "unified": "2122-FE0F"
+ },
+ "toilet": {
+  "unified": "1F6BD"
+ },
+ "tokyo_tower": {
+  "unified": "1F5FC"
+ },
+ "tomato": {
+  "unified": "1F345"
+ },
+ "tongue": {
+  "unified": "1F445"
+ },
+ "toolbox": {
+  "unified": "1F9F0"
+ },
+ "tooth": {
+  "unified": "1F9B7"
+ },
+ "toothbrush": {
+  "unified": "1FAA5"
+ },
+ "top": {
+  "unified": "1F51D"
+ },
+ "tophat": {
+  "unified": "1F3A9"
+ },
+ "tornado": {
+  "unified": "1F32A-FE0F"
+ },
+ "tornado_cloud": {
+  "unified": "1F32A-FE0F"
+ },
+ "trackball": {
+  "unified": "1F5B2-FE0F"
+ },
+ "tractor": {
+  "unified": "1F69C"
+ },
+ "traffic_light": {
+  "unified": "1F6A5"
+ },
+ "train": {
+  "unified": "1F68B"
+ },
+ "train2": {
+  "unified": "1F686"
+ },
+ "tram": {
+  "unified": "1F68A"
+ },
+ "transgender_flag": {
+  "unified": "1F3F3-FE0F-200D-26A7-FE0F"
+ },
+ "transgender_symbol": {
+  "unified": "26A7-FE0F"
+ },
+ "treasure_chest": {
+  "unified": "1FA8E"
+ },
+ "triangular_flag_on_post": {
+  "unified": "1F6A9"
+ },
+ "triangular_ruler": {
+  "unified": "1F4D0"
+ },
+ "trident": {
+  "unified": "1F531"
+ },
+ "triumph": {
+  "unified": "1F624"
+ },
+ "troll": {
+  "unified": "1F9CC"
+ },
+ "trolleybus": {
+  "unified": "1F68E"
+ },
+ "trombone": {
+  "unified": "1FA8A"
+ },
+ "trophy": {
+  "unified": "1F3C6"
+ },
+ "tropical_drink": {
+  "unified": "1F379"
+ },
+ "tropical_fish": {
+  "unified": "1F420"
+ },
+ "truck": {
+  "unified": "1F69A"
+ },
+ "trumpet": {
+  "unified": "1F3BA"
+ },
+ "tshirt": {
+  "unified": "1F455"
+ },
+ "tulip": {
+  "unified": "1F337"
+ },
+ "tumbler_glass": {
+  "unified": "1F943"
+ },
+ "turkey": {
+  "unified": "1F983"
+ },
+ "turtle": {
+  "unified": "1F422"
+ },
+ "tv": {
+  "unified": "1F4FA"
+ },
+ "twisted_rightwards_arrows": {
+  "unified": "1F500"
+ },
+ "two": {
+  "unified": "0032-FE0F-20E3"
+ },
+ "two_hearts": {
+  "unified": "1F495"
+ },
+ "two_men_holding_hands": {
+  "tones": {
+   "2": "1F46C-1F3FB",
+   "3": "1F46C-1F3FC",
+   "4": "1F46C-1F3FD",
+   "5": "1F46C-1F3FE",
+   "6": "1F46C-1F3FF"
+  },
+  "unified": "1F46C"
+ },
+ "two_women_holding_hands": {
+  "tones": {
+   "2": "1F46D-1F3FB",
+   "3": "1F46D-1F3FC",
+   "4": "1F46D-1F3FD",
+   "5": "1F46D-1F3FE",
+   "6": "1F46D-1F3FF"
+  },
+  "unified": "1F46D"
+ },
+ "u5272": {
+  "unified": "1F239"
+ },
+ "u5408": {
+  "unified": "1F234"
+ },
+ "u55b6": {
+  "unified": "1F23A"
+ },
+ "u6307": {
+  "unified": "1F22F"
+ },
+ "u6708": {
+  "unified": "1F237-FE0F"
+ },
+ "u6709": {
+  "unified": "1F236"
+ },
+ "u6e80": {
+  "unified": "1F235"
+ },
+ "u7121": {
+  "unified": "1F21A"
+ },
+ "u7533": {
+  "unified": "1F238"
+ },
+ "u7981": {
+  "unified": "1F232"
+ },
+ "u7a7a": {
+  "unified": "1F233"
+ },
+ "uk": {
+  "unified": "1F1EC-1F1E7"
+ },
+ "umbrella": {
+  "unified": "2602-FE0F"
+ },
+ "umbrella_on_ground": {
+  "unified": "26F1-FE0F"
+ },
+ "umbrella_with_rain_drops": {
+  "unified": "2614"
+ },
+ "unamused": {
+  "unified": "1F612"
+ },
+ "underage": {
+  "unified": "1F51E"
+ },
+ "unicorn_face": {
+  "unified": "1F984"
+ },
+ "unlock": {
+  "unified": "1F513"
+ },
+ "up": {
+  "unified": "1F199"
+ },
+ "upside_down_face": {
+  "unified": "1F643"
+ },
+ "us": {
+  "unified": "1F1FA-1F1F8"
+ },
+ "v": {
+  "tones": {
+   "2": "270C-1F3FB",
+   "3": "270C-1F3FC",
+   "4": "270C-1F3FD",
+   "5": "270C-1F3FE",
+   "6": "270C-1F3FF"
+  },
+  "unified": "270C-FE0F"
+ },
+ "vampire": {
+  "tones": {
+   "2": "1F9DB-1F3FB",
+   "3": "1F9DB-1F3FC",
+   "4": "1F9DB-1F3FD",
+   "5": "1F9DB-1F3FE",
+   "6": "1F9DB-1F3FF"
+  },
+  "unified": "1F9DB"
+ },
+ "vertical_traffic_light": {
+  "unified": "1F6A6"
+ },
+ "vhs": {
+  "unified": "1F4FC"
+ },
+ "vibration_mode": {
+  "unified": "1F4F3"
+ },
+ "video_camera": {
+  "unified": "1F4F9"
+ },
+ "video_game": {
+  "unified": "1F3AE"
+ },
+ "violin": {
+  "unified": "1F3BB"
+ },
+ "virgo": {
+  "unified": "264D"
+ },
+ "volcano": {
+  "unified": "1F30B"
+ },
+ "volleyball": {
+  "unified": "1F3D0"
+ },
+ "vs": {
+  "unified": "1F19A"
+ },
+ "waffle": {
+  "unified": "1F9C7"
+ },
+ "walking": {
+  "tones": {
+   "2": "1F6B6-1F3FB",
+   "3": "1F6B6-1F3FC",
+   "4": "1F6B6-1F3FD",
+   "5": "1F6B6-1F3FE",
+   "6": "1F6B6-1F3FF"
+  },
+  "unified": "1F6B6"
+ },
+ "waning_crescent_moon": {
+  "unified": "1F318"
+ },
+ "waning_gibbous_moon": {
+  "unified": "1F316"
+ },
+ "warning": {
+  "unified": "26A0-FE0F"
+ },
+ "wastebasket": {
+  "unified": "1F5D1-FE0F"
+ },
+ "watch": {
+  "unified": "231A"
+ },
+ "water_buffalo": {
+  "unified": "1F403"
+ },
+ "water_polo": {
+  "tones": {
+   "2": "1F93D-1F3FB",
+   "3": "1F93D-1F3FC",
+   "4": "1F93D-1F3FD",
+   "5": "1F93D-1F3FE",
+   "6": "1F93D-1F3FF"
+  },
+  "unified": "1F93D"
+ },
+ "watermelon": {
+  "unified": "1F349"
+ },
+ "wave": {
+  "tones": {
+   "2": "1F44B-1F3FB",
+   "3": "1F44B-1F3FC",
+   "4": "1F44B-1F3FD",
+   "5": "1F44B-1F3FE",
+   "6": "1F44B-1F3FF"
+  },
+  "unified": "1F44B"
+ },
+ "waving_black_flag": {
+  "unified": "1F3F4"
+ },
+ "waving_white_flag": {
+  "unified": "1F3F3-FE0F"
+ },
+ "wavy_dash": {
+  "unified": "3030-FE0F"
+ },
+ "waxing_crescent_moon": {
+  "unified": "1F312"
+ },
+ "waxing_gibbous_moon": {
+  "unified": "1F314"
+ },
+ "wc": {
+  "unified": "1F6BE"
+ },
+ "weary": {
+  "unified": "1F629"
+ },
+ "wedding": {
+  "unified": "1F492"
+ },
+ "weight_lifter": {
+  "tones": {
+   "2": "1F3CB-1F3FB",
+   "3": "1F3CB-1F3FC",
+   "4": "1F3CB-1F3FD",
+   "5": "1F3CB-1F3FE",
+   "6": "1F3CB-1F3FF"
+  },
+  "unified": "1F3CB-FE0F"
+ },
+ "whale": {
+  "unified": "1F433"
+ },
+ "whale2": {
+  "unified": "1F40B"
+ },
+ "wheel": {
+  "unified": "1F6DE"
+ },
+ "wheel_of_dharma": {
+  "unified": "2638-FE0F"
+ },
+ "wheelchair": {
+  "unified": "267F"
+ },
+ "white_check_mark": {
+  "unified": "2705"
+ },
+ "white_circle": {
+  "unified": "26AA"
+ },
+ "white_flower": {
+  "unified": "1F4AE"
+ },
+ "white_frowning_face": {
+  "unified": "2639-FE0F"
+ },
+ "white_haired_man": {
+  "tones": {
+   "2": "1F468-1F3FB-200D-1F9B3",
+   "3": "1F468-1F3FC-200D-1F9B3",
+   "4": "1F468-1F3FD-200D-1F9B3",
+   "5": "1F468-1F3FE-200D-1F9B3",
+   "6": "1F468-1F3FF-200D-1F9B3"
+  },
+  "unified": "1F468-200D-1F9B3"
+ },
+ "white_haired_person": {
+  "tones": {
+   "2": "1F9D1-1F3FB-200D-1F9B3",
+   "3": "1F9D1-1F3FC-200D-1F9B3",
+   "4": "1F9D1-1F3FD-200D-1F9B3",
+   "5": "1F9D1-1F3FE-200D-1F9B3",
+   "6": "1F9D1-1F3FF-200D-1F9B3"
+  },
+  "unified": "1F9D1-200D-1F9B3"
+ },
+ "white_haired_woman": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9B3",
+   "3": "1F469-1F3FC-200D-1F9B3",
+   "4": "1F469-1F3FD-200D-1F9B3",
+   "5": "1F469-1F3FE-200D-1F9B3",
+   "6": "1F469-1F3FF-200D-1F9B3"
+  },
+  "unified": "1F469-200D-1F9B3"
+ },
+ "white_heart": {
+  "unified": "1F90D"
+ },
+ "white_large_square": {
+  "unified": "2B1C"
+ },
+ "white_medium_small_square": {
+  "unified": "25FD"
+ },
+ "white_medium_square": {
+  "unified": "25FB-FE0F"
+ },
+ "white_small_square": {
+  "unified": "25AB-FE0F"
+ },
+ "white_square_button": {
+  "unified": "1F533"
+ },
+ "wilted_flower": {
+  "unified": "1F940"
+ },
+ "wind_blowing_face": {
+  "unified": "1F32C-FE0F"
+ },
+ "wind_chime": {
+  "unified": "1F390"
+ },
+ "window": {
+  "unified": "1FA9F"
+ },
+ "wine_glass": {
+  "unified": "1F377"
+ },
+ "wing": {
+  "unified": "1FABD"
+ },
+ "wink": {
+  "unified": "1F609"
+ },
+ "wireless": {
+  "unified": "1F6DC"
+ },
+ "wolf": {
+  "unified": "1F43A"
+ },
+ "woman": {
+  "tones": {
+   "2": "1F469-1F3FB",
+   "3": "1F469-1F3FC",
+   "4": "1F469-1F3FD",
+   "5": "1F469-1F3FE",
+   "6": "1F469-1F3FF"
+  },
+  "unified": "1F469"
+ },
+ "woman-biking": {
+  "tones": {
+   "2": "1F6B4-1F3FB-200D-2640-FE0F",
+   "3": "1F6B4-1F3FC-200D-2640-FE0F",
+   "4": "1F6B4-1F3FD-200D-2640-FE0F",
+   "5": "1F6B4-1F3FE-200D-2640-FE0F",
+   "6": "1F6B4-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F6B4-200D-2640-FE0F"
+ },
+ "woman-bouncing-ball": {
+  "tones": {
+   "2": "26F9-1F3FB-200D-2640-FE0F",
+   "3": "26F9-1F3FC-200D-2640-FE0F",
+   "4": "26F9-1F3FD-200D-2640-FE0F",
+   "5": "26F9-1F3FE-200D-2640-FE0F",
+   "6": "26F9-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "26F9-FE0F-200D-2640-FE0F"
+ },
+ "woman-bowing": {
+  "tones": {
+   "2": "1F647-1F3FB-200D-2640-FE0F",
+   "3": "1F647-1F3FC-200D-2640-FE0F",
+   "4": "1F647-1F3FD-200D-2640-FE0F",
+   "5": "1F647-1F3FE-200D-2640-FE0F",
+   "6": "1F647-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F647-200D-2640-FE0F"
+ },
+ "woman-boy": {
+  "unified": "1F469-200D-1F466"
+ },
+ "woman-boy-boy": {
+  "unified": "1F469-200D-1F466-200D-1F466"
+ },
+ "woman-cartwheeling": {
+  "tones": {
+   "2": "1F938-1F3FB-200D-2640-FE0F",
+   "3": "1F938-1F3FC-200D-2640-FE0F",
+   "4": "1F938-1F3FD-200D-2640-FE0F",
+   "5": "1F938-1F3FE-200D-2640-FE0F",
+   "6": "1F938-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F938-200D-2640-FE0F"
+ },
+ "woman-facepalming": {
+  "tones": {
+   "2": "1F926-1F3FB-200D-2640-FE0F",
+   "3": "1F926-1F3FC-200D-2640-FE0F",
+   "4": "1F926-1F3FD-200D-2640-FE0F",
+   "5": "1F926-1F3FE-200D-2640-FE0F",
+   "6": "1F926-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F926-200D-2640-FE0F"
+ },
+ "woman-frowning": {
+  "tones": {
+   "2": "1F64D-1F3FB-200D-2640-FE0F",
+   "3": "1F64D-1F3FC-200D-2640-FE0F",
+   "4": "1F64D-1F3FD-200D-2640-FE0F",
+   "5": "1F64D-1F3FE-200D-2640-FE0F",
+   "6": "1F64D-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F64D-200D-2640-FE0F"
+ },
+ "woman-gesturing-no": {
+  "tones": {
+   "2": "1F645-1F3FB-200D-2640-FE0F",
+   "3": "1F645-1F3FC-200D-2640-FE0F",
+   "4": "1F645-1F3FD-200D-2640-FE0F",
+   "5": "1F645-1F3FE-200D-2640-FE0F",
+   "6": "1F645-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F645-200D-2640-FE0F"
+ },
+ "woman-gesturing-ok": {
+  "tones": {
+   "2": "1F646-1F3FB-200D-2640-FE0F",
+   "3": "1F646-1F3FC-200D-2640-FE0F",
+   "4": "1F646-1F3FD-200D-2640-FE0F",
+   "5": "1F646-1F3FE-200D-2640-FE0F",
+   "6": "1F646-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F646-200D-2640-FE0F"
+ },
+ "woman-getting-haircut": {
+  "tones": {
+   "2": "1F487-1F3FB-200D-2640-FE0F",
+   "3": "1F487-1F3FC-200D-2640-FE0F",
+   "4": "1F487-1F3FD-200D-2640-FE0F",
+   "5": "1F487-1F3FE-200D-2640-FE0F",
+   "6": "1F487-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F487-200D-2640-FE0F"
+ },
+ "woman-getting-massage": {
+  "tones": {
+   "2": "1F486-1F3FB-200D-2640-FE0F",
+   "3": "1F486-1F3FC-200D-2640-FE0F",
+   "4": "1F486-1F3FD-200D-2640-FE0F",
+   "5": "1F486-1F3FE-200D-2640-FE0F",
+   "6": "1F486-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F486-200D-2640-FE0F"
+ },
+ "woman-girl": {
+  "unified": "1F469-200D-1F467"
+ },
+ "woman-girl-boy": {
+  "unified": "1F469-200D-1F467-200D-1F466"
+ },
+ "woman-girl-girl": {
+  "unified": "1F469-200D-1F467-200D-1F467"
+ },
+ "woman-golfing": {
+  "tones": {
+   "2": "1F3CC-1F3FB-200D-2640-FE0F",
+   "3": "1F3CC-1F3FC-200D-2640-FE0F",
+   "4": "1F3CC-1F3FD-200D-2640-FE0F",
+   "5": "1F3CC-1F3FE-200D-2640-FE0F",
+   "6": "1F3CC-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F3CC-FE0F-200D-2640-FE0F"
+ },
+ "woman-heart-man": {
+  "unified": "1F469-200D-2764-FE0F-200D-1F468"
+ },
+ "woman-heart-woman": {
+  "unified": "1F469-200D-2764-FE0F-200D-1F469"
+ },
+ "woman-juggling": {
+  "tones": {
+   "2": "1F939-1F3FB-200D-2640-FE0F",
+   "3": "1F939-1F3FC-200D-2640-FE0F",
+   "4": "1F939-1F3FD-200D-2640-FE0F",
+   "5": "1F939-1F3FE-200D-2640-FE0F",
+   "6": "1F939-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F939-200D-2640-FE0F"
+ },
+ "woman-kiss-man": {
+  "unified": "1F469-200D-2764-FE0F-200D-1F48B-200D-1F468"
+ },
+ "woman-kiss-woman": {
+  "unified": "1F469-200D-2764-FE0F-200D-1F48B-200D-1F469"
+ },
+ "woman-lifting-weights": {
+  "tones": {
+   "2": "1F3CB-1F3FB-200D-2640-FE0F",
+   "3": "1F3CB-1F3FC-200D-2640-FE0F",
+   "4": "1F3CB-1F3FD-200D-2640-FE0F",
+   "5": "1F3CB-1F3FE-200D-2640-FE0F",
+   "6": "1F3CB-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F3CB-FE0F-200D-2640-FE0F"
+ },
+ "woman-mountain-biking": {
+  "tones": {
+   "2": "1F6B5-1F3FB-200D-2640-FE0F",
+   "3": "1F6B5-1F3FC-200D-2640-FE0F",
+   "4": "1F6B5-1F3FD-200D-2640-FE0F",
+   "5": "1F6B5-1F3FE-200D-2640-FE0F",
+   "6": "1F6B5-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F6B5-200D-2640-FE0F"
+ },
+ "woman-playing-handball": {
+  "tones": {
+   "2": "1F93E-1F3FB-200D-2640-FE0F",
+   "3": "1F93E-1F3FC-200D-2640-FE0F",
+   "4": "1F93E-1F3FD-200D-2640-FE0F",
+   "5": "1F93E-1F3FE-200D-2640-FE0F",
+   "6": "1F93E-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F93E-200D-2640-FE0F"
+ },
+ "woman-playing-water-polo": {
+  "tones": {
+   "2": "1F93D-1F3FB-200D-2640-FE0F",
+   "3": "1F93D-1F3FC-200D-2640-FE0F",
+   "4": "1F93D-1F3FD-200D-2640-FE0F",
+   "5": "1F93D-1F3FE-200D-2640-FE0F",
+   "6": "1F93D-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F93D-200D-2640-FE0F"
+ },
+ "woman-pouting": {
+  "tones": {
+   "2": "1F64E-1F3FB-200D-2640-FE0F",
+   "3": "1F64E-1F3FC-200D-2640-FE0F",
+   "4": "1F64E-1F3FD-200D-2640-FE0F",
+   "5": "1F64E-1F3FE-200D-2640-FE0F",
+   "6": "1F64E-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F64E-200D-2640-FE0F"
+ },
+ "woman-raising-hand": {
+  "tones": {
+   "2": "1F64B-1F3FB-200D-2640-FE0F",
+   "3": "1F64B-1F3FC-200D-2640-FE0F",
+   "4": "1F64B-1F3FD-200D-2640-FE0F",
+   "5": "1F64B-1F3FE-200D-2640-FE0F",
+   "6": "1F64B-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F64B-200D-2640-FE0F"
+ },
+ "woman-rowing-boat": {
+  "tones": {
+   "2": "1F6A3-1F3FB-200D-2640-FE0F",
+   "3": "1F6A3-1F3FC-200D-2640-FE0F",
+   "4": "1F6A3-1F3FD-200D-2640-FE0F",
+   "5": "1F6A3-1F3FE-200D-2640-FE0F",
+   "6": "1F6A3-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F6A3-200D-2640-FE0F"
+ },
+ "woman-running": {
+  "tones": {
+   "2": "1F3C3-1F3FB-200D-2640-FE0F",
+   "3": "1F3C3-1F3FC-200D-2640-FE0F",
+   "4": "1F3C3-1F3FD-200D-2640-FE0F",
+   "5": "1F3C3-1F3FE-200D-2640-FE0F",
+   "6": "1F3C3-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F3C3-200D-2640-FE0F"
+ },
+ "woman-shrugging": {
+  "tones": {
+   "2": "1F937-1F3FB-200D-2640-FE0F",
+   "3": "1F937-1F3FC-200D-2640-FE0F",
+   "4": "1F937-1F3FD-200D-2640-FE0F",
+   "5": "1F937-1F3FE-200D-2640-FE0F",
+   "6": "1F937-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F937-200D-2640-FE0F"
+ },
+ "woman-surfing": {
+  "tones": {
+   "2": "1F3C4-1F3FB-200D-2640-FE0F",
+   "3": "1F3C4-1F3FC-200D-2640-FE0F",
+   "4": "1F3C4-1F3FD-200D-2640-FE0F",
+   "5": "1F3C4-1F3FE-200D-2640-FE0F",
+   "6": "1F3C4-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F3C4-200D-2640-FE0F"
+ },
+ "woman-swimming": {
+  "tones": {
+   "2": "1F3CA-1F3FB-200D-2640-FE0F",
+   "3": "1F3CA-1F3FC-200D-2640-FE0F",
+   "4": "1F3CA-1F3FD-200D-2640-FE0F",
+   "5": "1F3CA-1F3FE-200D-2640-FE0F",
+   "6": "1F3CA-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F3CA-200D-2640-FE0F"
+ },
+ "woman-tipping-hand": {
+  "tones": {
+   "2": "1F481-1F3FB-200D-2640-FE0F",
+   "3": "1F481-1F3FC-200D-2640-FE0F",
+   "4": "1F481-1F3FD-200D-2640-FE0F",
+   "5": "1F481-1F3FE-200D-2640-FE0F",
+   "6": "1F481-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F481-200D-2640-FE0F"
+ },
+ "woman-walking": {
+  "tones": {
+   "2": "1F6B6-1F3FB-200D-2640-FE0F",
+   "3": "1F6B6-1F3FC-200D-2640-FE0F",
+   "4": "1F6B6-1F3FD-200D-2640-FE0F",
+   "5": "1F6B6-1F3FE-200D-2640-FE0F",
+   "6": "1F6B6-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F6B6-200D-2640-FE0F"
+ },
+ "woman-wearing-turban": {
+  "tones": {
+   "2": "1F473-1F3FB-200D-2640-FE0F",
+   "3": "1F473-1F3FC-200D-2640-FE0F",
+   "4": "1F473-1F3FD-200D-2640-FE0F",
+   "5": "1F473-1F3FE-200D-2640-FE0F",
+   "6": "1F473-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F473-200D-2640-FE0F"
+ },
+ "woman-with-bunny-ears-partying": {
+  "tones": {
+   "2": "1F46F-1F3FB-200D-2640-FE0F",
+   "3": "1F46F-1F3FC-200D-2640-FE0F",
+   "4": "1F46F-1F3FD-200D-2640-FE0F",
+   "5": "1F46F-1F3FE-200D-2640-FE0F",
+   "6": "1F46F-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F46F-200D-2640-FE0F"
+ },
+ "woman-woman-boy": {
+  "unified": "1F469-200D-1F469-200D-1F466"
+ },
+ "woman-woman-boy-boy": {
+  "unified": "1F469-200D-1F469-200D-1F466-200D-1F466"
+ },
+ "woman-woman-girl": {
+  "unified": "1F469-200D-1F469-200D-1F467"
+ },
+ "woman-woman-girl-boy": {
+  "unified": "1F469-200D-1F469-200D-1F467-200D-1F466"
+ },
+ "woman-woman-girl-girl": {
+  "unified": "1F469-200D-1F469-200D-1F467-200D-1F467"
+ },
+ "woman-wrestling": {
+  "tones": {
+   "2": "1F93C-1F3FB-200D-2640-FE0F",
+   "3": "1F93C-1F3FC-200D-2640-FE0F",
+   "4": "1F93C-1F3FD-200D-2640-FE0F",
+   "5": "1F93C-1F3FE-200D-2640-FE0F",
+   "6": "1F93C-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F93C-200D-2640-FE0F"
+ },
+ "woman_and_man_holding_hands": {
+  "tones": {
+   "2": "1F46B-1F3FB",
+   "3": "1F46B-1F3FC",
+   "4": "1F46B-1F3FD",
+   "5": "1F46B-1F3FE",
+   "6": "1F46B-1F3FF"
+  },
+  "unified": "1F46B"
+ },
+ "woman_climbing": {
+  "tones": {
+   "2": "1F9D7-1F3FB-200D-2640-FE0F",
+   "3": "1F9D7-1F3FC-200D-2640-FE0F",
+   "4": "1F9D7-1F3FD-200D-2640-FE0F",
+   "5": "1F9D7-1F3FE-200D-2640-FE0F",
+   "6": "1F9D7-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9D7-200D-2640-FE0F"
+ },
+ "woman_feeding_baby": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F37C",
+   "3": "1F469-1F3FC-200D-1F37C",
+   "4": "1F469-1F3FD-200D-1F37C",
+   "5": "1F469-1F3FE-200D-1F37C",
+   "6": "1F469-1F3FF-200D-1F37C"
+  },
+  "unified": "1F469-200D-1F37C"
+ },
+ "woman_in_lotus_position": {
+  "tones": {
+   "2": "1F9D8-1F3FB-200D-2640-FE0F",
+   "3": "1F9D8-1F3FC-200D-2640-FE0F",
+   "4": "1F9D8-1F3FD-200D-2640-FE0F",
+   "5": "1F9D8-1F3FE-200D-2640-FE0F",
+   "6": "1F9D8-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9D8-200D-2640-FE0F"
+ },
+ "woman_in_manual_wheelchair": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9BD",
+   "3": "1F469-1F3FC-200D-1F9BD",
+   "4": "1F469-1F3FD-200D-1F9BD",
+   "5": "1F469-1F3FE-200D-1F9BD",
+   "6": "1F469-1F3FF-200D-1F9BD"
+  },
+  "unified": "1F469-200D-1F9BD"
+ },
+ "woman_in_manual_wheelchair_facing_right": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9BD-200D-27A1-FE0F",
+   "3": "1F469-1F3FC-200D-1F9BD-200D-27A1-FE0F",
+   "4": "1F469-1F3FD-200D-1F9BD-200D-27A1-FE0F",
+   "5": "1F469-1F3FE-200D-1F9BD-200D-27A1-FE0F",
+   "6": "1F469-1F3FF-200D-1F9BD-200D-27A1-FE0F"
+  },
+  "unified": "1F469-200D-1F9BD-200D-27A1-FE0F"
+ },
+ "woman_in_motorized_wheelchair": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9BC",
+   "3": "1F469-1F3FC-200D-1F9BC",
+   "4": "1F469-1F3FD-200D-1F9BC",
+   "5": "1F469-1F3FE-200D-1F9BC",
+   "6": "1F469-1F3FF-200D-1F9BC"
+  },
+  "unified": "1F469-200D-1F9BC"
+ },
+ "woman_in_motorized_wheelchair_facing_right": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9BC-200D-27A1-FE0F",
+   "3": "1F469-1F3FC-200D-1F9BC-200D-27A1-FE0F",
+   "4": "1F469-1F3FD-200D-1F9BC-200D-27A1-FE0F",
+   "5": "1F469-1F3FE-200D-1F9BC-200D-27A1-FE0F",
+   "6": "1F469-1F3FF-200D-1F9BC-200D-27A1-FE0F"
+  },
+  "unified": "1F469-200D-1F9BC-200D-27A1-FE0F"
+ },
+ "woman_in_steamy_room": {
+  "tones": {
+   "2": "1F9D6-1F3FB-200D-2640-FE0F",
+   "3": "1F9D6-1F3FC-200D-2640-FE0F",
+   "4": "1F9D6-1F3FD-200D-2640-FE0F",
+   "5": "1F9D6-1F3FE-200D-2640-FE0F",
+   "6": "1F9D6-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9D6-200D-2640-FE0F"
+ },
+ "woman_in_tuxedo": {
+  "tones": {
+   "2": "1F935-1F3FB-200D-2640-FE0F",
+   "3": "1F935-1F3FC-200D-2640-FE0F",
+   "4": "1F935-1F3FD-200D-2640-FE0F",
+   "5": "1F935-1F3FE-200D-2640-FE0F",
+   "6": "1F935-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F935-200D-2640-FE0F"
+ },
+ "woman_kneeling": {
+  "tones": {
+   "2": "1F9CE-1F3FB-200D-2640-FE0F",
+   "3": "1F9CE-1F3FC-200D-2640-FE0F",
+   "4": "1F9CE-1F3FD-200D-2640-FE0F",
+   "5": "1F9CE-1F3FE-200D-2640-FE0F",
+   "6": "1F9CE-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9CE-200D-2640-FE0F"
+ },
+ "woman_kneeling_facing_right": {
+  "tones": {
+   "2": "1F9CE-1F3FB-200D-2640-FE0F-200D-27A1-FE0F",
+   "3": "1F9CE-1F3FC-200D-2640-FE0F-200D-27A1-FE0F",
+   "4": "1F9CE-1F3FD-200D-2640-FE0F-200D-27A1-FE0F",
+   "5": "1F9CE-1F3FE-200D-2640-FE0F-200D-27A1-FE0F",
+   "6": "1F9CE-1F3FF-200D-2640-FE0F-200D-27A1-FE0F"
+  },
+  "unified": "1F9CE-200D-2640-FE0F-200D-27A1-FE0F"
+ },
+ "woman_running_facing_right": {
+  "tones": {
+   "2": "1F3C3-1F3FB-200D-2640-FE0F-200D-27A1-FE0F",
+   "3": "1F3C3-1F3FC-200D-2640-FE0F-200D-27A1-FE0F",
+   "4": "1F3C3-1F3FD-200D-2640-FE0F-200D-27A1-FE0F",
+   "5": "1F3C3-1F3FE-200D-2640-FE0F-200D-27A1-FE0F",
+   "6": "1F3C3-1F3FF-200D-2640-FE0F-200D-27A1-FE0F"
+  },
+  "unified": "1F3C3-200D-2640-FE0F-200D-27A1-FE0F"
+ },
+ "woman_standing": {
+  "tones": {
+   "2": "1F9CD-1F3FB-200D-2640-FE0F",
+   "3": "1F9CD-1F3FC-200D-2640-FE0F",
+   "4": "1F9CD-1F3FD-200D-2640-FE0F",
+   "5": "1F9CD-1F3FE-200D-2640-FE0F",
+   "6": "1F9CD-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9CD-200D-2640-FE0F"
+ },
+ "woman_walking_facing_right": {
+  "tones": {
+   "2": "1F6B6-1F3FB-200D-2640-FE0F-200D-27A1-FE0F",
+   "3": "1F6B6-1F3FC-200D-2640-FE0F-200D-27A1-FE0F",
+   "4": "1F6B6-1F3FD-200D-2640-FE0F-200D-27A1-FE0F",
+   "5": "1F6B6-1F3FE-200D-2640-FE0F-200D-27A1-FE0F",
+   "6": "1F6B6-1F3FF-200D-2640-FE0F-200D-27A1-FE0F"
+  },
+  "unified": "1F6B6-200D-2640-FE0F-200D-27A1-FE0F"
+ },
+ "woman_with_beard": {
+  "tones": {
+   "2": "1F9D4-1F3FB-200D-2640-FE0F",
+   "3": "1F9D4-1F3FC-200D-2640-FE0F",
+   "4": "1F9D4-1F3FD-200D-2640-FE0F",
+   "5": "1F9D4-1F3FE-200D-2640-FE0F",
+   "6": "1F9D4-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F9D4-200D-2640-FE0F"
+ },
+ "woman_with_probing_cane": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9AF",
+   "3": "1F469-1F3FC-200D-1F9AF",
+   "4": "1F469-1F3FD-200D-1F9AF",
+   "5": "1F469-1F3FE-200D-1F9AF",
+   "6": "1F469-1F3FF-200D-1F9AF"
+  },
+  "unified": "1F469-200D-1F9AF"
+ },
+ "woman_with_veil": {
+  "tones": {
+   "2": "1F470-1F3FB-200D-2640-FE0F",
+   "3": "1F470-1F3FC-200D-2640-FE0F",
+   "4": "1F470-1F3FD-200D-2640-FE0F",
+   "5": "1F470-1F3FE-200D-2640-FE0F",
+   "6": "1F470-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F470-200D-2640-FE0F"
+ },
+ "woman_with_white_cane_facing_right": {
+  "tones": {
+   "2": "1F469-1F3FB-200D-1F9AF-200D-27A1-FE0F",
+   "3": "1F469-1F3FC-200D-1F9AF-200D-27A1-FE0F",
+   "4": "1F469-1F3FD-200D-1F9AF-200D-27A1-FE0F",
+   "5": "1F469-1F3FE-200D-1F9AF-200D-27A1-FE0F",
+   "6": "1F469-1F3FF-200D-1F9AF-200D-27A1-FE0F"
+  },
+  "unified": "1F469-200D-1F9AF-200D-27A1-FE0F"
+ },
+ "womans_clothes": {
+  "unified": "1F45A"
+ },
+ "womans_flat_shoe": {
+  "unified": "1F97F"
+ },
+ "womans_hat": {
+  "unified": "1F452"
+ },
+ "women-with-bunny-ears-partying": {
+  "tones": {
+   "2": "1F46F-1F3FB-200D-2640-FE0F",
+   "3": "1F46F-1F3FC-200D-2640-FE0F",
+   "4": "1F46F-1F3FD-200D-2640-FE0F",
+   "5": "1F46F-1F3FE-200D-2640-FE0F",
+   "6": "1F46F-1F3FF-200D-2640-FE0F"
+  },
+  "unified": "1F46F-200D-2640-FE0F"
+ },
+ "women_holding_hands": {
+  "tones": {
+   "2": "1F46D-1F3FB",
+   "3": "1F46D-1F3FC",
+   "4": "1F46D-1F3FD",
+   "5": "1F46D-1F3FE",
+   "6": "1F46D-1F3FF"
+  },
+  "unified": "1F46D"
+ },
+ "womens": {
+  "unified": "1F6BA"
+ },
+ "wood": {
+  "unified": "1FAB5"
+ },
+ "woozy_face": {
+  "unified": "1F974"
+ },
+ "world_map": {
+  "unified": "1F5FA-FE0F"
+ },
+ "worm": {
+  "unified": "1FAB1"
+ },
+ "worried": {
+  "unified": "1F61F"
+ },
+ "wrench": {
+  "unified": "1F527"
+ },
+ "wrestlers": {
+  "tones": {
+   "2": "1F93C-1F3FB",
+   "3": "1F93C-1F3FC",
+   "4": "1F93C-1F3FD",
+   "5": "1F93C-1F3FE",
+   "6": "1F93C-1F3FF"
+  },
+  "unified": "1F93C"
+ },
+ "writing_hand": {
+  "tones": {
+   "2": "270D-1F3FB",
+   "3": "270D-1F3FC",
+   "4": "270D-1F3FD",
+   "5": "270D-1F3FE",
+   "6": "270D-1F3FF"
+  },
+  "unified": "270D-FE0F"
+ },
+ "x": {
+  "unified": "274C"
+ },
+ "x-ray": {
+  "unified": "1FA7B"
+ },
+ "yarn": {
+  "unified": "1F9F6"
+ },
+ "yawning_face": {
+  "unified": "1F971"
+ },
+ "yellow_heart": {
+  "unified": "1F49B"
+ },
+ "yen": {
+  "unified": "1F4B4"
+ },
+ "yin_yang": {
+  "unified": "262F-FE0F"
+ },
+ "yo-yo": {
+  "unified": "1FA80"
+ },
+ "yum": {
+  "unified": "1F60B"
+ },
+ "zany_face": {
+  "unified": "1F92A"
+ },
+ "zap": {
+  "unified": "26A1"
+ },
+ "zebra_face": {
+  "unified": "1F993"
+ },
+ "zero": {
+  "unified": "0030-FE0F-20E3"
+ },
+ "zipper_mouth_face": {
+  "unified": "1F910"
+ },
+ "zombie": {
+  "unified": "1F9DF"
+ },
+ "zzz": {
+  "unified": "1F4A4"
+ }
+}

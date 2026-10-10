@@ -450,6 +450,12 @@ class LocalFilenameTests(unittest.TestCase):
 
 
 class ConvertEmojiShortcodesTests(unittest.TestCase):
+    """convert_emoji_shortcodes() is a lookup against bin/emoji_shortcodes.json
+    (generated from iamcal/emoji-data, see generate_emoji_shortcodes.py) --
+    that dataset's `short_names` match Slack's own shortcode naming
+    directly, so these tests check behaviour (unknown codes, skin tones,
+    plain text) rather than re-deriving the dataset's own content."""
+
     def test_plain_shortcode_becomes_unicode(self):
         self.assertEqual(ms.convert_emoji_shortcodes(":bangbang:"), "‼️")
 
@@ -462,6 +468,12 @@ class ConvertEmojiShortcodesTests(unittest.TestCase):
     def test_unknown_shortcode_is_left_as_is(self):
         self.assertEqual(ms.convert_emoji_shortcodes(":not_a_real_emoji:"), ":not_a_real_emoji:")
 
+    def test_unrecognized_shortcode_with_trailing_skin_tone_is_left_as_is(self):
+        self.assertEqual(
+            ms.convert_emoji_shortcodes(":not_a_real_emoji::skin-tone-2:"),
+            ":not_a_real_emoji::skin-tone-2:",
+        )
+
     def test_plain_text_is_unchanged(self):
         self.assertEqual(ms.convert_emoji_shortcodes("Pizza in the kitchen!"), "Pizza in the kitchen!")
 
@@ -469,74 +481,77 @@ class ConvertEmojiShortcodesTests(unittest.TestCase):
         self.assertEqual(ms.convert_emoji_shortcodes(""), "")
 
     def test_slack_specific_shortcode_name_divergence_is_handled(self):
-        # Regression: Slack's shortcode uses a numeral ("3"), the `emoji`
-        # package only recognizes the spelled-out alias ("three") -- found
-        # live when a message with ~50 shortcodes had exactly this one
-        # left as literal text while everything else converted fine.
+        # Regression: a numeral shortcode ("3"), not a spelled-out word --
+        # the very first divergence found live, when a message with ~50
+        # shortcodes had exactly this one left as literal text.
         self.assertEqual(ms.convert_emoji_shortcodes(":smiling_face_with_3_hearts:"), "\U0001f970")
 
-    def test_slack_specific_alias_also_resolves_when_followed_by_a_skin_tone_code(self):
-        # The base shortcode must still resolve even with a trailing
-        # :skin-tone-N: right after it (same regex pass handles both).
-        self.assertEqual(
-            ms.convert_emoji_shortcodes(":smiling_face_with_3_hearts::skin-tone-2:"),
-            "\U0001f970\U0001f3fb",
-        )
-
-    def test_woman_shrugging_hyphenated_shortcode_is_handled(self):
-        # Regression: Slack sends "woman-shrugging" (hyphen), the `emoji`
-        # package's alias is "woman_shrugging" (underscore) -- left as
-        # literal text (with a stray skin-tone glyph after it) otherwise.
+    def test_hyphenated_shortcode_is_handled(self):
+        # Regression: "woman-shrugging" (hyphen) rendered as literal text
+        # plus a stray flesh-tone square under the old `emoji`-package
+        # approach -- a plain dataset lookup has no hyphen/underscore
+        # mismatch to trip over.
         self.assertEqual(ms.convert_emoji_shortcodes(":woman-shrugging:"), "\U0001f937‍♀️")
 
-    def test_skin_tone_on_a_zwj_emoji_is_inserted_after_the_base_codepoint(self):
+    def test_skin_tone_on_a_zwj_emoji_is_ordered_correctly(self):
         # Regression: a naive "append the modifier wherever :skin-tone-N:
         # appeared" put it after the *whole* ZWJ sequence (base, ZWJ,
         # female sign, VS16, modifier) -- an invalid order that rendered
         # live on the Pi as the base emoji plus a separate stray flesh-tone
-        # square. RGI order is base, modifier, ZWJ, female sign, VS16.
+        # square. The dataset's skin-tone variants are pre-composed in the
+        # correct order, so no ordering logic is needed here at all.
         self.assertEqual(
             ms.convert_emoji_shortcodes(":woman-shrugging::skin-tone-2:"),
             "\U0001f937\U0001f3fb‍♀️",
         )
 
-    def test_unrecognized_shortcode_with_trailing_skin_tone_is_left_as_is(self):
-        self.assertEqual(
-            ms.convert_emoji_shortcodes(":not_a_real_emoji::skin-tone-2:"),
-            ":not_a_real_emoji::skin-tone-2:",
-        )
-
-    def test_two_letter_country_flag_shortcode_is_computed(self):
-        # Regression: the `emoji` package's aliases for ISO country flags
-        # are inconsistent and mostly name-based ("laos", not "la") -- even
-        # common ones like :flag-gb:/:flag-us: don't resolve via alias
-        # lookup, so this is computed directly from the two letters rather
-        # than hand-listed.
+    def test_two_letter_country_flag_shortcode_is_handled(self):
+        # Regression: under the old `emoji`-package approach, almost no
+        # ISO two-letter country flags resolved at all (its aliases are
+        # name-based, e.g. "laos" not "la") -- a dataset built on Slack's
+        # own shortcode naming has every one of these directly.
         self.assertEqual(ms.convert_emoji_shortcodes(":flag-la:"), "\U0001f1f1\U0001f1e6")
         self.assertEqual(ms.convert_emoji_shortcodes(":flag-ag:"), "\U0001f1e6\U0001f1ec")
         self.assertEqual(ms.convert_emoji_shortcodes(":flag-gb:"), "\U0001f1ec\U0001f1e7")
 
-    def test_flag_shortcode_with_more_than_two_letters_is_not_treated_as_a_country_code(self):
-        self.assertEqual(ms.convert_emoji_shortcodes(":flag-xyz:"), ":flag-xyz:")
-
-    def test_flag_england_shortcode_is_handled(self):
-        # Regression: Slack sends "flag-england", the `emoji` package's
-        # alias for this subdivision flag is just "england".
+    def test_uk_nation_flag_shortcodes_are_handled(self):
+        # Regression: England/Scotland/Wales aren't ISO country codes --
+        # the `emoji` package only had a handful of these aliased at all.
         self.assertEqual(
             ms.convert_emoji_shortcodes(":flag-england:"),
             "\U0001f3f4\U000e0067\U000e0062\U000e0065\U000e006e\U000e0067\U000e007f",
         )
-
-    def test_flag_scotland_shortcode_is_handled(self):
         self.assertEqual(
             ms.convert_emoji_shortcodes(":flag-scotland:"),
             "\U0001f3f4\U000e0067\U000e0062\U000e0073\U000e0063\U000e0074\U000e007f",
         )
-
-    def test_flag_wales_shortcode_is_handled(self):
         self.assertEqual(
             ms.convert_emoji_shortcodes(":flag-wales:"),
             "\U0001f3f4\U000e0067\U000e0062\U000e0077\U000e006c\U000e0073\U000e007f",
+        )
+
+    def test_gendered_role_shortcode_is_handled(self):
+        # Regression: under the old `emoji`-package approach, gendered role
+        # emoji ("mage", "vampire", "cook", ...) needed a fallback chain to
+        # cope with the package naming some "<role>_man"/"<role>_woman" and
+        # others "man_<role>"/"woman_<role>" -- a dataset lookup by Slack's
+        # own naming sidesteps the inconsistency entirely.
+        self.assertEqual(ms.convert_emoji_shortcodes(":female_mage:"), "\U0001f9d9‍♀️")
+        self.assertEqual(ms.convert_emoji_shortcodes(":male_mage:"), "\U0001f9d9‍♂️")
+
+    def test_gendered_role_shortcode_with_skin_tone_is_ordered_correctly(self):
+        self.assertEqual(
+            ms.convert_emoji_shortcodes(":female_mage::skin-tone-2:"),
+            "\U0001f9d9\U0001f3fb‍♀️",
+        )
+
+    def test_hyphenated_gendered_role_shortcode_is_handled(self):
+        # Regression: Slack sends "male-cook" (hyphen) for this one, not
+        # "male_cook" -- the `emoji` package had no "cook" role emoji in
+        # its alias table at all, only its separate CLDR "en" table.
+        self.assertEqual(
+            ms.convert_emoji_shortcodes(":male-cook::skin-tone-2:"),
+            "\U0001f468\U0001f3fb‍\U0001f373",
         )
 
 
