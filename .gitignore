@@ -2,3 +2,6 @@ config/kiosk.env
 __pycache__/
 *.pyc
 .venv/
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
