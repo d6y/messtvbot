@@ -40,7 +40,7 @@ Yes, Slack's normal formatting works: `*bold*`, `_italic_`, `~strikethrough~`, a
 <div class="faq-item" markdown="1">
 ### Does emoji work?
 
-Yes, including skin-tone variants — they're shown as the actual emoji, not as text codes like `:thumbsup:`.
+Yes, mostly, but there are some Slack-specific weirdness. If you see anything that looks wonky, let us know (type `help` to see who)
 </div>
 
 <div class="faq-item" markdown="1">
@@ -64,5 +64,5 @@ That's expected. A short new message starting with one of those words is treated
 <div class="faq-item" markdown="1">
 ### Something seems broken — who do I ask?
 
-Post `help` as a new message; the bot's reply names who manages this instance.
+Post `help` as a new message, or reply `help` in a post's thread.
 </div>

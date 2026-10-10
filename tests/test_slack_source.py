@@ -255,6 +255,38 @@ class IsHelpTriggerTests(unittest.TestCase):
         self.assertFalse(ms.is_help_trigger(None))
 
 
+class IsHelpReplyTests(unittest.TestCase):
+    def test_bare_help_is_a_help_reply(self):
+        self.assertTrue(ms.is_help_reply("help"))
+
+    def test_help_is_case_insensitive(self):
+        self.assertTrue(ms.is_help_reply("HELP"))
+
+    def test_help_with_short_trailing_text_is_a_help_reply(self):
+        self.assertTrue(ms.is_help_reply("help please?"))
+
+    def test_bare_remove_is_not_a_help_reply(self):
+        # "remove" in a reply is already a real command, handled by
+        # parse_command/apply_reply_command -- not this function's job.
+        self.assertFalse(ms.is_help_reply("remove"))
+
+    def test_word_that_merely_starts_with_help_is_not_a_help_reply(self):
+        self.assertFalse(ms.is_help_reply("helpful, thanks!"))
+
+    def test_long_message_starting_with_help_is_not_a_help_reply(self):
+        text = "Help yourself to the leftover cake in the kitchen please"
+        self.assertFalse(ms.is_help_reply(text))
+
+    def test_unrelated_text_is_not_a_help_reply(self):
+        self.assertFalse(ms.is_help_reply("nice one"))
+
+    def test_empty_text_is_not_a_help_reply(self):
+        self.assertFalse(ms.is_help_reply(""))
+
+    def test_none_text_is_not_a_help_reply(self):
+        self.assertFalse(ms.is_help_reply(None))
+
+
 class BuildHelpTextTests(unittest.TestCase):
     def setUp(self):
         self.cfg = ms.SlackConfig(
@@ -1211,6 +1243,31 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.1"]["status"], "active")
 
+    def test_help_reply_gets_a_help_text_reply_and_leaves_entry_active(self):
+        existing = {"100.1": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(messages=[], replies_by_ts={"100.1": [{"text": "help", "user": "U2"}]})
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.1"]["status"], "active")
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
+        self.assertEqual(len(replies), 1)
+        self.assertEqual(replies[0]["text"], ms.build_help_text(self.cfg, self.now))
+
+    def test_help_reply_is_not_reanswered_on_a_later_tick(self):
+        existing = {"100.1": {"status": "active", "kind": "text", "text": "hi",
+                               "author": "Jane", "posted_at": "2026-07-15T00:00:00+00:00",
+                               "remove_at": "2026-08-14T00:00:00+00:00", "remove_reason": "ttl",
+                               "local_files": []}}
+        api = FakeSlackAPI(
+            messages=[], replies_by_ts={"100.1": [{"ts": "200.1", "text": "help", "user": "U2"}]},
+        )
+        state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
+        state = ms.poll_slack(self.cfg, state, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
+        self.assertEqual(len(replies), 1)
+
     def test_cancel_reply_no_longer_removes_the_entry(self):
         # "cancel" was dropped as a removal alias -- a reply using it is
         # just an ordinary reply now, not a command.
@@ -1454,13 +1511,13 @@ class PollSlackTests(unittest.TestCase):
         state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.1"]
         text = replies[0]["text"]
-        self.assertIn("Skiff TV", text)
+        self.assertIn("Mess TV", text)
         remove_at_local = datetime.fromisoformat(state["100.1"]["remove_at"]).astimezone(ms.LOCAL_TZ)
         self.assertIn(f"{remove_at_local:%-d %b %Y %H:%M}", text)
         self.assertIn("`remove now`", text)
         posted_at = datetime.fromisoformat(state["100.1"]["posted_at"])
         example_date_local = (posted_at + timedelta(days=1)).astimezone(ms.LOCAL_TZ)
-        self.assertIn(f"`remove {example_date_local:%-d %b %Y}`", text)
+        self.assertIn(f"`remove {example_date_local:%-d %b}`", text)
 
     def test_accepted_message_reply_includes_a_review_link(self):
         # Lets a poster see how their own post actually renders (useful
@@ -1808,6 +1865,16 @@ class HandleRealtimeEventTests(unittest.TestCase):
                                             api, self.audit_path)
         self.assertTrue(changed)
         self.assertEqual(state["100.9"]["status"], "cancelled")
+
+    def test_reply_with_help_gets_help_text_and_leaves_entry_active(self):
+        state = {"100.9": self._active_entry()}
+        api = FakeSlackAPI()
+        event = {"ts": "200.1", "thread_ts": "100.9", "text": "help", "user": "U2"}
+        changed = ms.handle_realtime_event(self.cfg, state, self.source_dir, event, self.now,
+                                            api, self.audit_path)
+        self.assertTrue(changed)
+        self.assertEqual(state["100.9"]["status"], "active")
+        self.assertEqual(api.posted_messages[0]["text"], ms.build_help_text(self.cfg, self.now))
 
     def test_reply_with_scheduled_removal_leaves_entry_active(self):
         state = {"100.9": self._active_entry()}

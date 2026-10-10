@@ -709,13 +709,13 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         # newline before it), there's no block-list equivalent available
         # without switching to Block Kit.
         bullets = [
-            f"Removes {remove_at_local:%-d %b %Y %H:%M} ({interval})",
-            f"To remove: reply `remove now` or `remove {example_remove_at_local:%-d %b %Y}` for example",
+            f"Will be removed {remove_at_local:%-d %b %Y %H:%M} ({interval})",
+            f"To remove at a different time: reply `remove now` or, for example, `remove {example_remove_at_local:%-d %b}`, `remove tomorrow`, etc.",
         ]
         if images_truncated_from:
             bullets.append(f"Only the first {cfg.max_images} of {images_truncated_from} images were used")
         bullets.append(f"<{review_url}|See how it looks>")
-        message = "Added to the Skiff TV.\n" + "\n".join(f"• {b}" for b in bullets)
+        message = "Added to the Mess TV.\n" + "\n".join(f"• {b}" for b in bullets)
         _post_safe(api, cfg.channel, message, thread_ts=ts)
 
 
@@ -795,6 +795,56 @@ def apply_reply_command(cfg: SlackConfig, state: dict, parent_ts: str, reply: di
         )
 
 
+HELP_REPLY_RE = re.compile(r"^help\b", re.IGNORECASE)
+
+
+def is_help_reply(text: str) -> bool:
+    """True for a short thread reply that starts with 'help' -- someone
+    asking for the usage summary from inside a post's thread rather than
+    posting a fresh 'help' message (see build_help_text). Deliberately
+    not 'remove' here too -- that's already a real command handled by
+    parse_command/apply_reply_command, not something this needs to catch."""
+    stripped = (text or "").strip()
+    if not stripped or len(stripped) > HELP_TRIGGER_MAX_LEN:
+        return False
+    return bool(HELP_REPLY_RE.match(stripped))
+
+
+def apply_help_reply(cfg: SlackConfig, state: dict, parent_ts: str, reply: dict, now: datetime,
+                      api: SlackAPI, audit_path: Path) -> None:
+    """Reply in-thread with the same help text a fresh 'help' message gets
+    (build_help_text), for someone who replied 'help' instead. Shared by
+    poll_slack's per-thread reply scan and handle_realtime_event's
+    one-at-a-time Socket Mode path -- do not duplicate this logic at a new
+    call site. Leaves the entry's own remove_at/status untouched -- this is
+    purely informational, not a command."""
+    entry = state[parent_ts]
+    reply_ts = reply.get("ts")
+
+    # Same style of dedup as apply_reply_command's remove_command_ts --
+    # without it, a reply that's still the latest one next tick would get
+    # re-answered (and re-audited) every single poll forever.
+    if reply_ts is not None and entry.get("help_reply_ts") == reply_ts:
+        return
+    entry["help_reply_ts"] = reply_ts
+
+    reply_user = reply.get("user")
+    if reply_user:
+        try:
+            requested_by = api.user_name(reply_user)
+        except SlackAPIError as exc:
+            log.error("Failed to resolve Slack user name for %s: %s", reply_user, exc)
+            requested_by = reply_user
+    else:
+        requested_by = "someone"
+
+    append_audit(audit_path, {
+        "at": now.isoformat(timespec="seconds"), "ts": parent_ts, "author": requested_by,
+        "kind": "command", "action": "help_reply", "summary": "help requested via reply",
+    })
+    _post_safe(api, cfg.channel, build_help_text(cfg, now), thread_ts=parent_ts)
+
+
 def handle_realtime_event(cfg: SlackConfig, state: dict, source_dir: Path, event: dict, now: datetime,
                            api: SlackAPI, audit_path: Path) -> bool:
     """Apply one Slack Socket Mode `message` event to `state` -- the
@@ -835,7 +885,10 @@ def handle_realtime_event(cfg: SlackConfig, state: dict, source_dir: Path, event
     if entry is None or entry["status"] != "active":
         return False
     before = dict(entry)
-    apply_reply_command(cfg, state, thread_ts, event, now, api, audit_path)
+    if is_help_reply(event.get("text", "")):
+        apply_help_reply(cfg, state, thread_ts, event, now, api, audit_path)
+    else:
+        apply_reply_command(cfg, state, thread_ts, event, now, api, audit_path)
     return entry != before
 
 
@@ -894,16 +947,19 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
             entry["last_seen_latest_reply"] = msg.get("latest_reply")
         human_replies = [r for r in replies if not r.get("bot_id")]
         command = None
-        command_ts = None
-        for reply in human_replies:  # last match wins
+        winning_reply = None
+        help_reply = None
+        for reply in human_replies:  # last match wins, independently per kind
             parsed = parse_command(reply.get("text", ""), now)
             if parsed is not None:
                 command = parsed
-                command_ts = reply.get("ts")
                 winning_reply = reply
-        if command is None:
-            continue
-        apply_reply_command(cfg, state, ts, winning_reply, now, api, audit_path)
+            if is_help_reply(reply.get("text", "")):
+                help_reply = reply
+        if command is not None:
+            apply_reply_command(cfg, state, ts, winning_reply, now, api, audit_path)
+        if help_reply is not None:
+            apply_help_reply(cfg, state, ts, help_reply, now, api, audit_path)
 
     # Only sweep entries that existed before this tick: a message's `ts` is
     # its real Slack post time, but `history()` is queried with `oldest` set

@@ -7,11 +7,11 @@ nav: commands
 
 # Commands
 
-All commands are replies to your own post's thread — except `help`, which is a new message on its own.
+`remove` is a reply to your own post's thread. `help` works either way — a new message on its own, or a reply in a post's thread.
 {:.lede}
 
 <div class="callout" markdown="1">
-Find the message you posted, open its thread, and reply there. A reply posted anywhere else (a new top-level message, or a reply on someone else's post) doesn't count.
+For `remove`: find the message you posted, open its thread, and reply there. A reply posted anywhere else (a new top-level message, or a reply on someone else's post) doesn't count.
 </div>
 
 ## Removing a post
@@ -35,6 +35,6 @@ Scheduling a removal doesn't take the post down early — it stays up until the 
 
 ## Getting help
 
-Post `help` as a new message (not a reply) and the bot replies with a quick summary: what it does, how long a post stays up, how to remove one, and who to contact if something's broken.
+Post `help` as a new message, or reply `help` in any post's thread, and the bot replies with a quick summary: what it does, how long a post stays up, how to remove one, and who to contact if something's broken.
 
 A short new message that happens to start with `help` or `remove` is treated the same way — it won't be shown on the display, since it's almost certainly someone looking for instructions rather than content meant for the screen. A longer message that happens to start with one of those words (a real notice, not a command) is shown normally.
