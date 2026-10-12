@@ -79,11 +79,19 @@ cat <<EOF
 Next steps:
   1. If you haven't yet, create a Slack app and fill in KIOSK_SLACK_TOKEN,
      KIOSK_SLACK_CHANNEL, and KIOSK_SLACK_APP_TOKEN in config/kiosk.env
-     (see docs/SETUP.md), then:
+     (see README.md's "Slack app setup" section), then:
        systemctl --user restart kiosk-socket.service
   2. Check it worked:
        systemctl --user status kiosk-socket.service
        cat ~/kiosk-data/data/manifest.json
-  3. Reboot to see the kiosk autostart, or test it now without rebooting:
+  3. The kiosk autostart entry only fires once this user is auto-logged
+     into the desktop on boot. If that's not set up yet:
+       sudo raspi-config nonint do_boot_behaviour B4
+     (or: sudo raspi-config -> System Options -> Boot / Auto Login ->
+     Desktop Autologin), then reboot.
+  4. Reboot to see the kiosk autostart, or test it now without rebooting
+     (only works if you already have a desktop session open, e.g. an
+     attached screen -- not over a plain SSH session, which has no
+     display):
        $REPO_DIR/kiosk/launch-kiosk-pi.sh
 EOF

@@ -154,6 +154,22 @@ bin/serve.sh
 
 ...and open `http://127.0.0.1:8420/` (or /admin for the admin panel).
 
+## Troubleshooting
+
+- **Mouse cursor visible on the kiosk display**: `kiosk/launch-kiosk-pi.sh` hides it via
+  `unclutter` (and blanks the screen via `xset`), but both are X11-only and silently do
+  nothing under Wayland. Recent Raspberry Pi OS images default to a Wayland session
+  (`loginctl list-sessions` / `loginctl show-session <id> -p Type` will show
+  `Type=wayland`). Switch the Pi to X11:
+  ```
+  sudo raspi-config nonint do_wayland W1
+  sudo reboot
+  ```
+  (GUI equivalent: `sudo raspi-config` -> Advanced Options -> Wayland -> X11.) The nonint
+  value codes for `do_wayland` vary by image -- if `W1` errors as an unrecognised option,
+  check what your image actually supports with
+  `grep -o 'do_[a-z_]*' /usr/bin/raspi-config` or just use the interactive menu instead.
+
 ## Repo layout
 
 ```
