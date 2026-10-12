@@ -9,6 +9,7 @@
   const textAuthor = document.getElementById("text-author");
   const imageCaption = document.getElementById("image-caption");
   const imageCaptionText = document.getElementById("image-caption-text");
+  const imageCaptionAuthor = document.getElementById("image-caption-author");
   const gridLayer = document.getElementById("grid-layer");
   const videoLayer = document.getElementById("video-layer");
   const emptyState = document.getElementById("empty-state");
@@ -165,6 +166,13 @@
         p.innerHTML = slackMrkdwnToHtml(region.text || "");
         p.style.fontSize = gridTextFontSizeVw(region.text || "", cols) + "vw";
         cell.appendChild(p);
+        if (item.author) {
+          const authorP = document.createElement("p");
+          authorP.className = "grid-cell-author";
+          authorP.textContent = "— " + item.author;
+          authorP.style.fontSize = Math.max(1, gridTextFontSizeVw(region.text || "", cols) * 0.35) + "vw";
+          cell.appendChild(authorP);
+        }
         textCells.push({ p, cell });
       } else {
         const img = document.createElement("img");
@@ -175,7 +183,14 @@
       gridLayer.appendChild(cell);
     }
     // Only measurable (clientHeight) once every cell is actually in the
-    // DOM and the grid has laid out, hence a second pass after the loop.
+    // DOM *and* gridLayer itself is display:grid, hence a second pass
+    // after the loop -- and "visible" has to be added here, before that
+    // pass, not left to showSlide's caller as usual: while gridLayer is
+    // still display:none, clientHeight reads 0, so shrinkFontToFit would
+    // immediately collapse every caption to its minimum font size (found
+    // live: a caption briefly renders tiny, then relayouts at the right
+    // size next time this same slide comes back around).
+    gridLayer.classList.add("visible");
     for (const { p, cell } of textCells) {
       shrinkFontToFit(p, cell, 1.4);
     }
@@ -249,6 +264,7 @@
       if (item.caption) {
         imageCaptionText.innerHTML = slackMrkdwnToHtml(item.caption);
         imageCaptionText.style.fontSize = captionFontSizeVw(item.caption) + "vw";
+        imageCaptionAuthor.textContent = item.author ? "— " + item.author : "";
         stage.classList.add("split");
         imageCaption.classList.add("visible");
         shrinkFontToFit(imageCaptionText, imageCaption, 2);
@@ -275,6 +291,7 @@
       if (item.caption) {
         imageCaptionText.innerHTML = slackMrkdwnToHtml(item.caption);
         imageCaptionText.style.fontSize = captionFontSizeVw(item.caption) + "vw";
+        imageCaptionAuthor.textContent = item.author ? "— " + item.author : "";
         stage.classList.add("split");
         imageCaption.classList.add("visible");
         shrinkFontToFit(imageCaptionText, imageCaption, 2);

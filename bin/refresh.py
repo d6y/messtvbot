@@ -355,7 +355,7 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                         continue
                     item = {
                         "kind": "pdf-page", "ts": ts, "name": file_path.name, "src": rel,
-                        "page": i, "pages": total,
+                        "page": i, "pages": total, "author": entry["author"],
                     }
                     # Repeats on every page -- each page is its own slide
                     # shown at a different point in the rotation, not all
@@ -367,7 +367,8 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
             elif file_path.suffix.lower() in VIDEO_EXTS:
                 rel = _relative_or_none(file_path, kiosk_dir, entry.get("ts"), "manifest item")
                 if rel is not None:
-                    item = {"kind": "video", "ts": ts, "name": file_path.name, "src": rel}
+                    item = {"kind": "video", "ts": ts, "name": file_path.name, "src": rel,
+                            "author": entry["author"]}
                     if entry.get("text"):
                         item["caption"] = entry["text"]
                     items.append(item)
@@ -382,13 +383,14 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                         continue
                     regions.append({"kind": "image", "src": rel, "name": img_path.name})
                 if regions:
-                    items.append({"kind": "grid", "ts": ts, "regions": regions})
+                    items.append({"kind": "grid", "ts": ts, "regions": regions, "author": entry["author"]})
             else:
                 display_path = heic_rendered.get(str(file_path), file_path)
                 rel = _relative_or_none(display_path, kiosk_dir, entry.get("ts"), "manifest item")
                 if rel is None:
                     continue
-                item = {"kind": "image", "ts": ts, "name": file_path.name, "src": rel}
+                item = {"kind": "image", "ts": ts, "name": file_path.name, "src": rel,
+                        "author": entry["author"]}
                 if entry.get("text"):
                     item["caption"] = entry["text"]
                 items.append(item)

@@ -211,7 +211,8 @@ class BuildManifestTests(unittest.TestCase):
         entry = _attachment_entry(text="", local_files=[str(video_path)], ts="100.8")
         manifest = refresh.build_manifest([("100.8", entry)], {}, self.kiosk_dir, 8, 30)
         self.assertEqual(manifest["items"], [
-            {"kind": "video", "ts": "100.8", "name": "slack-100.8.mp4", "src": "source/slack-100.8.mp4"},
+            {"kind": "video", "ts": "100.8", "name": "slack-100.8.mp4", "src": "source/slack-100.8.mp4",
+             "author": "Jane"},
         ])
 
     def test_video_with_caption_includes_caption_field(self):
@@ -221,6 +222,42 @@ class BuildManifestTests(unittest.TestCase):
         entry = _attachment_entry(text="Team outing clip!", local_files=[str(video_path)], ts="100.9")
         manifest = refresh.build_manifest([("100.9", entry)], {}, self.kiosk_dir, 8, 30)
         self.assertEqual(manifest["items"][0]["caption"], "Team outing clip!")
+
+    def test_video_item_includes_author(self):
+        video_path = self.kiosk_dir / "source" / "slack-100.9.mov"
+        video_path.parent.mkdir(parents=True)
+        video_path.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(video_path)], ts="100.9")
+        manifest = refresh.build_manifest([("100.9", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["items"][0]["author"], "Jane")
+
+    def test_image_item_includes_author(self):
+        image_path = self.kiosk_dir / "source" / "slack-100.1.png"
+        image_path.parent.mkdir(parents=True)
+        image_path.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(image_path)])
+        manifest = refresh.build_manifest([("100.1", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["items"][0]["author"], "Jane")
+
+    def test_grid_item_includes_author(self):
+        a = self._make_image("slack-100.5-0.jpg")
+        b = self._make_image("slack-100.5-1.png")
+        entry = _attachment_entry(text="", local_files=[str(a), str(b)], ts="100.5")
+        manifest = refresh.build_manifest([("100.5", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["items"][0]["author"], "Jane")
+
+    def test_pdf_page_includes_author(self):
+        pdf_path = self.kiosk_dir / "source" / "slack-100.1.pdf"
+        pdf_path.parent.mkdir(parents=True)
+        pdf_path.write_bytes(b"x")
+        page_path = self.kiosk_dir / "rendered" / "slack-100.1" / "page-1.png"
+        page_path.parent.mkdir(parents=True)
+        page_path.write_bytes(b"x")
+        entry = _attachment_entry(text="", local_files=[str(pdf_path)])
+        manifest = refresh.build_manifest(
+            [("100.1", entry)], {"slack-100.1": [page_path]}, self.kiosk_dir, 8, 30
+        )
+        self.assertEqual(manifest["items"][0]["author"], "Jane")
 
     def test_single_heic_image_uses_the_converted_jpg(self):
         heic_path = self._make_image("slack-100.10.heic")
