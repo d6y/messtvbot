@@ -921,6 +921,31 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(state["100.1"]["author"], "Jane")
         self.assertEqual(state["100.1"]["status"], "active")
 
+    def test_new_message_stores_poster_user_id(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.1"]["author_id"], "U1")
+
+    def test_new_message_stores_poster_user_id_even_when_name_lookup_fails(self):
+        class FailingNameAPI(FakeSlackAPI):
+            def user_name(self, user_id):
+                raise ms.SlackAPIError("users_not_found")
+        api = FailingNameAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.1"]["author_id"], "U1")
+
+    def test_message_with_no_user_stores_no_author_id(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "files": []}],
+        )
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertIsNone(state["100.1"]["author_id"])
+
     def test_new_attachment_message_downloads_file(self):
         api = FakeSlackAPI(
             messages=[{"ts": "100.2", "text": "", "user": "U1",

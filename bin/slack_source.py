@@ -671,7 +671,7 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         author = "Unknown"
     entry = {
         "ts": ts, "posted_at": posted_at, "status": "active", "kind": kind,
-        "text": "", "author": author, "local_files": [],
+        "text": "", "author": author, "author_id": msg.get("user"), "local_files": [],
         "remove_at": (posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
         "remove_reason": "ttl",
     }

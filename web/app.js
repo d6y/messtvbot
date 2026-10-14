@@ -13,6 +13,7 @@
   const gridLayer = document.getElementById("grid-layer");
   const videoLayer = document.getElementById("video-layer");
   const emptyState = document.getElementById("empty-state");
+  const authorBadge = document.getElementById("author-badge");
 
   const DEFAULT_SLIDE_MS = 8000;
   const DEFAULT_POLL_MS = 30000;
@@ -197,6 +198,24 @@
     return true;
   }
 
+  // Author to show in the bottom-left badge, or null. Only slides with no
+  // text on screen get one -- anything with text (a text slide, a caption,
+  // a grid's caption cell) already shows "— author" alongside that text.
+  function standaloneAuthor(item) {
+    if (!item.author) return null;
+    if (item.kind === "text") return null;
+    if (item.kind === "grid") {
+      const regions = Array.isArray(item.regions) ? item.regions : [];
+      return regions.some((r) => r.kind === "text") ? null : item.author;
+    }
+    return item.caption ? null : item.author;
+  }
+
+  function setAuthorBadge(author) {
+    authorBadge.textContent = author ? "— " + author : "";
+    authorBadge.classList.toggle("visible", Boolean(author));
+  }
+
   function hideVideoLayer() {
     videoLayer.classList.remove("visible");
     videoLayer.pause();
@@ -223,6 +242,7 @@
       imageCaption.classList.remove("visible");
       gridLayer.classList.remove("visible");
       hideVideoLayer();
+      setAuthorBadge(standaloneAuthor(item));
       currentIndex = index;
       return;
     }
@@ -245,6 +265,7 @@
       stage.classList.remove("split");
       imageCaption.classList.remove("visible");
       hideVideoLayer();
+      setAuthorBadge(standaloneAuthor(item));
       currentIndex = index;
       return;
     }
@@ -272,6 +293,7 @@
         stage.classList.remove("split");
         imageCaption.classList.remove("visible");
       }
+      setAuthorBadge(standaloneAuthor(item));
       currentIndex = index;
       return;
     }
@@ -299,6 +321,7 @@
         stage.classList.remove("split");
         imageCaption.classList.remove("visible");
       }
+      setAuthorBadge(standaloneAuthor(item));
       [frontLayer, backLayer] = [backLayer, frontLayer];
       currentIndex = index;
     } catch (err) {
@@ -348,6 +371,7 @@
       imageCaption.classList.remove("visible");
       gridLayer.classList.remove("visible");
       hideVideoLayer();
+      setAuthorBadge(null);
       clearTimeout(slideTimer);
       currentIndex = -1;
       return;

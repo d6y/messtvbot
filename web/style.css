@@ -189,3 +189,29 @@ code {
   margin-top: 1em;
   color: #888;
 }
+
+/* Attribution for slides with no text on screen (captionless image,
+   PDF page, or image-only grid) -- see standaloneAuthor() in app.js.
+   Pinned to the screen's corner, not the image's, since object-fit:
+   contain letterboxes each image differently. Shrink-wraps to the name. */
+#author-badge {
+  position: absolute;
+  left: 2vw;
+  bottom: 2vw;
+  background: #000;
+  color: #fff;
+  padding: 0.35em 0.7em;
+  font-size: 1.4vw;
+  line-height: 1.2;
+  white-space: nowrap;
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 900ms ease-in-out;
+  pointer-events: none;
+}
+
+#author-badge.visible {
+  opacity: 1;
+}
