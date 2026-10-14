@@ -199,6 +199,31 @@ bin/serve.sh
   pattern, or `wlan0` sitting `disconnected` for more than a couple of minutes, is the
   real failure mode the watchdog exists for.
 
+- **Kiosk display goes white/blank** (separately from the cursor/Wayland issue above):
+  one real, confirmed cause is Raspberry Pi OS's **console-level screen blanking**,
+  which is independent of X11's own DPMS settings (`launch-kiosk-pi.sh` already
+  disables those via `xset`, but that doesn't touch this). Check and fix:
+  ```
+  raspi-config nonint get_blanking
+  ```
+  `0` means it's enabled (the likely culprit); disable it with:
+  ```
+  sudo raspi-config nonint do_blanking 1
+  ```
+  Ruled out as *not* the cause, if you're auditing this again: WiFi power-saving
+  (`iw wlan0 get power_save` was already `off`), USB autosuspend (only matters for
+  USB-attached peripherals -- the Pi's onboard WiFi is SDIO, not USB, so this never
+  affects `wlan0`), systemd sleep/suspend/hibernate targets (all `inactive` by
+  default on a Pi with no battery), and HDMI-CEC (no explicit config either way in
+  `/boot/firmware/config.txt`, so this is on defaults -- worth a closer look only if
+  blanking and DPMS are both confirmed off and the screen still goes dark). Also
+  checked and clean: `vcgencmd get_throttled` showed no undervoltage ever and no
+  *currently* active throttling (only a historical soft-temperature-limit bit, not
+  something actively happening) -- re-check this one specifically if the white-screen
+  or WiFi issues recur, since a genuinely overloaded/throttled Pi could plausibly
+  explain both at once (the Pi 3B+ is modest hardware for running a full X11 desktop
+  plus Chromium simultaneously).
+
 ## Repo layout
 
 ```
