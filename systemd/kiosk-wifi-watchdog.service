@@ -3,4 +3,11 @@ Description=Mess TV Bot: nudge wlan0 back up if it's sitting disconnected
 
 [Service]
 Type=oneshot
+# Type=oneshot disables systemd's default start timeout entirely -- without
+# this, a wedged NetworkManager (the exact failure mode this watchdog exists
+# to work around) could leave `nmcli` hanging forever, which would stop the
+# timer from ever firing the service again (a timer won't re-trigger a unit
+# that's still "activating"). 2min comfortably exceeds `nmcli device
+# connect`'s own ~90s default activation wait.
+TimeoutStartSec=2min
 ExecStart=%h/messtvbot/kiosk/wifi-watchdog-pi.sh

@@ -179,25 +179,38 @@ bin/serve.sh
   (no errors, no retry attempts logged in `journalctl -u NetworkManager`) until a manual
   `nmcli device connect wlan0` was run, which then reconnected within seconds both times.
   Setting `connection.autoconnect-retries` to `0` ("forever", instead of the default
-  `-1`, which defers to a small global limit) was tried first and genuinely helps avoid
-  NetworkManager giving up outright, but on its own did **not** reliably make it retry
-  again within a useful window after a full failure -- so this alone isn't the fix,
-  just worth having set regardless:
+  `-1`, which defers to a small global limit) was tried first, and is still worth
+  having set, but on its own did **not** reliably make it retry again within a useful
+  window after a full failure -- so this alone isn't the fix:
   ```
   sudo nmcli connection modify "<your-SSID>" connection.autoconnect-retries 0
   ```
   The actual fix is `kiosk/wifi-watchdog-pi.sh` + `systemd/kiosk-wifi-watchdog.timer`
   (installed and enabled automatically by `install-pi.sh`): every 2 minutes it checks
-  whether `wlan0` is sitting cleanly `disconnected` and, if so, runs
-  `nmcli device connect wlan0` itself -- the same manual nudge that worked instantly
-  both times this was debugged live. It only acts on a clean `disconnected` state, never
-  interrupting an in-progress `connecting` attempt or touching an already-`connected`
-  device, so it can't fight with NetworkManager's own reconnect logic. Occasional brief
-  wlan0 re-associate/scan blips in `journalctl -u NetworkManager` that resolve within a
+  for any WiFi device sitting cleanly `disconnected` and, if found, runs
+  `nmcli device connect <device>` itself -- the same manual nudge that worked instantly
+  both times this was debugged live. It only acts on a clean `disconnected` state, so
+  it's very unlikely to interrupt an in-progress `connecting` attempt or fight with
+  NetworkManager's own reconnect logic (there's a small window between checking and
+  acting where NetworkManager could start its own attempt first, but `nmcli device
+  connect` on an already-activating device just errors harmlessly or restarts that one
+  attempt -- it can't loop). The service unit sets `TimeoutStartSec=2min`, since
+  `Type=oneshot` otherwise has *no* default timeout at all -- without it, a wedged
+  NetworkManager (the exact fault this exists to work around) could leave `nmcli`
+  hanging forever and silently stop the timer from ever firing the service again.
+  **Depends on the user being in the `netdev` group** (Raspberry Pi OS's default `pi`/
+  first-boot-wizard user is; a manually-created user might not be) -- that's what lets
+  a `systemd --user` unit call `nmcli device connect` via polkit without needing root
+  or an interactive auth prompt. Confirm with `nmcli general permissions` --
+  `org.freedesktop.NetworkManager.network-control` should read `yes`. If this was ever
+  set up with a non-default user, test the actual timer-fired path once rather than
+  trusting it: `nmcli device disconnect wlan0 && systemctl --user start
+  kiosk-wifi-watchdog.service`, then confirm it reconnects. Occasional brief wlan0
+  re-associate/scan blips in `journalctl -u NetworkManager` that resolve within a
   couple of seconds on their own are normal (routine WPA rekeying/AP housekeeping) and
   not something to chase -- only a `link timed out` / repeated `Activation: failed`
-  pattern, or `wlan0` sitting `disconnected` for more than a couple of minutes, is the
-  real failure mode the watchdog exists for.
+  pattern, or a WiFi device sitting `disconnected` for more than a couple of minutes,
+  is the real failure mode the watchdog exists for.
 
 - **Kiosk display goes white/blank** (separately from the cursor/Wayland issue above):
   one real, confirmed cause is Raspberry Pi OS's **console-level screen blanking**,
@@ -222,7 +235,12 @@ bin/serve.sh
   something actively happening) -- re-check this one specifically if the white-screen
   or WiFi issues recur, since a genuinely overloaded/throttled Pi could plausibly
   explain both at once (the Pi 3B+ is modest hardware for running a full X11 desktop
-  plus Chromium simultaneously).
+  plus Chromium simultaneously). Note that `launch-kiosk-pi.sh`'s `while true`
+  relaunch loop only recovers from Chromium actually *exiting* -- if blanking/DPMS
+  are both off and the screen still goes white, that's more likely a genuine Chromium
+  hang/GPU crash that leaves the process alive but unresponsive, which nothing here
+  currently detects or recovers from automatically; see that script's own header
+  comment for the known `--disable-gpu`/GLES2 angle on this.
 
 ## Repo layout
 
