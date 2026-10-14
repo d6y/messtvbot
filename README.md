@@ -170,6 +170,35 @@ bin/serve.sh
   check what your image actually supports with
   `grep -o 'do_[a-z_]*' /usr/bin/raspi-config` or just use the interactive menu instead.
 
+- **WiFi drop takes the kiosk offline for hours, not seconds**: `kiosk-socket.service`
+  itself recovers fine on its own once WiFi actually reconnects -- `slack_sdk`'s Socket
+  Mode client keeps retrying every few seconds and picks up where it left off, no restart
+  needed. The real problem is NetworkManager not reliably retrying *WiFi* reconnection on
+  its own once an activation attempt has fully failed out -- found live, twice: once left
+  the Pi offline for ~5 hours overnight, the other for 25+ minutes with a clean terminal
+  (no errors, no retry attempts logged in `journalctl -u NetworkManager`) until a manual
+  `nmcli device connect wlan0` was run, which then reconnected within seconds both times.
+  Setting `connection.autoconnect-retries` to `0` ("forever", instead of the default
+  `-1`, which defers to a small global limit) was tried first and genuinely helps avoid
+  NetworkManager giving up outright, but on its own did **not** reliably make it retry
+  again within a useful window after a full failure -- so this alone isn't the fix,
+  just worth having set regardless:
+  ```
+  sudo nmcli connection modify "<your-SSID>" connection.autoconnect-retries 0
+  ```
+  The actual fix is `kiosk/wifi-watchdog-pi.sh` + `systemd/kiosk-wifi-watchdog.timer`
+  (installed and enabled automatically by `install-pi.sh`): every 2 minutes it checks
+  whether `wlan0` is sitting cleanly `disconnected` and, if so, runs
+  `nmcli device connect wlan0` itself -- the same manual nudge that worked instantly
+  both times this was debugged live. It only acts on a clean `disconnected` state, never
+  interrupting an in-progress `connecting` attempt or touching an already-`connected`
+  device, so it can't fight with NetworkManager's own reconnect logic. Occasional brief
+  wlan0 re-associate/scan blips in `journalctl -u NetworkManager` that resolve within a
+  couple of seconds on their own are normal (routine WPA rekeying/AP housekeeping) and
+  not something to chase -- only a `link timed out` / repeated `Activation: failed`
+  pattern, or `wlan0` sitting `disconnected` for more than a couple of minutes, is the
+  real failure mode the watchdog exists for.
+
 ## Repo layout
 
 ```

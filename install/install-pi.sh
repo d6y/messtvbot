@@ -54,6 +54,8 @@ cp "$REPO_DIR"/systemd/kiosk-refresh.service "$HOME/.config/systemd/user/"
 cp "$REPO_DIR"/systemd/kiosk-refresh.timer "$HOME/.config/systemd/user/"
 cp "$REPO_DIR"/systemd/kiosk-socket.service "$HOME/.config/systemd/user/"
 cp "$REPO_DIR"/systemd/kiosk-serve.service "$HOME/.config/systemd/user/"
+cp "$REPO_DIR"/systemd/kiosk-wifi-watchdog.service "$HOME/.config/systemd/user/"
+cp "$REPO_DIR"/systemd/kiosk-wifi-watchdog.timer "$HOME/.config/systemd/user/"
 
 systemctl --user daemon-reload
 # Disable the old timer on a re-run against an existing install -- otherwise
@@ -63,6 +65,7 @@ systemctl --user daemon-reload
 systemctl --user disable --now kiosk-refresh.timer 2>/dev/null || true
 systemctl --user enable --now kiosk-serve.service
 systemctl --user enable --now kiosk-socket.service
+systemctl --user enable --now kiosk-wifi-watchdog.timer
 
 echo "==> Allowing user services to run without an active login (linger)"
 sudo loginctl enable-linger "$USER"

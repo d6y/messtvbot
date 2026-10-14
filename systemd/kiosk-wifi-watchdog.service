@@ -1,0 +1,6 @@
+[Unit]
+Description=Mess TV Bot: nudge wlan0 back up if it's sitting disconnected
+
+[Service]
+Type=oneshot
+ExecStart=%h/messtvbot/kiosk/wifi-watchdog-pi.sh

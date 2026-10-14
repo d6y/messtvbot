@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodic trigger for kiosk-wifi-watchdog.service
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
