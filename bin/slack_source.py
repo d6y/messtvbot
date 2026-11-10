@@ -184,6 +184,16 @@ class RemovalCommand:
     remove_at: datetime | None
 
 
+def _normalize_date_phrase(phrase: str) -> str:
+    """Rewrite phrasings dateparser gets wrong into ones it gets right.
+    "at 2200" -> "at 22:00": dateparser reads a bare 4-digit number as a
+    year (or silently drops it after "today"/"tomorrow"), so only rewrite
+    it after "at", where it can't be a year. "tonight" -> "today":
+    dateparser doesn't know "tonight" at all."""
+    phrase = re.sub(r"\bat\s+([01]\d|2[0-3])([0-5]\d)\b", r"at \1:\2", phrase, flags=re.IGNORECASE)
+    return re.sub(r"\btonight\b", "today", phrase, flags=re.IGNORECASE)
+
+
 def parse_command(text: str, now: datetime) -> RemovalCommand | None:
     """Return a RemovalCommand if `text` contains a removal trigger word,
     else None. A bare trigger word (no phrase after it) means "remove
@@ -201,18 +211,22 @@ def parse_command(text: str, now: datetime) -> RemovalCommand | None:
         return None
 
     rest = (text[:match.start()] + text[match.end():]).strip()
-    if not rest:
+    if not rest or rest.lower() == "now":
         return RemovalCommand(remove_at=now)
 
     # Replies name dates/times with no timezone, and mean London time when
     # they do -- parse relative to (and localize into) LOCAL_TZ rather than
     # UTC, so "remove 10am" means 10am in London, not 10am UTC.
     naive_local_now = now.astimezone(LOCAL_TZ).replace(tzinfo=None)
-    parsed = dateparser.parse(rest, settings={
+    parsed = dateparser.parse(_normalize_date_phrase(rest), settings={
         "PREFER_DATES_FROM": "future",
         "RELATIVE_BASE": naive_local_now,
     })
-    if parsed is None:
+    # Landing exactly on the current moment means dateparser kept only a
+    # day word ("today") and threw the rest away -- treat it as not
+    # understood rather than removing immediately (live bug: "remove today
+    # at 2200" took a post down at 17:48).
+    if parsed is None or parsed == naive_local_now:
         return RemovalCommand(remove_at=None)
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=LOCAL_TZ)

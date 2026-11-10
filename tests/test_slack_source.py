@@ -403,6 +403,39 @@ class ParseCommandTests(unittest.TestCase):
         result = ms.parse_command("remove 10", self.NOW)
         self.assertIsNotNone(result.remove_at)
 
+    # Live bug 2026-11-06: "remove today at 2200" removed the post
+    # immediately -- dateparser kept "today", silently dropped "2200", and
+    # returned the current moment. 17:48 on a November day is GMT, so
+    # London time and UTC coincide in these tests.
+    EVENING = datetime(2026, 11, 6, 17, 48, tzinfo=timezone.utc)
+
+    def test_four_digit_24h_time_after_at_is_a_time(self):
+        result = ms.parse_command("remove today at 2200", self.EVENING)
+        self.assertEqual(result.remove_at.isoformat(), "2026-11-06T22:00:00+00:00")
+
+    def test_four_digit_24h_time_with_tomorrow(self):
+        result = ms.parse_command("remove tomorrow at 0900", self.EVENING)
+        self.assertEqual(result.remove_at.isoformat(), "2026-11-07T09:00:00+00:00")
+
+    def test_tonight_with_a_time_means_today(self):
+        result = ms.parse_command("remove tonight at 11pm", self.EVENING)
+        self.assertEqual(result.remove_at.isoformat(), "2026-11-06T23:00:00+00:00")
+
+    def test_year_after_a_date_is_still_a_year(self):
+        result = ms.parse_command("remove 13 Nov 2026", self.EVENING)
+        self.assertEqual(result.remove_at.date().isoformat(), "2026-11-13")
+
+    def test_phrase_that_resolves_to_this_moment_is_not_understood(self):
+        # A phrase only ever lands exactly on "now" when dateparser threw
+        # part of it away -- removing immediately on a garbled date is the
+        # outcome the remove_at=None branch exists to prevent. A bare
+        # "remove" / "remove now" is the deliberate way to say now.
+        for phrase in ("remove today", "remove tonight"):
+            with self.subTest(phrase=phrase):
+                result = ms.parse_command(phrase, self.EVENING)
+                self.assertIsNotNone(result)
+                self.assertIsNone(result.remove_at)
+
     def test_unrelated_reply_does_not_match(self):
         self.assertIsNone(ms.parse_command("nice!", self.NOW))
 
