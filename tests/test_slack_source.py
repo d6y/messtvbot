@@ -1,3 +1,4 @@
+import copy
 import email.message
 import io
 import sys
@@ -54,6 +55,69 @@ class ClassifyMessageTests(unittest.TestCase):
     def test_message_with_bot_id_is_ignored_regardless_of_user(self):
         msg = {"text": "I've removed: ...", "files": [], "bot_id": "B123"}
         self.assertEqual(ms.classify_message(msg), "ignored")
+
+
+# Trimmed from real conversations.history payloads (2026-11-10): a forward's
+# own "text" is whatever the forwarder typed (often ""), and the forwarded
+# post -- text and files, in the same shape as a normal message's -- is an
+# attachment marked is_share.
+FORWARD_TEXT_ONLY = {
+    "ts": "200.1", "user": "U_FWD", "text": "",
+    "attachments": [{
+        "is_share": True, "is_msg_unfurl": True,
+        "author_id": "U_ORIG", "channel_id": "C_GENERAL",
+        "text": ":christmas_tree: *Lunch - save the date*\nTuesday 8 December 12-2pm.",
+    }],
+}
+FORWARD_WITH_IMAGE_AND_NOTE = {
+    "ts": "200.2", "user": "U_FWD",
+    "text": "Just checking what happens if I forward this",
+    "attachments": [{
+        "is_share": True, "is_msg_unfurl": True, "is_thread_root_unfurl": True,
+        "author_id": "U_ORIG", "channel_id": "C_GENERAL",
+        "text": "Some cake in the kitchen!",
+        "files": [{"filetype": "jpg", "name": "cake.jpg", "size": 823467,
+                   "url_private_download": "https://x/cake.jpg", "url_private": "https://x/cake-view.jpg"}],
+    }],
+}
+
+
+class UnwrapForwardTests(unittest.TestCase):
+    def test_ordinary_message_is_unchanged(self):
+        msg = {"ts": "100.1", "user": "U1", "text": "Pizza today!", "files": []}
+        self.assertEqual(ms.unwrap_forward(msg), msg)
+
+    def test_forward_uses_the_forwarded_text(self):
+        result = ms.unwrap_forward(FORWARD_TEXT_ONLY)
+        self.assertEqual(result["text"], FORWARD_TEXT_ONLY["attachments"][0]["text"])
+
+    def test_forward_stays_credited_to_the_forwarder_at_its_own_ts(self):
+        result = ms.unwrap_forward(FORWARD_TEXT_ONLY)
+        self.assertEqual(result["user"], "U_FWD")
+        self.assertEqual(result["ts"], "200.1")
+
+    def test_forwarders_own_note_is_dropped(self):
+        result = ms.unwrap_forward(FORWARD_WITH_IMAGE_AND_NOTE)
+        self.assertEqual(result["text"], "Some cake in the kitchen!")
+
+    def test_forward_uses_the_forwarded_files(self):
+        result = ms.unwrap_forward(FORWARD_WITH_IMAGE_AND_NOTE)
+        self.assertEqual(result["files"], FORWARD_WITH_IMAGE_AND_NOTE["attachments"][0]["files"])
+
+    def test_forward_without_files_has_no_files(self):
+        self.assertEqual(ms.unwrap_forward(FORWARD_TEXT_ONLY)["files"], [])
+
+    def test_pasted_message_link_is_not_a_forward(self):
+        # Pasting a Slack message permalink unfurls it with is_msg_unfurl
+        # but no is_share -- the poster's own comment is what they meant.
+        msg = {"ts": "100.3", "user": "U1", "text": "see <https://x/archives/C1/p1>",
+               "attachments": [{"is_msg_unfurl": True, "text": "the linked post"}]}
+        self.assertEqual(ms.unwrap_forward(msg), msg)
+
+    def test_does_not_modify_the_original_message(self):
+        original = copy.deepcopy(FORWARD_WITH_IMAGE_AND_NOTE)
+        ms.unwrap_forward(FORWARD_WITH_IMAGE_AND_NOTE)
+        self.assertEqual(FORWARD_WITH_IMAGE_AND_NOTE, original)
 
 
 class ExtractAttachmentTests(unittest.TestCase):
@@ -953,6 +1017,27 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(state["100.1"]["text"], "Pizza today!")
         self.assertEqual(state["100.1"]["author"], "Jane")
         self.assertEqual(state["100.1"]["status"], "active")
+
+    def test_forwarded_text_post_is_shown_as_the_forwarders_post(self):
+        api = FakeSlackAPI(messages=[FORWARD_TEXT_ONLY], user_names={"U_FWD": "Ben", "U_ORIG": "Orig"})
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        entry = state["200.1"]
+        self.assertEqual(entry["status"], "active")
+        self.assertEqual(entry["kind"], "text")
+        self.assertIn("Lunch - save the date", entry["text"])
+        self.assertIn("\U0001F384", entry["text"])  # :christmas_tree: converted as usual
+        self.assertEqual(entry["author"], "Ben")
+        self.assertIn("Added to the Mess TV", api.posted_messages[0]["text"])
+        self.assertEqual(api.posted_messages[0]["thread_ts"], "200.1")
+
+    def test_forwarded_image_post_downloads_the_forwarded_image_and_drops_the_note(self):
+        api = FakeSlackAPI(messages=[FORWARD_WITH_IMAGE_AND_NOTE], user_names={"U_FWD": "Richard"})
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        entry = state["200.2"]
+        self.assertEqual(entry["kind"], "attachment")
+        self.assertEqual(entry["text"], "Some cake in the kitchen!")
+        self.assertEqual(entry["local_files"], [str(self.source_dir / "slack-200.2.jpg")])
+        self.assertIn("https://x/cake.jpg", api.downloaded)
 
     def test_new_message_stores_poster_user_id(self):
         api = FakeSlackAPI(
@@ -1943,6 +2028,15 @@ class HandleRealtimeEventTests(unittest.TestCase):
         changed = ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now,
                                             api, self.audit_path)
         self.assertTrue(changed)
+
+    def test_forwarded_post_is_ingested_with_the_forwarded_content(self):
+        api = FakeSlackAPI(user_names={"U_FWD": "Richard"})
+        state = {}
+        ms.handle_realtime_event(self.cfg, state, self.source_dir, FORWARD_WITH_IMAGE_AND_NOTE,
+                                 self.now, api, self.audit_path)
+        self.assertEqual(state["200.2"]["text"], "Some cake in the kitchen!")
+        self.assertEqual(state["200.2"]["author"], "Richard")
+        self.assertIn("https://x/cake.jpg", api.downloaded)
 
     def test_duplicate_ts_is_not_reingested(self):
         api = FakeSlackAPI()

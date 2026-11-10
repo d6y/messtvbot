@@ -97,6 +97,20 @@ def classify_message(msg: dict, bot_user_id: str = "") -> str:
     return "ignored"
 
 
+def unwrap_forward(msg: dict) -> dict:
+    """If `msg` forwards another Slack post, return it as if the forwarder
+    had posted that post's text and files themselves; otherwise return it
+    unchanged. A forward's own "text" is only the forwarder's note, which
+    is deliberately dropped -- the forwarded post goes in an attachment
+    marked is_share, with files in the same shape as a normal message's.
+    A pasted message link also unfurls (is_msg_unfurl) but has no
+    is_share, and the poster's own comment is what they meant there."""
+    share = next((a for a in msg.get("attachments") or [] if a.get("is_share")), None)
+    if share is None:
+        return msg
+    return {**msg, "text": share.get("text") or "", "files": share.get("files") or []}
+
+
 def extract_attachment(msg: dict) -> dict | None:
     """Return {'url', 'filetype', 'name'} for the first image/PDF file on
     the message, or None if it has no recognized attachment."""
@@ -622,6 +636,7 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
     writing `state[ts]` and posting/auditing the appropriate reply. Shared by
     poll_slack's bulk history scan and handle_realtime_event's one-at-a-time
     Socket Mode path -- do not duplicate this logic at a new call site."""
+    msg = unwrap_forward(msg)
     ts = msg["ts"]
     kind = classify_message(msg, bot_user_id=cfg.bot_user_id)
     author_for_audit = msg.get("user", "unknown")
