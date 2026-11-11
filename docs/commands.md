@@ -1,17 +1,18 @@
 ---
 layout: default
 title: Commands — Mess TV Bot
-description: How to remove or reschedule a message, and how to get help, with Mess TV Bot.
+description: How to remove or reschedule a message, see what's on the display, and get help, with Mess TV Bot.
 nav: commands
 ---
 
 # Commands
 
-There are two:
+There are three:
 
 
 1. `remove` in message's thread to remove it or schedule removal.
-2. `help` in a new message on its own, or a reply in a message's thread.
+2. `list` in a new message on its own, to see what's on the display.
+3. `help` in a new message on its own, or a reply in a message's thread.
 
 {:.lede}
 
@@ -37,6 +38,17 @@ If a date/time phrase can't be understood (e.g. a typo), nothing is removed — 
 Times are always in UK local time, adjusting automatically for GMT/BST.
 
 Scheduling a removal doesn't take the message down early — it stays up until the new date arrives. The bot confirms the date in a thread reply either way, so you always have something to check back against — and that confirmation always includes how far off the date is, e.g. "14 Aug 2026 09:00 (in 13 days)".
+
+## Seeing what's on the display
+
+Post `list` as a new message on its own (`what's on` works too) and the bot replies in that message's thread with a numbered list of everything currently on the display, oldest first. For each one you get:
+
+- the text of the message, shortened if it's long — or, for a message that's only an image, the image itself (the first one, if there are several);
+- who posted it;
+- when it's due to come down, e.g. "until 14 Aug 2026 09:00 (in 13 days)";
+- a link to the original message, which is where you'd reply `remove`.
+
+The `list` message itself is never shown on the display. It has to be the whole message: a notice that merely starts with "What's on…" or "List of…" is shown normally.
 
 ## Getting help
 

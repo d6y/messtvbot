@@ -44,6 +44,12 @@ COMMAND_WORDS = ("remove",)
 HELP_TRIGGER_RE = re.compile(r"^(help|remove)\b", re.IGNORECASE)
 HELP_TRIGGER_MAX_LEN = 30
 
+# "list" (or "what's on") as a whole new top-level message asks for a reply
+# listing everything currently on the display -- see is_list_trigger().
+# Whole-message match only, unlike HELP_TRIGGER_RE's starts-with: "What's on
+# tonight: quiz at 7" is exactly how a real notice might begin.
+LIST_TRIGGER_RE = re.compile(r"^(list|what['\u2019]?s on)\s*\??$", re.IGNORECASE)
+
 # Dates/times shown to humans (Slack messages) are always in this zone,
 # switching between GMT/BST automatically -- everything is still stored
 # internally as UTC-aware datetimes/ISO strings.
@@ -119,8 +125,8 @@ def extract_attachment(msg: dict) -> dict | None:
 
 
 def extract_attachments(msg: dict) -> list[dict]:
-    """Return {'url', 'filetype', 'name'} for every image/video/PDF file on
-    the message, in Slack's own order. Empty list if it has none."""
+    """Return {'url', 'filetype', 'name', 'id'} for every image/video/PDF
+    file on the message, in Slack's own order. Empty list if it has none."""
     attachments = []
     for f in msg.get("files", []) or []:
         filetype = (f.get("filetype") or "").lower()
@@ -129,6 +135,7 @@ def extract_attachments(msg: dict) -> list[dict]:
                 "url": f.get("url_private_download") or f.get("url_private"),
                 "filetype": filetype,
                 "name": f.get("name", "file"),
+                "id": f.get("id"),
             })
     return attachments
 
@@ -279,6 +286,13 @@ def is_help_trigger(text: str) -> bool:
     return bool(HELP_TRIGGER_RE.match(stripped))
 
 
+def is_list_trigger(text: str) -> bool:
+    """True for a new message that is nothing but 'list' or "what's on"
+    (any case, optional trailing '?') -- a request for the list of what's
+    currently on the display, not signage content."""
+    return bool(LIST_TRIGGER_RE.match((text or "").strip()))
+
+
 # Public end-user docs (docs/ in this repo, published via GitHub Pages) --
 # a fixed public URL, unrelated to cfg.server_url (that's this deployment's
 # own LAN address, e.g. for the admin interface below).
@@ -296,6 +310,7 @@ def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
         f"images or a combination of both. Each message is shown for {interval}.\n\n"
         f"To remove at a different time: reply `remove now` or, for example, "
         f"`remove {example_remove_at:%-d %b}`, `remove tomorrow`, etc.\n\n"
+        "To see what's on the display now: send `list` as a new message.\n\n"
         f"More help: <{DOCS_URL}|{DOCS_URL}>.\n\n"
         f"There's also an admin interface at {cfg.server_url}/admin.\n\n"
         f"If I'm broken, please contact `{cfg.admin_contact}`."
@@ -483,8 +498,9 @@ class SlackAPI(Protocol):
     def channel_name(self, channel_id: str) -> str: ...
     def download(self, url: str, dest_path: Path) -> None: ...
     def post_message(self, channel: str, text: str, thread_ts: str | None = None,
-                     reply_broadcast: bool = False) -> None: ...
+                     reply_broadcast: bool = False, blocks: list[dict] | None = None) -> None: ...
     def auth_test(self) -> str: ...
+    def workspace_url(self) -> str: ...
 
 
 class SlackWebAPI:
@@ -496,6 +512,7 @@ class SlackWebAPI:
         self.token = token
         self._user_cache: dict[str, str] = {}
         self._channel_cache: dict[str, str] = {}
+        self._workspace_url: str | None = None
 
     def _call(self, method: str, params: dict) -> dict:
         url = self.BASE_URL + method
@@ -577,23 +594,41 @@ class SlackWebAPI:
         Path(dest_path).write_bytes(data)
 
     def post_message(self, channel: str, text: str, thread_ts: str | None = None,
-                     reply_broadcast: bool = False) -> None:
+                     reply_broadcast: bool = False, blocks: list[dict] | None = None) -> None:
         params = {"channel": channel, "text": text}
         if thread_ts:
             params["thread_ts"] = thread_ts
             if reply_broadcast:
                 params["reply_broadcast"] = "true"
+        if blocks is not None:
+            params["blocks"] = json.dumps(blocks)
         self._call("chat.postMessage", params)
 
     def auth_test(self) -> str:
         payload = self._call("auth.test", {})
         return payload.get("user_id", "")
 
+    def workspace_url(self) -> str:
+        """This workspace's base URL (e.g. https://example.slack.com/), for
+        building message permalinks -- see message_permalink()."""
+        if self._workspace_url is None:
+            self._workspace_url = self._call("auth.test", {}).get("url", "")
+        return self._workspace_url
+
 
 def _post_safe(api: SlackAPI, channel: str, text: str, thread_ts: str | None = None,
-               reply_broadcast: bool = False) -> None:
+               reply_broadcast: bool = False, blocks: list[dict] | None = None) -> None:
     """post_message wrapper that never raises -- a failed acknowledgement
-    shouldn't break the poll tick."""
+    shouldn't break the poll tick. If `blocks` are given and Slack rejects
+    the post (one invalid block fails the whole message), it's retried as
+    plain `text` rather than dropped."""
+    if blocks is not None:
+        try:
+            api.post_message(channel, text, thread_ts=thread_ts, reply_broadcast=reply_broadcast,
+                             blocks=blocks)
+            return
+        except SlackAPIError as exc:
+            log.warning("Slack rejected a post with blocks, retrying as plain text: %s", exc)
     try:
         api.post_message(channel, text, thread_ts=thread_ts, reply_broadcast=reply_broadcast)
     except SlackAPIError as exc:
@@ -641,6 +676,152 @@ def build_removal_notice(entry: dict, ttl_days: int) -> str:
     else:
         reason = f"expired after {ttl_days} days"
     return f"I've removed {_describe_removed(entry)} posted by {author} ({reason})"
+
+
+def live_entries(state: dict, now: datetime) -> list[dict]:
+    """Entries on the display right now, oldest first. An entry already past
+    its remove_at is left out even if this tick's sweep hasn't marked it
+    expired yet."""
+    return [
+        entry for _, entry in sorted_active_entries(state)
+        if datetime.fromisoformat(entry["remove_at"]) > now
+    ]
+
+
+def message_permalink(workspace_url: str, channel: str, ts: str) -> str:
+    """Slack's link to a message, built from its parts rather than one
+    chat.getPermalink call per message."""
+    return f"{workspace_url.rstrip('/')}/archives/{channel}/p{ts.replace('.', '')}"
+
+
+# The file types Slack's image block accepts -- anything else (HEIC, WebP,
+# BMP) gets a text line instead, since one invalid block makes Slack reject
+# the whole message.
+SLACK_IMAGE_BLOCK_SUFFIXES = {".jpg", ".jpeg", ".png", ".gif"}
+# Slack's cap on blocks in one message.
+LIST_MAX_BLOCKS = 50
+LIST_EXCERPT_MAX_LINES = 3
+LIST_EXCERPT_MAX_CHARS = 200
+
+_SLACK_LINK_RE = re.compile(r"<(https?://[^|>]+)(?:\|([^>]*))?>")
+
+
+def _slack_escape(text: str) -> str:
+    """Escape Slack's three control characters, so stored post text can't be
+    read as a link or mention when it's sent back to Slack."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _list_excerpt(text: str) -> str:
+    """The first few lines of a post's text, shortened and escaped for a
+    Slack reply. Links are reduced to their label (or bare URL) first, so
+    shortening can never cut one in half."""
+    plain = _SLACK_LINK_RE.sub(lambda m: m.group(2) or m.group(1), text)
+    lines = [line.strip() for line in plain.splitlines() if line.strip()]
+    kept = "\n".join(lines[:LIST_EXCERPT_MAX_LINES])
+    cut = len(lines) > LIST_EXCERPT_MAX_LINES and not kept.endswith("...")
+    shortened = _truncate(kept + ("..." if cut else ""), LIST_EXCERPT_MAX_CHARS)
+    return _slack_escape(shortened)
+
+
+def _describe_attachments(entry: dict) -> str:
+    files = entry.get("local_files") or []
+    if not files:
+        return "Attachment"
+    if Path(files[0]).suffix.lower() == f".{PDF_FILETYPE}":
+        return "PDF"
+    return "Image" if len(files) == 1 else f"{len(files)} images"
+
+
+def _first_image_file_id(entry: dict) -> str | None:
+    """Slack file ID of the entry's first image, if Slack can show it in an
+    image block. None for entries ingested before file_ids was stored."""
+    files = entry.get("local_files") or []
+    file_ids = entry.get("file_ids") or []
+    if not files or not file_ids or not file_ids[0]:
+        return None
+    return file_ids[0] if Path(files[0]).suffix.lower() in SLACK_IMAGE_BLOCK_SUFFIXES else None
+
+
+def build_list_entry(entry: dict, now: datetime, permalink: str | None,
+                     number: int) -> tuple[str, list[dict]]:
+    """One live post for the `list` reply, as (plain-text line, Block Kit
+    blocks), labelled with its `number` in the list. A post with text shows just the text; an image-only post shows
+    its first image, straight from Slack by file ID; anything else (a PDF,
+    or an image Slack can't show inline) gets a short text label. The last
+    block is always the details line: author, removal date and interval,
+    and a link to the original post."""
+    remove_at_utc = datetime.fromisoformat(entry["remove_at"])
+    remove_at_local = remove_at_utc.astimezone(LOCAL_TZ)
+    details = (
+        f"— {_slack_escape(entry['author'])} · until {remove_at_local:%-d %b %Y %H:%M} "
+        f"({_describe_interval(remove_at_utc, now)})"
+    )
+    if permalink:
+        details += f" · <{permalink}|view post>"
+
+    def context(text: str) -> dict:
+        return {"type": "context", "elements": [{"type": "mrkdwn", "text": text}]}
+
+    def section(text: str) -> dict:
+        return {"type": "section", "text": {"type": "mrkdwn", "text": text}}
+
+    text = entry.get("text")
+    if text:
+        excerpt = _list_excerpt(text)
+        line = f"{number}. {' / '.join(excerpt.splitlines())} {details}"
+        return line, [section(f"*{number}.* {excerpt}"), context(details)]
+
+    label = _describe_attachments(entry)
+    line = f"{number}. {label} {details}"
+    file_id = _first_image_file_id(entry)
+    if file_id is None:
+        return line, [section(f"*{number}.* _{label}_"), context(details)]
+    image_count = len(entry["local_files"])
+    extra = f" · first of {image_count} images" if image_count > 1 else ""
+    # The number gets its own section rather than being the image block's
+    # title: a title is plain text only, so it couldn't be bold like the rest.
+    image = {"type": "image", "slack_file": {"id": file_id},
+             "alt_text": f"Image posted by {entry['author']}"}
+    return line, [section(f"*{number}.*"), image, context(details + extra)]
+
+
+def build_list_messages(entries: list[dict], now: datetime, workspace_url: str,
+                        channel: str) -> list[tuple[str, list[dict] | None]]:
+    """The `list` reply for these live entries, as (text, blocks) messages
+    to post in order. Usually one; a list too long for Slack's block limit
+    is split across several, never separating a post from its details line.
+    `text` is the complete plain-text version of the same message -- used
+    for notifications, and as the fallback if Slack rejects the blocks. An
+    empty `workspace_url` just means no "view post" links."""
+    if not entries:
+        return [("Nothing is on the Mess TV at the moment.", None)]
+    heading = f"*On the Mess TV now ({len(entries)}):*"
+    chunks: list[tuple[list[str], list[dict]]] = [
+        ([heading], [{"type": "section", "text": {"type": "mrkdwn", "text": heading}}])
+    ]
+    for number, entry in enumerate(entries, start=1):
+        permalink = message_permalink(workspace_url, channel, entry["ts"]) if workspace_url else None
+        line, blocks = build_list_entry(entry, now, permalink, number)
+        lines_so_far, blocks_so_far = chunks[-1]
+        if len(blocks_so_far) + len(blocks) > LIST_MAX_BLOCKS:
+            chunks.append(([line], blocks))
+        else:
+            chunks[-1] = (lines_so_far + [line], blocks_so_far + blocks)
+    return [("\n".join(lines), blocks) for lines, blocks in chunks]
+
+
+def reply_with_list(cfg: SlackConfig, state: dict, thread_ts: str, now: datetime,
+                    api: SlackAPI) -> None:
+    """Post the list of what's currently on the display as a reply in
+    `thread_ts`'s thread. Never raises."""
+    try:
+        workspace_url = api.workspace_url()
+    except SlackAPIError as exc:
+        log.error("Failed to look up the workspace URL, listing without links: %s", exc)
+        workspace_url = ""
+    for text, blocks in build_list_messages(live_entries(state, now), now, workspace_url, cfg.channel):
+        _post_safe(api, cfg.channel, text, thread_ts=thread_ts, blocks=blocks)
 
 
 def backfill_entries(state: dict, ttl_days: int) -> dict:
@@ -724,6 +905,18 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         # active, never re-processed, never shown on the display.
         state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
         return
+
+    if kind == "text" and is_list_trigger(msg.get("text")):
+        log.info("Replying with the list of live posts for Slack message %s", ts)
+        reply_with_list(cfg, state, ts, now, api)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts,
+            "author": author_for_audit, "kind": "ignored", "action": "list_reply",
+            "summary": (msg.get("text") or "")[:80],
+        })
+        # Same marker pattern as the "ignored" branch above.
+        state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+        return
     if msg.get("user"):
         try:
             author = api.user_name(msg["user"])
@@ -735,6 +928,7 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
     entry = {
         "ts": ts, "posted_at": posted_at, "status": "active", "kind": kind,
         "text": "", "author": author, "author_id": msg.get("user"), "local_files": [],
+        "file_ids": [],
         "remove_at": (posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
         "remove_reason": "ttl",
     }
@@ -756,6 +950,7 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
             to_download = to_download[:cfg.max_images]
         multi = len(to_download) > 1
         downloaded = []
+        downloaded_ids = []
         for i, attachment in enumerate(to_download):
             dest = source_dir / local_filename(ts, attachment["filetype"], i if multi else None)
             try:
@@ -765,7 +960,9 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
                           ts, attachment["name"], exc)
             else:
                 downloaded.append(str(dest))
+                downloaded_ids.append(attachment["id"])
         entry["local_files"] = downloaded
+        entry["file_ids"] = downloaded_ids
         if not downloaded:
             entry["status"] = "failed"
 

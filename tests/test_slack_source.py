@@ -131,7 +131,7 @@ class ExtractAttachmentTests(unittest.TestCase):
     def test_returns_first_image_file(self):
         msg = {"files": [{"filetype": "jpg", "url_private_download": "https://x/a.jpg", "name": "a.jpg"}]}
         result = ms.extract_attachment(msg)
-        self.assertEqual(result, {"url": "https://x/a.jpg", "filetype": "jpg", "name": "a.jpg"})
+        self.assertEqual(result, {"url": "https://x/a.jpg", "filetype": "jpg", "name": "a.jpg", "id": None})
 
     def test_falls_back_to_url_private_when_no_download_url(self):
         msg = {"files": [{"filetype": "png", "url_private": "https://x/b.png", "name": "b.png"}]}
@@ -149,14 +149,14 @@ class ExtractAttachmentsTests(unittest.TestCase):
 
     def test_returns_all_recognized_files_in_order(self):
         msg = {"files": [
-            {"filetype": "jpg", "url_private_download": "https://x/a.jpg", "name": "a.jpg"},
-            {"filetype": "zip", "url_private_download": "https://x/b.zip", "name": "b.zip"},
+            {"id": "FA", "filetype": "jpg", "url_private_download": "https://x/a.jpg", "name": "a.jpg"},
+            {"id": "FB", "filetype": "zip", "url_private_download": "https://x/b.zip", "name": "b.zip"},
             {"filetype": "png", "url_private_download": "https://x/c.png", "name": "c.png"},
         ]}
         result = ms.extract_attachments(msg)
         self.assertEqual(result, [
-            {"url": "https://x/a.jpg", "filetype": "jpg", "name": "a.jpg"},
-            {"url": "https://x/c.png", "filetype": "png", "name": "c.png"},
+            {"url": "https://x/a.jpg", "filetype": "jpg", "name": "a.jpg", "id": "FA"},
+            {"url": "https://x/c.png", "filetype": "png", "name": "c.png", "id": None},
         ])
 
     def test_falls_back_to_url_private_when_no_download_url(self):
@@ -319,6 +319,41 @@ class IsHelpTriggerTests(unittest.TestCase):
         self.assertFalse(ms.is_help_trigger(None))
 
 
+class IsListTriggerTests(unittest.TestCase):
+    def test_bare_list_is_a_trigger(self):
+        self.assertTrue(ms.is_list_trigger("list"))
+
+    def test_list_is_case_insensitive_and_ignores_surrounding_space(self):
+        self.assertTrue(ms.is_list_trigger("  List \n"))
+
+    def test_list_with_a_question_mark_is_a_trigger(self):
+        self.assertTrue(ms.is_list_trigger("list?"))
+
+    def test_whats_on_is_a_trigger(self):
+        self.assertTrue(ms.is_list_trigger("what's on"))
+
+    def test_whats_on_with_a_curly_apostrophe_is_a_trigger(self):
+        self.assertTrue(ms.is_list_trigger("What\u2019s on?"))
+
+    def test_whats_on_without_an_apostrophe_is_a_trigger(self):
+        self.assertTrue(ms.is_list_trigger("whats on"))
+
+    def test_notice_starting_with_whats_on_is_not_a_trigger(self):
+        self.assertFalse(ms.is_list_trigger("What's on tonight: quiz at 7"))
+
+    def test_notice_starting_with_list_is_not_a_trigger(self):
+        self.assertFalse(ms.is_list_trigger("List of volunteers needed"))
+
+    def test_word_that_merely_starts_with_list_is_not_a_trigger(self):
+        self.assertFalse(ms.is_list_trigger("listen"))
+
+    def test_empty_text_is_not_a_trigger(self):
+        self.assertFalse(ms.is_list_trigger(""))
+
+    def test_none_text_is_not_a_trigger(self):
+        self.assertFalse(ms.is_list_trigger(None))
+
+
 class IsHelpReplyTests(unittest.TestCase):
     def test_bare_help_is_a_help_reply(self):
         self.assertTrue(ms.is_help_reply("help"))
@@ -372,6 +407,10 @@ class BuildHelpTextTests(unittest.TestCase):
         self.assertIn("`remove now`", text)
         example_local = (self.posted_at_dt + timedelta(days=1)).astimezone(ms.LOCAL_TZ)
         self.assertIn(f"`remove {example_local:%-d %b}`", text)
+
+    def test_mentions_the_list_command(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn("`list`", text)
 
     def test_includes_admin_url(self):
         text = ms.build_help_text(self.cfg, self.posted_at_dt)
@@ -864,6 +903,28 @@ class SlackWebAPICallTests(unittest.TestCase):
             self.assertEqual(api.auth_test(), "UBOT1")
 
 
+    def test_workspace_url_comes_from_auth_test_and_is_cached(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        with mock.patch.object(api, "_call", return_value={"ok": True, "url": "https://mess.slack.com/"}) as call:
+            self.assertEqual(api.workspace_url(), "https://mess.slack.com/")
+            self.assertEqual(api.workspace_url(), "https://mess.slack.com/")
+        self.assertEqual(call.call_count, 1)
+
+    def test_post_message_sends_blocks_as_json(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": "hi"}}]
+        with mock.patch.object(api, "_call", return_value={"ok": True}) as call:
+            api.post_message("C1", "hi", thread_ts="100.1", blocks=blocks)
+        params = call.call_args[0][1]
+        self.assertEqual(json.loads(params["blocks"]), blocks)
+
+    def test_post_message_without_blocks_sends_no_blocks_param(self):
+        api = ms.SlackWebAPI(token="xoxb-test")
+        with mock.patch.object(api, "_call", return_value={"ok": True}) as call:
+            api.post_message("C1", "hi")
+        self.assertNotIn("blocks", call.call_args[0][1])
+
+
 class SlackWebAPIRateLimitTests(unittest.TestCase):
     def _http_429(self, retry_after=None):
         headers = email.message.Message()
@@ -975,7 +1036,10 @@ class FakeSlackAPI:
     """Test double for SlackAPI -- no network."""
 
     def __init__(self, messages=None, replies_by_ts=None, user_names=None, channel_names=None,
-                 downloads_fail_for=None, posts_fail=False):
+                 downloads_fail_for=None, posts_fail=False, blocks_fail=False,
+                 workspace_url_fails=False):
+        self.blocks_fail = blocks_fail
+        self.workspace_url_fails = workspace_url_fails
         self.messages = messages or []
         self.replies_by_ts = replies_by_ts or {}
         self.user_names = user_names or {}
@@ -1007,14 +1071,239 @@ class FakeSlackAPI:
         Path(dest_path).write_bytes(b"fake-bytes")
         self.downloaded[url] = str(dest_path)
 
-    def post_message(self, channel, text, thread_ts=None, reply_broadcast=False):
-        if self.posts_fail:
+    def post_message(self, channel, text, thread_ts=None, reply_broadcast=False, blocks=None):
+        if self.posts_fail or (blocks is not None and self.blocks_fail):
             raise ms.SlackAPIError("chat.postMessage failed")
-        self.posted_messages.append({"channel": channel, "text": text, "thread_ts": thread_ts,
-                                     "reply_broadcast": reply_broadcast})
+        posted = {"channel": channel, "text": text, "thread_ts": thread_ts,
+                  "reply_broadcast": reply_broadcast}
+        self.posted_messages.append(posted if blocks is None else {**posted, "blocks": blocks})
 
     def auth_test(self):
         return ""
+
+    def workspace_url(self):
+        if self.workspace_url_fails:
+            raise ms.SlackAPIError("auth.test failed")
+        return "https://mess.slack.com/"
+
+
+def _list_entry(**overrides):
+    entry = {
+        "ts": "100.1", "status": "active", "kind": "text", "text": "Pizza today!",
+        "author": "Jane", "author_id": "U1", "local_files": [],
+        "posted_at": "2026-08-01T00:00:00+00:00", "remove_at": "2026-08-04T09:00:00+00:00",
+    }
+    return {**entry, **overrides}
+
+
+class MessagePermalinkTests(unittest.TestCase):
+    def test_builds_slacks_archive_link(self):
+        self.assertEqual(
+            ms.message_permalink("https://mess.slack.com/", "C1", "1700000000.000200"),
+            "https://mess.slack.com/archives/C1/p1700000000000200",
+        )
+
+
+class LiveEntriesTests(unittest.TestCase):
+    def setUp(self):
+        self.now = datetime(2026, 8, 1, tzinfo=timezone.utc)
+
+    def test_returns_active_entries_oldest_first(self):
+        state = {
+            "200.1": _list_entry(ts="200.1", posted_at="2026-07-31T00:00:00+00:00"),
+            "100.1": _list_entry(ts="100.1", posted_at="2026-07-30T00:00:00+00:00"),
+        }
+        self.assertEqual([e["ts"] for e in ms.live_entries(state, self.now)], ["100.1", "200.1"])
+
+    def test_leaves_out_entries_that_are_not_active(self):
+        state = {
+            "100.1": _list_entry(status="cancelled"),
+            "100.2": {"ts": "100.2", "status": "ignored", "posted_at": "2026-07-30T00:00:00+00:00"},
+        }
+        self.assertEqual(ms.live_entries(state, self.now), [])
+
+    def test_leaves_out_an_active_entry_already_past_its_removal_time(self):
+        state = {"100.1": _list_entry(remove_at="2026-07-31T23:59:00+00:00")}
+        self.assertEqual(ms.live_entries(state, self.now), [])
+
+
+class BuildListEntryTests(unittest.TestCase):
+    def setUp(self):
+        self.now = datetime(2026, 8, 1, 9, 0, tzinfo=timezone.utc)
+        self.link = "https://mess.slack.com/archives/C1/p1001"
+
+    def test_text_post_shows_the_text(self):
+        line, blocks = ms.build_list_entry(_list_entry(), self.now, self.link, 1)
+        self.assertEqual(blocks[0]["type"], "section")
+        self.assertIn("Pizza today!", blocks[0]["text"]["text"])
+        self.assertIn("Pizza today!", line)
+
+    def test_details_give_author_removal_date_interval_and_link(self):
+        line, blocks = ms.build_list_entry(_list_entry(), self.now, self.link, 1)
+        details = blocks[-1]["elements"][0]["text"]
+        self.assertEqual(blocks[-1]["type"], "context")
+        for text in (details, line):
+            self.assertIn("Jane", text)
+            # 09:00 UTC is 10:00 in London during BST.
+            self.assertIn("until 4 Aug 2026 10:00 (in 3 days)", text)
+            self.assertIn(f"<{self.link}|view post>", text)
+
+    def test_no_link_when_the_permalink_is_unknown(self):
+        line, blocks = ms.build_list_entry(_list_entry(), self.now, None, 1)
+        self.assertNotIn("view post", line)
+        self.assertNotIn("view post", blocks[-1]["elements"][0]["text"])
+
+    def test_image_only_post_shows_the_image_by_its_slack_file_id(self):
+        entry = _list_entry(kind="attachment", text="", local_files=["/s/slack-100.1.jpg"],
+                            file_ids=["F1"])
+        line, blocks = ms.build_list_entry(entry, self.now, self.link, 1)
+        self.assertEqual([b["type"] for b in blocks], ["section", "image", "context"])
+        self.assertEqual(blocks[1]["slack_file"], {"id": "F1"})
+        self.assertTrue(blocks[1]["alt_text"])
+        self.assertIn("Image", line)
+
+    def test_image_with_caption_shows_just_the_text(self):
+        entry = _list_entry(kind="attachment", text="Bake sale", local_files=["/s/slack-100.1.jpg"],
+                            file_ids=["F1"])
+        _, blocks = ms.build_list_entry(entry, self.now, self.link, 1)
+        self.assertEqual([b["type"] for b in blocks], ["section", "context"])
+        self.assertIn("Bake sale", blocks[0]["text"]["text"])
+
+    def test_several_images_show_the_first_and_say_how_many_there_are(self):
+        entry = _list_entry(kind="attachment", text="",
+                            local_files=["/s/slack-100.1-0.png", "/s/slack-100.1-1.png", "/s/slack-100.1-2.png"],
+                            file_ids=["F1", "F2", "F3"])
+        line, blocks = ms.build_list_entry(entry, self.now, self.link, 1)
+        self.assertEqual(blocks[1]["slack_file"], {"id": "F1"})
+        self.assertIn("first of 3 images", blocks[-1]["elements"][0]["text"])
+        self.assertIn("3 images", line)
+
+    def test_image_stored_before_file_ids_existed_falls_back_to_a_text_line(self):
+        entry = _list_entry(kind="attachment", text="", local_files=["/s/slack-100.1.jpg"])
+        _, blocks = ms.build_list_entry(entry, self.now, self.link, 1)
+        self.assertEqual([b["type"] for b in blocks], ["section", "context"])
+        self.assertIn("Image", blocks[0]["text"]["text"])
+
+    def test_heic_image_falls_back_to_a_text_line(self):
+        # Slack's image block only takes png/jpg/gif -- one bad block would
+        # get the whole reply rejected.
+        entry = _list_entry(kind="attachment", text="", local_files=["/s/slack-100.1.heic"],
+                            file_ids=["F1"])
+        _, blocks = ms.build_list_entry(entry, self.now, self.link, 1)
+        self.assertEqual([b["type"] for b in blocks], ["section", "context"])
+
+    def test_captionless_pdf_is_a_plain_pdf_line(self):
+        entry = _list_entry(kind="attachment", text="", local_files=["/s/slack-100.1.pdf"],
+                            file_ids=["F1"])
+        line, blocks = ms.build_list_entry(entry, self.now, self.link, 1)
+        self.assertEqual([b["type"] for b in blocks], ["section", "context"])
+        self.assertIn("PDF", blocks[0]["text"]["text"])
+        self.assertIn("PDF", line)
+
+    def test_long_text_is_shortened(self):
+        _, blocks = ms.build_list_entry(_list_entry(text="word " * 200), self.now, self.link, 1)
+        self.assertLess(len(blocks[0]["text"]["text"]), 300)
+
+    def test_text_with_many_lines_keeps_only_the_first_few(self):
+        text = "\n".join(f"line {i}" for i in range(10))
+        _, blocks = ms.build_list_entry(_list_entry(text=text), self.now, self.link, 1)
+        shown = blocks[0]["text"]["text"]
+        self.assertIn("line 2", shown)
+        self.assertNotIn("line 3", shown)
+
+    def test_slack_control_characters_in_text_are_escaped(self):
+        _, blocks = ms.build_list_entry(_list_entry(text="cake < pie & <!channel>"), self.now, self.link, 1)
+        shown = blocks[0]["text"]["text"]
+        self.assertIn("cake &lt; pie &amp; &lt;!channel&gt;", shown)
+
+    def test_links_in_text_are_shown_by_their_label(self):
+        _, blocks = ms.build_list_entry(
+            _list_entry(text="Sign up <https://example.com/form|here> or <https://example.com/b>"),
+            self.now, self.link, 1)
+        shown = blocks[0]["text"]["text"]
+        self.assertIn("Sign up here or https://example.com/b", shown)
+
+    def test_text_post_is_numbered(self):
+        line, blocks = ms.build_list_entry(_list_entry(), self.now, self.link, 3)
+        self.assertTrue(blocks[0]["text"]["text"].startswith("*3.* "))
+        self.assertTrue(line.startswith("3. "))
+
+    def test_image_post_has_its_number_in_bold_above_the_image(self):
+        # Not the image block's own title: that's plain text only, so it
+        # can't be bold like the other entries' numbers.
+        entry = _list_entry(kind="attachment", text="", local_files=["/s/slack-100.1.jpg"],
+                            file_ids=["F1"])
+        line, blocks = ms.build_list_entry(entry, self.now, self.link, 3)
+        self.assertEqual(blocks[0]["text"]["text"], "*3.*")
+        self.assertNotIn("title", blocks[1])
+        self.assertTrue(line.startswith("3. "))
+
+    def test_text_label_fallback_is_numbered(self):
+        entry = _list_entry(kind="attachment", text="", local_files=["/s/slack-100.1.pdf"])
+        _, blocks = ms.build_list_entry(entry, self.now, self.link, 3)
+        self.assertTrue(blocks[0]["text"]["text"].startswith("*3.* "))
+
+
+class BuildListMessagesTests(unittest.TestCase):
+    def setUp(self):
+        self.now = datetime(2026, 8, 1, 9, 0, tzinfo=timezone.utc)
+
+    def _build(self, entries, workspace_url="https://mess.slack.com/"):
+        return ms.build_list_messages(entries, self.now, workspace_url, "C1")
+
+    def test_nothing_live_says_so_in_plain_text(self):
+        messages = self._build([])
+        self.assertEqual(len(messages), 1)
+        text, blocks = messages[0]
+        self.assertIn("Nothing", text)
+        self.assertIsNone(blocks)
+
+    def test_heading_gives_the_number_of_posts(self):
+        entries = [_list_entry(ts="100.1"), _list_entry(ts="100.2", text="Quiz night")]
+        (text, blocks), = self._build(entries)
+        self.assertIn("(2)", blocks[0]["text"]["text"])
+        self.assertIn("(2)", text)
+
+    def test_plain_text_fallback_has_a_line_per_post(self):
+        entries = [_list_entry(ts="100.1"), _list_entry(ts="100.2", text="Quiz night")]
+        (text, _), = self._build(entries)
+        self.assertIn("Pizza today!", text)
+        self.assertIn("Quiz night", text)
+
+    def test_each_post_links_to_its_own_message(self):
+        (text, _), = self._build([_list_entry(ts="100.1")])
+        self.assertIn("https://mess.slack.com/archives/C1/p1001", text)
+
+    def test_no_links_when_the_workspace_url_is_unknown(self):
+        (text, _), = self._build([_list_entry(ts="100.1")], workspace_url="")
+        self.assertNotIn("view post", text)
+
+    def test_a_long_list_is_split_so_no_message_exceeds_slacks_block_limit(self):
+        entries = [_list_entry(ts=f"100.{i}", text=f"Notice {i}") for i in range(60)]
+        messages = self._build(entries)
+        self.assertGreater(len(messages), 1)
+        for _, blocks in messages:
+            self.assertLessEqual(len(blocks), 50)
+        all_text = "\n".join(text for text, _ in messages)
+        for i in range(60):
+            self.assertIn(f"Notice {i} ", all_text + " ")
+
+    def test_posts_are_numbered_in_order(self):
+        entries = [_list_entry(ts="100.1"), _list_entry(ts="100.2", text="Quiz night")]
+        (text, _), = self._build(entries)
+        self.assertIn("1. Pizza today!", text)
+        self.assertIn("2. Quiz night", text)
+
+    def test_numbering_carries_on_across_a_split(self):
+        entries = [_list_entry(ts=f"100.{i}", text=f"Notice {i}") for i in range(60)]
+        messages = self._build(entries)
+        self.assertTrue(messages[1][0].startswith(f"{len(messages[0][1]) // 2 + 1}. "))
+        self.assertIn("60. Notice 59", messages[-1][0])
+
+    def test_a_split_never_separates_a_post_from_its_details(self):
+        entries = [_list_entry(ts=f"100.{i}", text=f"Notice {i}") for i in range(60)]
+        for _, blocks in self._build(entries):
+            self.assertEqual(blocks[-1]["type"], "context")
 
 
 class AppendAuditTests(unittest.TestCase):
@@ -1309,6 +1598,85 @@ class PollSlackTests(unittest.TestCase):
         api2 = FakeSlackAPI(messages=[{"ts": "100.32", "text": "remove", "user": "U1", "files": []}])
         ms.poll_slack(self.cfg, state, self.source_dir, self.now, api2, audit_path=self.audit_path)
         self.assertEqual(api2.posted_messages, [])
+
+    def _active_text_entry(self, ts, text):
+        return {"ts": ts, "status": "active", "kind": "text", "text": text, "author": "Jane",
+                "author_id": "U1", "local_files": [],
+                "posted_at": "2026-07-31T00:00:00+00:00", "remove_at": "2026-08-30T00:00:00+00:00",
+                "remove_reason": "ttl"}
+
+    def test_list_message_is_not_shown_and_gets_the_list_in_its_thread(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.50", "text": "list", "user": "U2", "files": []}])
+        state = {"100.1": self._active_text_entry("100.1", "Pizza today!")}
+        ms.poll_slack(self.cfg, state, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.50"]["status"], "ignored")
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.50"]
+        self.assertEqual(len(replies), 1)
+        self.assertIn("Pizza today!", replies[0]["text"])
+        self.assertIn("blocks", replies[0])
+
+    def test_list_request_is_audited_as_its_own_action(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.51", "text": "list", "user": "U2", "files": []}])
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        events = [json.loads(line) for line in self.audit_path.read_text().splitlines()]
+        self.assertEqual([e["action"] for e in events], ["list_reply"])
+
+    def test_list_with_nothing_live_gets_a_reply_saying_so(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.52", "text": "list", "user": "U2", "files": []}])
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.52"]
+        self.assertEqual(len(replies), 1)
+        self.assertIn("Nothing", replies[0]["text"])
+
+    def test_list_falls_back_to_plain_text_if_slack_rejects_the_blocks(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.53", "text": "list", "user": "U2", "files": []}],
+                           blocks_fail=True)
+        state = {"100.1": self._active_text_entry("100.1", "Pizza today!")}
+        ms.poll_slack(self.cfg, state, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.53"]
+        self.assertEqual(len(replies), 1)
+        self.assertNotIn("blocks", replies[0])
+        self.assertIn("Pizza today!", replies[0]["text"])
+
+    def test_list_still_replies_without_links_if_the_workspace_url_lookup_fails(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.54", "text": "list", "user": "U2", "files": []}],
+                           workspace_url_fails=True)
+        state = {"100.1": self._active_text_entry("100.1", "Pizza today!")}
+        ms.poll_slack(self.cfg, state, self.source_dir, self.now, api, audit_path=self.audit_path)
+        replies = [p for p in api.posted_messages if p["thread_ts"] == "100.54"]
+        self.assertIn("Pizza today!", replies[0]["text"])
+        self.assertNotIn("view post", replies[0]["text"])
+
+    def test_list_request_is_not_reprocessed_on_a_later_tick(self):
+        messages = [{"ts": "100.55", "text": "list", "user": "U2", "files": []}]
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, FakeSlackAPI(messages=messages),
+                              audit_path=self.audit_path)
+        api2 = FakeSlackAPI(messages=messages)
+        ms.poll_slack(self.cfg, state, self.source_dir, self.now, api2, audit_path=self.audit_path)
+        self.assertEqual(api2.posted_messages, [])
+
+    def test_notice_starting_with_whats_on_is_shown_normally(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.56", "text": "What's on tonight: quiz at 7", "user": "U1", "files": []}])
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.56"]["status"], "active")
+
+    def test_ingested_images_record_their_slack_file_ids(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.57", "text": "", "user": "U1", "files": [
+            {"id": "FA", "filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"},
+            {"id": "FB", "filetype": "png", "url_private_download": "https://x/b.png", "name": "b.png"},
+        ]}])
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.57"]["file_ids"], ["FA", "FB"])
+
+    def test_file_ids_stay_in_step_with_local_files_when_a_download_fails(self):
+        api = FakeSlackAPI(messages=[{"ts": "100.58", "text": "", "user": "U1", "files": [
+            {"id": "FA", "filetype": "png", "url_private_download": "https://x/a.png", "name": "a.png"},
+            {"id": "FB", "filetype": "png", "url_private_download": "https://x/b.png", "name": "b.png"},
+        ]}], downloads_fail_for={"https://x/a.png"})
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(len(state["100.58"]["local_files"]), 1)
+        self.assertEqual(state["100.58"]["file_ids"], ["FB"])
 
     def test_long_message_starting_with_remove_is_shown_normally(self):
         text = "Remove your shoes before entering the office please and thank you"
@@ -2100,6 +2468,13 @@ class HandleRealtimeEventTests(unittest.TestCase):
         changed = ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now,
                                             api, self.audit_path)
         self.assertTrue(changed)
+
+    def test_list_event_gets_the_list_in_its_thread(self):
+        api = FakeSlackAPI()
+        event = {"ts": "100.60", "text": "list", "user": "U2"}
+        ms.handle_realtime_event(self.cfg, {}, self.source_dir, event, self.now, api, self.audit_path)
+        self.assertEqual([p["thread_ts"] for p in api.posted_messages], ["100.60"])
+        self.assertIn("Nothing", api.posted_messages[0]["text"])
 
     def test_forwarded_post_is_ingested_with_the_forwarded_content(self):
         api = FakeSlackAPI(user_names={"U_FWD": "Richard"})
