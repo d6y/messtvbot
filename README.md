@@ -48,8 +48,10 @@ control is whoever's on the same network/host.
 The bot also posts back to Slack so it's clear what happened to a
 post: a thread reply when a post is accepted onto the display, a
 thread reply when it's removed or scheduled for removal by a command
-reply, and a new top-level message ("I've removed: ... by ...") when a
-post expires via the TTL timeout or a scheduled removal.
+reply, and a reply in the original post's thread that's also shown in
+the channel ("I've removed ... posted by @poster") when a post expires
+via the TTL timeout or a scheduled removal -- the @-mention notifies the
+poster.
 
 ## Slack app setup (get your token and channel ID)
 

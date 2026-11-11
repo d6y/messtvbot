@@ -482,7 +482,8 @@ class SlackAPI(Protocol):
     def user_name(self, user_id: str) -> str: ...
     def channel_name(self, channel_id: str) -> str: ...
     def download(self, url: str, dest_path: Path) -> None: ...
-    def post_message(self, channel: str, text: str, thread_ts: str | None = None) -> None: ...
+    def post_message(self, channel: str, text: str, thread_ts: str | None = None,
+                     reply_broadcast: bool = False) -> None: ...
     def auth_test(self) -> str: ...
 
 
@@ -575,10 +576,13 @@ class SlackWebAPI:
             raise SlackAPIError(f"download failed: {exc}") from exc
         Path(dest_path).write_bytes(data)
 
-    def post_message(self, channel: str, text: str, thread_ts: str | None = None) -> None:
+    def post_message(self, channel: str, text: str, thread_ts: str | None = None,
+                     reply_broadcast: bool = False) -> None:
         params = {"channel": channel, "text": text}
         if thread_ts:
             params["thread_ts"] = thread_ts
+            if reply_broadcast:
+                params["reply_broadcast"] = "true"
         self._call("chat.postMessage", params)
 
     def auth_test(self) -> str:
@@ -586,11 +590,12 @@ class SlackWebAPI:
         return payload.get("user_id", "")
 
 
-def _post_safe(api: SlackAPI, channel: str, text: str, thread_ts: str | None = None) -> None:
+def _post_safe(api: SlackAPI, channel: str, text: str, thread_ts: str | None = None,
+               reply_broadcast: bool = False) -> None:
     """post_message wrapper that never raises -- a failed acknowledgement
     shouldn't break the poll tick."""
     try:
-        api.post_message(channel, text, thread_ts=thread_ts)
+        api.post_message(channel, text, thread_ts=thread_ts, reply_broadcast=reply_broadcast)
     except SlackAPIError as exc:
         log.error("Failed to post Slack acknowledgement: %s", exc)
 
@@ -607,6 +612,35 @@ def _describe_entry(entry: dict) -> str:
         caption = entry.get("text")
         return f"{_truncate(caption)} ({filename})" if caption else filename
     return "attachment"
+
+
+def _describe_removed(entry: dict) -> str:
+    """What was removed, for the removal notice: the quoted text/caption if
+    there is one, else what kind of attachment it was. Never the local
+    filename (unlike _describe_entry) -- that's the bot's own download name
+    and means nothing to the people reading the channel."""
+    text = entry.get("text")
+    if text:
+        return f'"{_truncate(text)}"'
+    files = entry.get("local_files") or []
+    if not files:
+        return "the attachment"
+    if Path(files[0]).suffix.lower() == f".{PDF_FILETYPE}":
+        return "the PDF"
+    return "the image" if len(files) == 1 else f"the {len(files)} images"
+
+
+def build_removal_notice(entry: dict, ttl_days: int) -> str:
+    """The channel notice for a post that just came off the display. Mentions
+    the poster by ID so Slack notifies them; entries from before author_id
+    was stored fall back to the plain name."""
+    author_id = entry.get("author_id")
+    author = f"<@{author_id}>" if author_id else entry["author"]
+    if entry.get("remove_reason") == "command":
+        reason = f'requested by {entry.get("remove_requested_by", entry["author"])}'
+    else:
+        reason = f"expired after {ttl_days} days"
+    return f"I've removed {_describe_removed(entry)} posted by {author} ({reason})"
 
 
 def backfill_entries(state: dict, ttl_days: int) -> dict:
@@ -1020,13 +1054,9 @@ def poll_slack(cfg: SlackConfig, state: dict, source_dir: Path, now: datetime, a
         entry = sweep_target[ts]
         if entry["status"] != "expired":
             continue
-        if entry.get("remove_reason") == "command":
-            who = entry.get("remove_requested_by", entry["author"])
-            message = (f'I\'ve removed: "{_describe_entry(entry)}" by {entry["author"]} '
-                       f"(requested by {who})")
-        else:
-            message = (f'I\'ve removed: "{_describe_entry(entry)}" by {entry["author"]} '
-                       f"(expired after {cfg.ttl_days} days)")
-        _post_safe(api, cfg.channel, message)
+        # A broadcast reply in the original post's thread, not a bare
+        # top-level message: Slack shows it attached to the post it's about.
+        _post_safe(api, cfg.channel, build_removal_notice(entry, cfg.ttl_days),
+                   thread_ts=ts, reply_broadcast=True)
 
     return state

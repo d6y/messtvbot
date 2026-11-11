@@ -39,7 +39,7 @@ class FakeSlackAPI:
     def download(self, url, dest_path):
         Path(dest_path).write_bytes(b"x")
 
-    def post_message(self, channel, text, thread_ts=None):
+    def post_message(self, channel, text, thread_ts=None, reply_broadcast=False):
         self.posted_messages.append({"channel": channel, "text": text, "thread_ts": thread_ts})
 
     def auth_test(self):
@@ -210,7 +210,7 @@ class MakeRequestListenerTests(SocketListenerTestCase):
 
     def test_handler_exception_does_not_propagate(self):
         class ExplodingAPI(FakeSlackAPI):
-            def post_message(self, channel, text, thread_ts=None):
+            def post_message(self, channel, text, thread_ts=None, reply_broadcast=False):
                 raise RuntimeError("boom")
 
         api = ExplodingAPI()

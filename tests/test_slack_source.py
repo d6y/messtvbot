@@ -510,6 +510,70 @@ class ParseCommandTests(unittest.TestCase):
         self.assertIsNone(ms.parse_command(None, self.NOW))
 
 
+class RemovalNoticeTests(unittest.TestCase):
+    def _entry(self, **overrides):
+        entry = {"kind": "text", "text": "Old announcement", "author": "Jane",
+                 "author_id": "U1", "local_files": [], "remove_reason": "ttl"}
+        return {**entry, **overrides}
+
+    def test_text_entry_quotes_the_text_and_mentions_the_author(self):
+        self.assertEqual(
+            ms.build_removal_notice(self._entry(), ttl_days=7),
+            'I\'ve removed "Old announcement" posted by <@U1> (expired after 7 days)')
+
+    def test_entry_without_author_id_falls_back_to_the_name(self):
+        entry = self._entry()
+        del entry["author_id"]
+        self.assertIn("posted by Jane (", ms.build_removal_notice(entry, ttl_days=7))
+
+    def test_entry_with_null_author_id_falls_back_to_the_name(self):
+        notice = ms.build_removal_notice(self._entry(author_id=None), ttl_days=7)
+        self.assertIn("posted by Jane (", notice)
+
+    def test_captionless_image_is_described_without_its_filename(self):
+        entry = self._entry(kind="attachment", text="", local_files=["/x/slack-1.png"])
+        notice = ms.build_removal_notice(entry, ttl_days=7)
+        self.assertTrue(notice.startswith("I've removed the image posted by <@U1>"))
+        self.assertNotIn("slack-1.png", notice)
+
+    def test_captionless_multi_image_post_states_the_count(self):
+        entry = self._entry(kind="attachment", text="",
+                            local_files=["/x/slack-1-0.png", "/x/slack-1-1.heic", "/x/slack-1-2.jpg"])
+        self.assertTrue(ms.build_removal_notice(entry, ttl_days=7)
+                        .startswith("I've removed the 3 images posted by"))
+
+    def test_captionless_pdf_is_described_as_a_pdf(self):
+        entry = self._entry(kind="attachment", text="", local_files=["/x/slack-1.PDF"])
+        self.assertTrue(ms.build_removal_notice(entry, ttl_days=7)
+                        .startswith("I've removed the PDF posted by"))
+
+    def test_captioned_attachment_quotes_the_caption_only(self):
+        entry = self._entry(kind="attachment", text="Free pizza today!",
+                            local_files=["/x/slack-1.png"])
+        notice = ms.build_removal_notice(entry, ttl_days=7)
+        self.assertTrue(notice.startswith('I\'ve removed "Free pizza today!" posted by'))
+        self.assertNotIn("slack-1.png", notice)
+
+    def test_long_text_is_truncated(self):
+        notice = ms.build_removal_notice(self._entry(text="x" * 100), ttl_days=7)
+        self.assertIn('"' + "x" * 77 + '..."', notice)
+
+    def test_attachment_without_local_files_falls_back(self):
+        entry = self._entry(kind="attachment", text="", local_files=[])
+        self.assertTrue(ms.build_removal_notice(entry, ttl_days=7)
+                        .startswith("I've removed the attachment posted by"))
+
+    def test_command_removal_names_the_requester_without_mentioning_them(self):
+        entry = self._entry(remove_reason="command", remove_requested_by="Richard")
+        self.assertTrue(ms.build_removal_notice(entry, ttl_days=7)
+                        .endswith("posted by <@U1> (requested by Richard)"))
+
+    def test_command_removal_without_requester_falls_back_to_the_author_name(self):
+        entry = self._entry(remove_reason="command")
+        self.assertTrue(ms.build_removal_notice(entry, ttl_days=7)
+                        .endswith("(requested by Jane)"))
+
+
 class DescribeEntryTests(unittest.TestCase):
     def test_text_entry_shows_the_text(self):
         entry = {"kind": "text", "text": "Pizza in the kitchen!"}
@@ -943,10 +1007,11 @@ class FakeSlackAPI:
         Path(dest_path).write_bytes(b"fake-bytes")
         self.downloaded[url] = str(dest_path)
 
-    def post_message(self, channel, text, thread_ts=None):
+    def post_message(self, channel, text, thread_ts=None, reply_broadcast=False):
         if self.posts_fail:
             raise ms.SlackAPIError("chat.postMessage failed")
-        self.posted_messages.append({"channel": channel, "text": text, "thread_ts": thread_ts})
+        self.posted_messages.append({"channel": channel, "text": text, "thread_ts": thread_ts,
+                                     "reply_broadcast": reply_broadcast})
 
     def auth_test(self):
         return ""
@@ -1797,18 +1862,25 @@ class PollSlackTests(unittest.TestCase):
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.2"]
         self.assertEqual(len(replies), 1)
 
-    def test_expired_entry_gets_new_top_level_removal_message(self):
-        local_file = self.source_dir / "slack-1.png"
-        local_file.write_bytes(b"x")
+    def test_expired_entry_gets_broadcast_thread_reply_on_the_original_post(self):
         existing = {"1": {"status": "active", "kind": "text", "text": "Old announcement",
-                           "author": "Jane", "posted_at": "2020-01-01T00:00:00+00:00",
+                           "author": "Jane", "author_id": "U1",
+                           "posted_at": "2020-01-01T00:00:00+00:00",
                            "local_files": [], "remove_at": "2020-01-31T00:00:00+00:00", "remove_reason": "ttl"}}
         api = FakeSlackAPI(messages=[])
         ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
-        top_level = [p for p in api.posted_messages if p["thread_ts"] is None]
-        self.assertEqual(len(top_level), 1)
-        self.assertIn("Old announcement", top_level[0]["text"])
-        self.assertIn("Jane", top_level[0]["text"])
+        self.assertEqual(api.posted_messages, [{
+            "channel": "C1", "thread_ts": "1", "reply_broadcast": True,
+            "text": 'I\'ve removed "Old announcement" posted by <@U1> (expired after 30 days)',
+        }])
+
+    def test_other_replies_are_not_broadcast_to_the_channel(self):
+        api = FakeSlackAPI(
+            messages=[{"ts": "100.1", "text": "Pizza today!", "user": "U1", "files": []}],
+            user_names={"U1": "Jane"},
+        )
+        ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual([p["reply_broadcast"] for p in api.posted_messages], [False])
 
     def test_post_message_failure_does_not_raise(self):
         api = FakeSlackAPI(
