@@ -16,7 +16,7 @@ class LoadConfigKioskDirTests(unittest.TestCase):
     def setUp(self):
         self._saved_env = dict(os.environ)
         for key in ("KIOSK_SLACK_TOKEN", "KIOSK_SLACK_CHANNEL", "KIOSK_DIR", "KIOSK_MAX_IMAGES",
-                    "KIOSK_MAX_ATTACHMENT_MB"):
+                    "KIOSK_MAX_ATTACHMENT_MB", "KIOSK_SHOW_AUTHOR"):
             os.environ.pop(key, None)
         os.environ["KIOSK_SLACK_TOKEN"] = "xoxb-test"
         os.environ["KIOSK_SLACK_CHANNEL"] = "C1"
@@ -56,6 +56,21 @@ class LoadConfigKioskDirTests(unittest.TestCase):
         os.environ["KIOSK_MAX_ATTACHMENT_MB"] = "10"
         cfg = refresh.load_config(["refresh.py"])
         self.assertEqual(cfg.max_attachment_mb, 10)
+
+    def test_show_author_is_off_by_default(self):
+        self.assertFalse(refresh.load_config(["refresh.py"]).show_author)
+
+    def test_show_author_can_be_turned_on(self):
+        for value in ("1", "true", "TRUE", "yes", "on", " 1 "):
+            with self.subTest(value=value):
+                os.environ["KIOSK_SHOW_AUTHOR"] = value
+                self.assertTrue(refresh.load_config(["refresh.py"]).show_author)
+
+    def test_show_author_other_values_are_off(self):
+        for value in ("0", "false", "no", "off", ""):
+            with self.subTest(value=value):
+                os.environ["KIOSK_SHOW_AUTHOR"] = value
+                self.assertFalse(refresh.load_config(["refresh.py"]).show_author)
 
 
 def _attachment_entry(text="", local_files=None, ts="100.1"):
@@ -211,8 +226,7 @@ class BuildManifestTests(unittest.TestCase):
         entry = _attachment_entry(text="", local_files=[str(video_path)], ts="100.8")
         manifest = refresh.build_manifest([("100.8", entry)], {}, self.kiosk_dir, 8, 30)
         self.assertEqual(manifest["items"], [
-            {"kind": "video", "ts": "100.8", "name": "slack-100.8.mp4", "src": "source/slack-100.8.mp4",
-             "author": "Jane"},
+            {"kind": "video", "ts": "100.8", "name": "slack-100.8.mp4", "src": "source/slack-100.8.mp4"},
         ])
 
     def test_video_with_caption_includes_caption_field(self):
@@ -228,7 +242,7 @@ class BuildManifestTests(unittest.TestCase):
         video_path.parent.mkdir(parents=True)
         video_path.write_bytes(b"x")
         entry = _attachment_entry(text="", local_files=[str(video_path)], ts="100.9")
-        manifest = refresh.build_manifest([("100.9", entry)], {}, self.kiosk_dir, 8, 30)
+        manifest = refresh.build_manifest([("100.9", entry)], {}, self.kiosk_dir, 8, 30, show_author=True)
         self.assertEqual(manifest["items"][0]["author"], "Jane")
 
     def test_image_item_includes_author(self):
@@ -236,14 +250,14 @@ class BuildManifestTests(unittest.TestCase):
         image_path.parent.mkdir(parents=True)
         image_path.write_bytes(b"x")
         entry = _attachment_entry(text="", local_files=[str(image_path)])
-        manifest = refresh.build_manifest([("100.1", entry)], {}, self.kiosk_dir, 8, 30)
+        manifest = refresh.build_manifest([("100.1", entry)], {}, self.kiosk_dir, 8, 30, show_author=True)
         self.assertEqual(manifest["items"][0]["author"], "Jane")
 
     def test_grid_item_includes_author(self):
         a = self._make_image("slack-100.5-0.jpg")
         b = self._make_image("slack-100.5-1.png")
         entry = _attachment_entry(text="", local_files=[str(a), str(b)], ts="100.5")
-        manifest = refresh.build_manifest([("100.5", entry)], {}, self.kiosk_dir, 8, 30)
+        manifest = refresh.build_manifest([("100.5", entry)], {}, self.kiosk_dir, 8, 30, show_author=True)
         self.assertEqual(manifest["items"][0]["author"], "Jane")
 
     def test_pdf_page_includes_author(self):
@@ -255,9 +269,40 @@ class BuildManifestTests(unittest.TestCase):
         page_path.write_bytes(b"x")
         entry = _attachment_entry(text="", local_files=[str(pdf_path)])
         manifest = refresh.build_manifest(
-            [("100.1", entry)], {"slack-100.1": [page_path]}, self.kiosk_dir, 8, 30
+            [("100.1", entry)], {"slack-100.1": [page_path]}, self.kiosk_dir, 8, 30, show_author=True
         )
         self.assertEqual(manifest["items"][0]["author"], "Jane")
+
+    def test_text_item_includes_author_when_shown(self):
+        entry = {"ts": "100.2", "kind": "text", "text": "Pizza!", "author": "Jane",
+                 "posted_at": "2026-08-01T12:00:00+00:00", "local_files": []}
+        manifest = refresh.build_manifest([("100.2", entry)], {}, self.kiosk_dir, 8, 30, show_author=True)
+        self.assertEqual(manifest["items"][0]["author"], "Jane")
+
+    def test_no_item_has_an_author_by_default(self):
+        # Off by default (KIOSK_SHOW_AUTHOR): with no "author" key at all,
+        # web/app.js shows neither the "— author" line nor the badge.
+        text = {"ts": "100.2", "kind": "text", "text": "Pizza!", "author": "Jane",
+                "posted_at": "2026-08-01T12:00:00+00:00", "local_files": []}
+        image = self._make_image("slack-100.3.png")
+        a = self._make_image("slack-100.4-0.jpg")
+        b = self._make_image("slack-100.4-1.png")
+        video = self._make_image("slack-100.6.mp4")
+        pdf = self._make_image("slack-100.7.pdf")
+        page = self.kiosk_dir / "rendered" / "slack-100.7" / "page-1.png"
+        page.parent.mkdir(parents=True)
+        page.write_bytes(b"x")
+        entries = [
+            ("100.2", text),
+            ("100.3", _attachment_entry(text="cap", local_files=[str(image)], ts="100.3")),
+            ("100.4", _attachment_entry(text="", local_files=[str(a), str(b)], ts="100.4")),
+            ("100.6", _attachment_entry(text="", local_files=[str(video)], ts="100.6")),
+            ("100.7", _attachment_entry(text="", local_files=[str(pdf)], ts="100.7")),
+        ]
+        manifest = refresh.build_manifest(entries, {"slack-100.7": [page]}, self.kiosk_dir, 8, 30)
+        self.assertEqual({i["kind"] for i in manifest["items"]}, {"text", "image", "grid", "video", "pdf-page"})
+        for item in manifest["items"]:
+            self.assertNotIn("author", item, item["kind"])
 
     def test_single_heic_image_uses_the_converted_jpg(self):
         heic_path = self._make_image("slack-100.10.heic")

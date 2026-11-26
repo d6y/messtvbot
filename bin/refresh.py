@@ -71,6 +71,8 @@ class Config:
     max_images: int
     max_pdf_pages: int
     max_attachment_mb: int
+    # Whether slides show who posted them ("— author" / #author-badge).
+    show_author: bool = False
 
     @property
     def source_dir(self) -> Path:
@@ -97,6 +99,11 @@ def load_env_file(path: Path) -> None:
         key = key.strip()
         value = value.strip().strip('"').strip("'")
         os.environ.setdefault(key, value)
+
+
+def _env_flag(name: str) -> bool:
+    """True for 1/true/yes/on (any case); anything else, or unset, is False."""
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def load_config(argv: list[str]) -> Config:
@@ -135,6 +142,7 @@ def load_config(argv: list[str]) -> Config:
         max_images=int(os.environ.get("KIOSK_MAX_IMAGES", "6")),
         max_pdf_pages=int(os.environ.get("KIOSK_MAX_PDF_PAGES", "15")),
         max_attachment_mb=int(os.environ.get("KIOSK_MAX_ATTACHMENT_MB", "25")),
+        show_author=_env_flag("KIOSK_SHOW_AUTHOR"),
     )
 
 
@@ -327,7 +335,10 @@ def _relative_or_none(path: Path, kiosk_dir: Path, ts: object, label: str) -> st
 
 def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[str, list[Path]],
                     kiosk_dir: Path, slide_seconds: int, poll_seconds: int,
-                    heic_rendered: dict[str, Path] | None = None) -> dict:
+                    heic_rendered: dict[str, Path] | None = None, show_author: bool = False) -> dict:
+    """With show_author off (the default, KIOSK_SHOW_AUTHOR), no item has an
+    "author" key at all, and web/app.js -- which only shows the "— author"
+    line or #author-badge when an item has one -- shows neither."""
     heic_rendered = heic_rendered or {}
     items = []
     for _ts, entry in active_entries:
@@ -395,6 +406,9 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
                     item["caption"] = entry["text"]
                 items.append(item)
 
+    if not show_author:
+        items = [{k: v for k, v in item.items() if k != "author"} for item in items]
+
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "slide_seconds": slide_seconds,
@@ -448,7 +462,7 @@ def build_and_write_manifest(cfg: Config, state: dict) -> dict:
     cleanup_stale_heic_renders({f.stem for f in heic_files}, cfg.rendered_dir)
 
     manifest = build_manifest(active_entries, rendered_pages, cfg.kiosk_dir, cfg.slide_seconds, cfg.poll_seconds,
-                               heic_rendered=heic_rendered)
+                               heic_rendered=heic_rendered, show_author=cfg.show_author)
     write_manifest(manifest, cfg.data_dir)
 
     log.info("Refresh complete: %d slide(s) from %d active Slack message(s)",
