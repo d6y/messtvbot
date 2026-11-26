@@ -54,4 +54,4 @@ The `list` message itself is never shown on the display. It has to be the whole 
 
 Post `help` as a new message, or reply `help` in any message's thread, and the bot replies with a quick summary: what it does, how long a message stays up, how to remove one, and who to contact if something's broken.
 
-A short new message that happens to start with `help` or `remove` is treated the same way — it won't be shown on the display, since it's almost certainly someone looking for instructions rather than content meant for the screen. A longer message that happens to start with one of those words (a real notice, not a command) is shown normally.
+A short new message that happens to start with `help` or `remove` is treated the same way — it won't be shown on the display, since it's almost certainly someone looking for instructions rather than content meant for the screen. For `help` the bot replies with the summary. For `remove` it replies that the message won't be shown, and that to remove a post you reply in that post's own thread. A longer message that happens to start with one of those words (a real notice, not a command) is shown normally.

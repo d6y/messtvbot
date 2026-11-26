@@ -286,6 +286,30 @@ def is_help_trigger(text: str) -> bool:
     return bool(HELP_TRIGGER_RE.match(stripped))
 
 
+def help_trigger_reply(cfg: SlackConfig, text: str, user_id: str | None,
+                       posted_at_dt: datetime) -> str:
+    """Reply to a new message caught by is_help_trigger(). Someone who asked
+    for `help` gets just the help text -- that's what they expect. A
+    misplaced `remove ...` gets misplaced_remove_reply() instead."""
+    if (text or "").strip().lower().startswith("remove"):
+        return misplaced_remove_reply(user_id)
+    return build_help_text(cfg, posted_at_dt)
+
+
+def misplaced_remove_reply(user_id: str | None) -> str:
+    """Reply to `remove ...` posted as a new message instead of in a post's
+    thread. Says what the bot did with it: without this, the poster (and
+    anyone else in the thread) can't tell whether it went on the display,
+    and likely thinks a post is now coming down. Bold, with an emoji and an
+    @-mention of the poster, so it isn't missed."""
+    subject = f"<@{user_id}> This message" if user_id else "This message"
+    return (
+        f":no_entry_sign: *{subject} won't be shown on the Mess TV as it looks "
+        "like a command.* \n\nTo remove a post, find it "
+        "in the channel and reply `remove` in its thread."
+    )
+
+
 def is_list_trigger(text: str) -> bool:
     """True for a new message that is nothing but 'list' or "what's on"
     (any case, optional trailing '?') -- a request for the list of what's
@@ -895,7 +919,8 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
 
     if kind == "text" and is_help_trigger(msg.get("text")):
         log.info("Replying with help text for Slack message %s: looks like a help/remove request", ts)
-        _post_safe(api, cfg.channel, build_help_text(cfg, posted_at_dt), thread_ts=ts)
+        reply = help_trigger_reply(cfg, msg.get("text"), msg.get("user"), posted_at_dt)
+        _post_safe(api, cfg.channel, reply, thread_ts=ts)
         append_audit(audit_path, {
             "at": now.isoformat(timespec="seconds"), "ts": ts,
             "author": author_for_audit, "kind": "ignored", "action": "help_reply",

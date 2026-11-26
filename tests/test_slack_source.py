@@ -439,6 +439,28 @@ class BuildHelpTextTests(unittest.TestCase):
         self.assertNotIn(f"`remove {real_expiry:%-d %b %Y}`", text)
 
 
+class MisplacedRemoveReplyTests(unittest.TestCase):
+    def test_says_not_shown(self):
+        self.assertIn("won't be shown on the Mess TV", ms.misplaced_remove_reply("U1"))
+
+    def test_points_at_the_original_posts_thread(self):
+        self.assertIn("reply `remove` in its thread", ms.misplaced_remove_reply("U1"))
+
+    def test_starts_with_an_emoji_and_mentions_the_poster_in_bold(self):
+        reply = ms.misplaced_remove_reply("U1")
+        self.assertTrue(reply.startswith(":no_entry_sign: *<@U1> "), reply)
+
+    def test_only_the_first_sentence_is_bold(self):
+        first, rest = ms.misplaced_remove_reply("U1").split("\n\n", 1)
+        self.assertTrue(first.rstrip().endswith("command.*"), first)
+        self.assertNotIn("*", rest)
+
+    def test_no_mention_when_the_poster_is_unknown(self):
+        reply = ms.misplaced_remove_reply(None)
+        self.assertNotIn("<@", reply)
+        self.assertTrue(reply.startswith(":no_entry_sign: *This message"), reply)
+
+
 class ParseCommandTests(unittest.TestCase):
     NOW = datetime(2026, 9, 3, 12, 0, tzinfo=timezone.utc)  # a Thursday
 
@@ -1577,7 +1599,8 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(state["100.30"]["status"], "ignored")
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.30"]
         self.assertEqual(len(replies), 1)
-        self.assertIn("Mess TV", replies[0]["text"])
+        # The preface already says what to do -- no full help text after it.
+        self.assertEqual(replies[0]["text"], ms.misplaced_remove_reply("U1"))
 
     def test_bare_help_message_is_not_shown_and_gets_a_help_reply(self):
         api = FakeSlackAPI(
@@ -1588,6 +1611,10 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(ms.sorted_active_entries(state), [])
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.31"]
         self.assertEqual(len(replies), 1)
+        # Someone asking for help gets just the help text -- no "won't be
+        # shown" warning; they asked for help, not to post something.
+        self.assertTrue(replies[0]["text"].startswith("Messages posted here appear on the Mess TV"))
+        self.assertNotIn("won't be shown", replies[0]["text"])
 
     def test_help_trigger_is_not_reprocessed_on_a_later_tick(self):
         api = FakeSlackAPI(
