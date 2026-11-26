@@ -117,6 +117,15 @@ def unwrap_forward(msg: dict) -> dict:
     return {**msg, "text": share.get("text") or "", "files": share.get("files") or []}
 
 
+def forward_note(msg: dict) -> str | None:
+    """The forwarder's own note on a forward ("" if they wrote none), or
+    None if `msg` isn't a forward. unwrap_forward() drops the note; this is
+    read only for an `until <date>` instruction (see parse_until)."""
+    if not any(a.get("is_share") for a in msg.get("attachments") or []):
+        return None
+    return msg.get("text") or ""
+
+
 def extract_attachment(msg: dict) -> dict | None:
     """Return {'url', 'filetype', 'name'} for the first image/PDF file on
     the message, or None if it has no recognized attachment."""
@@ -235,43 +244,122 @@ def parse_command(text: str, now: datetime) -> RemovalCommand | None:
     if not rest or rest.lower() == "now":
         return RemovalCommand(remove_at=now)
 
-    # Replies name dates/times with no timezone, and mean London time when
-    # they do -- parse relative to (and localize into) LOCAL_TZ rather than
-    # UTC, so "remove 10am" means 10am in London, not 10am UTC.
-    naive_local_now = now.astimezone(LOCAL_TZ).replace(tzinfo=None)
-    parsed = dateparser.parse(_normalize_date_phrase(rest), settings={
+    return RemovalCommand(remove_at=_parse_date_phrase(rest, now))
+
+
+def _dateparse_local(phrase: str, naive_local_base: datetime) -> datetime | None:
+    # Day-first, as in the UK: without DATE_ORDER, "11/12/26" came out as
+    # 12 Nov 2126.
+    return dateparser.parse(_normalize_date_phrase(phrase), settings={
         "PREFER_DATES_FROM": "future",
-        "RELATIVE_BASE": naive_local_now,
+        "RELATIVE_BASE": naive_local_base,
+        "DATE_ORDER": "DMY",
     })
-    # Landing exactly on the current moment means dateparser kept only a
-    # day word ("today") and threw the rest away -- treat it as not
-    # understood rather than removing immediately (live bug: "remove today
-    # at 2200" took a post down at 17:48).
-    if parsed is None or parsed == naive_local_now:
-        return RemovalCommand(remove_at=None)
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=LOCAL_TZ)
+
+
+def _to_utc(naive_local: datetime) -> datetime:
+    if naive_local.tzinfo is None:
+        naive_local = naive_local.replace(tzinfo=LOCAL_TZ)
     # Stored/compared as UTC like every other timestamp in this app --
     # LOCAL_TZ only decides how bare text like "10am" is interpreted.
-    return RemovalCommand(remove_at=parsed.astimezone(timezone.utc))
+    return naive_local.astimezone(timezone.utc)
+
+
+_EXPLICIT_MIDNIGHT_RE = re.compile(r"\b(midnight|0?0[:.]00|12\s*am)\b", re.IGNORECASE)
+# "in 2 hours", "30 mins" -- a relative time of day, not just a day.
+_HOURS_OR_MINUTES_RE = re.compile(r"\d\s*(h|hrs?|hours?|m|mins?|minutes?)\b", re.IGNORECASE)
+
+
+def _parse_date_phrase(phrase: str, now: datetime) -> datetime | None:
+    """A user-typed date/time phrase (`remove <phrase>`, `until <phrase>`)
+    as a UTC datetime, or None if it can't be understood or is in the past.
+    A phrase with no time of day ("11 Dec", "Friday", "tomorrow", "in 1
+    week") means the END of that day, 23:59 London: "until 11 Dec" for a
+    party on the 11th must still be up on the 11th, and dateparser alone
+    gives 00:00 -- the night before."""
+    # Typed dates/times have no timezone, and mean London time when they
+    # do -- parse relative to (and localize into) LOCAL_TZ rather than
+    # UTC, so "remove 10am" means 10am in London, not 10am UTC.
+    naive_local_now = now.astimezone(LOCAL_TZ).replace(tzinfo=None)
+    parsed = _dateparse_local(phrase, naive_local_now)
+    if parsed is None:
+        return None
+    # dateparser has no "was a time given?" flag. A relative phrase takes
+    # its time of day from the base, so parsing again from a base 12 hours
+    # off shows it; an absolute date with no time comes out as 00:00.
+    # "in 2 hours" also moves with the base, but names a time, so it's
+    # excluded explicitly.
+    reparsed = _dateparse_local(phrase, naive_local_now + timedelta(hours=12))
+    no_time_given = not _HOURS_OR_MINUTES_RE.search(phrase) and (
+        (reparsed is not None and reparsed.time() != parsed.time())
+        or (parsed.time() == datetime.min.time() and not _EXPLICIT_MIDNIGHT_RE.search(phrase))
+    )
+    if no_time_given:
+        parsed = parsed.replace(hour=23, minute=59, second=0, microsecond=0)
+    elif parsed == naive_local_now:
+        # Landing exactly on the current moment with a time "given" means
+        # dateparser threw part of the phrase away -- treat it as not
+        # understood rather than removing immediately (live bug: "remove
+        # today at 2200" took a post down at 17:48).
+        return None
+    result = _to_utc(parsed)
+    return result if result > now else None
+
+
+# The whole message, any case: "until <date>", "show until <date>" or
+# "show now until <date>", optionally ending with a full stop or "!".
+UNTIL_RE = re.compile(r"^(?:show\s+(?:now\s+)?)?until\s+(\S.*?)[.!]?$", re.IGNORECASE)
+
+
+@dataclass
+class UntilInstruction:
+    text: str  # the whole message, stripped -- quoted back if not understood
+    phrase: str  # just the date part, e.g. "11 Dec 26"
+    # None: shaped like an instruction, but the date wasn't understood (or
+    # is in the past). The caller then treats the text as ordinary content.
+    remove_at: datetime | None
+
+
+def parse_until(text: str | None, now: datetime) -> UntilInstruction | None:
+    """An UntilInstruction if `text` is, in its entirety, `until <date>`
+    (optionally `show`/`show now` first), else None. Whole-message only,
+    like the list trigger, so a real caption that merely mentions "until"
+    is never read as an instruction."""
+    stripped = (text or "").strip()
+    match = UNTIL_RE.match(stripped)
+    if match is None:
+        return None
+    phrase = match.group(1).strip()
+    return UntilInstruction(text=stripped, phrase=phrase, remove_at=_parse_date_phrase(phrase, now))
 
 
 def _describe_interval(target: datetime, now: datetime) -> str:
     """Human-friendly relative description of how far target is from now,
     e.g. "in 3 days", "in 1 hour" -- shown alongside an absolute date/time
-    in a reply so a poster doesn't have to do the arithmetic themselves."""
-    total_seconds = int((target - now).total_seconds())
-    if total_seconds <= 0:
+    in a reply so a poster doesn't have to do the arithmetic themselves.
+    A day or more away counts London CALENDAR days, as people do: a reply
+    sent seconds after a post with a 7-day expiry is 6 days 23:59:5x
+    away, and flooring that said "in 6 days" (live); plain rounding
+    instead made an end-of-day "remove in 1 week" (7d23h) "in 8 days".
+    Under a day, hours/minutes rounded to the nearest."""
+    seconds = (target - now).total_seconds()
+    if seconds <= 0:
         return "now"
-    days, rem = divmod(total_seconds, 86400)
-    if days >= 1:
-        return f"in {days} day" + ("" if days == 1 else "s")
-    hours, rem = divmod(rem, 3600)
-    if hours >= 1:
-        return f"in {hours} hour" + ("" if hours == 1 else "s")
-    minutes = rem // 60
-    if minutes >= 1:
-        return f"in {minutes} minute" + ("" if minutes == 1 else "s")
+
+    def nearest(unit_seconds: int) -> int:
+        return int(seconds / unit_seconds + 0.5)  # half up, not banker's
+
+    def plural(n: int, unit: str) -> str:
+        return f"in {n} {unit}" + ("" if n == 1 else "s")
+
+    # Choose the unit by the rounded value, so 23h59m is "1 day", not "24 hours".
+    days = (target.astimezone(LOCAL_TZ).date() - now.astimezone(LOCAL_TZ).date()).days
+    if nearest(3600) >= 24 and days >= 1:  # nearly a day away can still be today
+        return plural(days, "day")
+    if nearest(60) >= 60:
+        return plural(nearest(3600), "hour")
+    if nearest(60) >= 1:
+        return plural(nearest(60), "minute")
     return "in under a minute"
 
 
@@ -307,6 +395,18 @@ def misplaced_remove_reply(user_id: str | None) -> str:
         f":no_entry_sign: *{subject} won't be shown on the Mess TV as it looks "
         "like a command.* \n\nTo remove a post, find it "
         "in the channel and reply `remove` in its thread."
+    )
+
+
+def misplaced_until_reply(user_id: str | None, phrase: str) -> str:
+    """Reply to a text-only `until <date>` new message: there's nothing to
+    show, so it's almost certainly meant for a post that's already up --
+    and that's what a `remove <date>` thread reply does."""
+    subject = f"<@{user_id}> This message" if user_id else "This message"
+    return (
+        f":no_entry_sign: *{subject} won't be shown on the Mess TV as it looks "
+        "like a command.* \n\nTo change how long a post stays up, find it "
+        f"in the channel and reply `remove {phrase}` in its thread."
     )
 
 
@@ -697,6 +797,8 @@ def build_removal_notice(entry: dict, ttl_days: int) -> str:
     author = f"<@{author_id}>" if author_id else entry["author"]
     if entry.get("remove_reason") == "command":
         reason = f'requested by {entry.get("remove_requested_by", entry["author"])}'
+    elif entry.get("remove_reason") == "until":
+        reason = "reached the date asked for when it was posted"
     else:
         reason = f"expired after {ttl_days} days"
     return f"I've removed {_describe_removed(entry)} posted by {author} ({reason})"
@@ -875,12 +977,20 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
     writing `state[ts]` and posting/auditing the appropriate reply. Shared by
     poll_slack's bulk history scan and handle_realtime_event's one-at-a-time
     Socket Mode path -- do not duplicate this logic at a new call site."""
+    note = forward_note(msg)
     msg = unwrap_forward(msg)
     ts = msg["ts"]
     kind = classify_message(msg, bot_user_id=cfg.bot_user_id)
     author_for_audit = msg.get("user", "unknown")
     posted_at_dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
     posted_at = posted_at_dt.isoformat(timespec="seconds")
+    # `until <date>` as the poster's own whole text: a forward's note, or an
+    # ordinary message's text. Only an understood date makes an ordinary
+    # message's text an instruction (and so hidden); otherwise it's shown
+    # as normal. Forwarded content itself is never read as one.
+    until = parse_until(msg.get("text") if note is None else note, now)
+    until_date = until.remove_at if until else None
+    hide_text = note is None and until_date is not None
 
     unsupported_reason = _unsupported_attachment_reason(msg, max_bytes=cfg.max_attachment_bytes)
     if unsupported_reason is not None:
@@ -942,6 +1052,21 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         # Same marker pattern as the "ignored" branch above.
         state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
         return
+
+    if kind == "text" and hide_text:
+        # Nothing to show but the instruction itself: almost certainly
+        # meant for a post that's already up.
+        log.info("Replying to Slack message %s: `until` with nothing to show", ts)
+        _post_safe(api, cfg.channel, misplaced_until_reply(msg.get("user"), until.phrase), thread_ts=ts)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts,
+            "author": author_for_audit, "kind": "ignored", "action": "until_reply",
+            "summary": (msg.get("text") or "")[:80],
+        })
+        # Same marker pattern as the "ignored" branch above.
+        state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+        return
+
     if msg.get("user"):
         try:
             author = api.user_name(msg["user"])
@@ -954,11 +1079,11 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         "ts": ts, "posted_at": posted_at, "status": "active", "kind": kind,
         "text": "", "author": author, "author_id": msg.get("user"), "local_files": [],
         "file_ids": [],
-        "remove_at": (posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
-        "remove_reason": "ttl",
+        "remove_at": (until_date or posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
+        "remove_reason": "until" if until_date else "ttl",
     }
 
-    entry["text"] = convert_emoji_shortcodes(
+    entry["text"] = "" if hide_text else convert_emoji_shortcodes(
         resolve_mentions(html.unescape(msg.get("text", "")), api)
     )
     images_truncated_from = 0
@@ -1012,6 +1137,10 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
             f"Will be removed {remove_at_local:%-d %b %Y %H:%M} ({interval})",
             f"To remove at a different time: reply `remove now` or, for example, `remove {example_remove_at_local:%-d %b}`, `remove tomorrow`, etc.",
         ]
+        if until and until_date is None:
+            usual = "1 day" if cfg.ttl_days == 1 else f"{cfg.ttl_days} days"
+            bullets.insert(1, f"Couldn't understand \u201c{_slack_escape(until.text)}\u201d as a date, "
+                              f"so using the usual {usual}")
         if images_truncated_from:
             bullets.append(f"Only the first {cfg.max_images} of {images_truncated_from} images were used")
         bullets.append(f"<{review_url}|See how it looks>")

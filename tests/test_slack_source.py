@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 import tempfile
 import shutil
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin"))
@@ -461,6 +461,168 @@ class MisplacedRemoveReplyTests(unittest.TestCase):
         self.assertTrue(reply.startswith(":no_entry_sign: *This message"), reply)
 
 
+class ForwardNoteTests(unittest.TestCase):
+    def test_forward_returns_the_forwarders_note(self):
+        self.assertEqual(ms.forward_note(FORWARD_WITH_IMAGE_AND_NOTE),
+                         "Just checking what happens if I forward this")
+
+    def test_forward_without_a_note_returns_empty(self):
+        self.assertEqual(ms.forward_note(FORWARD_TEXT_ONLY), "")
+
+    def test_ordinary_message_has_no_forward_note(self):
+        self.assertIsNone(ms.forward_note({"ts": "100.1", "text": "Pizza", "files": []}))
+
+
+class ParseUntilTests(unittest.TestCase):
+    NOW = datetime(2026, 11, 26, 16, 51, tzinfo=timezone.utc)  # a Thursday, GMT
+
+    def _at(self, *args):
+        return datetime(*args, tzinfo=ms.LOCAL_TZ).astimezone(timezone.utc)
+
+    def test_show_now_until_date_means_the_end_of_that_day(self):
+        result = ms.parse_until("Show now until 11 Dec 26", self.NOW)
+        self.assertEqual(result.remove_at, self._at(2026, 12, 11, 23, 59))
+
+    def test_bare_until(self):
+        self.assertEqual(ms.parse_until("until 11 Dec", self.NOW).remove_at,
+                         self._at(2026, 12, 11, 23, 59))
+
+    def test_show_until(self):
+        self.assertEqual(ms.parse_until("show until 11 Dec", self.NOW).remove_at,
+                         self._at(2026, 12, 11, 23, 59))
+
+    def test_any_case_and_a_trailing_full_stop(self):
+        self.assertEqual(ms.parse_until("  SHOW UNTIL 11 Dec.  ", self.NOW).remove_at,
+                         self._at(2026, 12, 11, 23, 59))
+
+    def test_a_given_time_is_kept(self):
+        self.assertEqual(ms.parse_until("show until 11 Dec 5pm", self.NOW).remove_at,
+                         self._at(2026, 12, 11, 17, 0))
+
+    def test_numeric_dates_are_day_first(self):
+        self.assertEqual(ms.parse_until("until 11/12/26", self.NOW).remove_at,
+                         self._at(2026, 12, 11, 23, 59))
+
+    def test_hours_keep_the_exact_time(self):
+        self.assertEqual(ms.parse_until("until in 3 hours", self.NOW).remove_at,
+                         self.NOW + timedelta(hours=3))
+
+    def test_relative_day_means_the_end_of_that_day(self):
+        self.assertEqual(ms.parse_until("until tomorrow", self.NOW).remove_at,
+                         self._at(2026, 11, 27, 23, 59))
+
+    def test_weekday_means_the_end_of_that_day(self):
+        self.assertEqual(ms.parse_until("until Friday", self.NOW).remove_at,
+                         self._at(2026, 11, 27, 23, 59))
+
+    def test_today_means_the_end_of_today(self):
+        self.assertEqual(ms.parse_until("until today", self.NOW).remove_at,
+                         self._at(2026, 11, 26, 23, 59))
+
+    def test_explicit_midnight_is_kept(self):
+        self.assertEqual(ms.parse_until("until 11 Dec midnight", self.NOW).remove_at,
+                         self._at(2026, 12, 11, 0, 0))
+
+    def test_end_of_day_is_london_time_in_summer(self):
+        self.assertEqual(ms.parse_until("until 1 Jul 2027", self.NOW).remove_at,
+                         self._at(2027, 7, 1, 23, 59))
+
+    def test_unparseable_date_is_an_instruction_with_no_date(self):
+        result = ms.parse_until("until Chrismas", self.NOW)
+        self.assertIsNotNone(result)
+        self.assertIsNone(result.remove_at)
+        self.assertEqual(result.text, "until Chrismas")
+
+    def test_past_date_is_not_understood(self):
+        result = ms.parse_until("until yesterday", self.NOW)
+        self.assertIsNotNone(result)
+        self.assertIsNone(result.remove_at)
+
+    def test_until_must_be_the_whole_message(self):
+        self.assertIsNone(ms.parse_until("Xmas party until 11 Dec", self.NOW))
+
+    def test_until_on_a_later_line_does_not_count(self):
+        self.assertIsNone(ms.parse_until("Xmas party\nuntil 11 Dec", self.NOW))
+
+    def test_until_with_nothing_after_it_does_not_count(self):
+        self.assertIsNone(ms.parse_until("until", self.NOW))
+
+    def test_empty_and_none_text(self):
+        self.assertIsNone(ms.parse_until("", self.NOW))
+        self.assertIsNone(ms.parse_until(None, self.NOW))
+
+
+class MisplacedUntilReplyTests(unittest.TestCase):
+    def test_says_not_shown_and_mentions_the_poster(self):
+        reply = ms.misplaced_until_reply("U1", "11 Dec")
+        self.assertTrue(reply.startswith(":no_entry_sign: *<@U1> "), reply)
+        self.assertIn("won't be shown on the Mess TV", reply)
+
+    def test_suggests_the_remove_reply_with_their_own_date(self):
+        self.assertIn("reply `remove 11 Dec` in its thread", ms.misplaced_until_reply("U1", "11 Dec"))
+
+    def test_no_mention_when_the_poster_is_unknown(self):
+        self.assertNotIn("<@", ms.misplaced_until_reply(None, "11 Dec"))
+
+
+class DescribeIntervalTests(unittest.TestCase):
+    NOW = datetime(2026, 11, 26, 20, 52, tzinfo=timezone.utc)
+
+    def _in(self, **delta):
+        return ms._describe_interval(self.NOW + timedelta(**delta), self.NOW)
+
+    def test_seven_days_less_a_few_seconds_is_seven_days(self):
+        # Live: the acceptance reply goes out seconds after the post, so a
+        # 7-day expiry is 6 days 23:59:5x away -- it said "in 6 days".
+        self.assertEqual(self._in(days=7, seconds=-5), "in 7 days")
+
+    def test_exact_days(self):
+        self.assertEqual(self._in(days=3), "in 3 days")
+
+    def test_counts_calendar_days_not_24_hour_periods(self):
+        # 20:52 + 3d11h is 07:52 four calendar days on -- "in 4 days".
+        self.assertEqual(self._in(days=3, hours=11), "in 4 days")
+
+    def test_end_of_day_a_week_on_is_seven_days(self):
+        # "remove in 1 week" said just after midnight is 23:59 seven days
+        # on: 7d23h away, which plain rounding called "in 8 days".
+        now = datetime(2026, 8, 1, 0, 0, tzinfo=timezone.utc)  # 01:00 BST
+        target = datetime(2026, 8, 8, 23, 59, tzinfo=ms.LOCAL_TZ)
+        self.assertEqual(ms._describe_interval(target, now), "in 7 days")
+
+    def test_nearly_a_day_away_but_still_today_is_in_hours(self):
+        now = datetime(2026, 11, 26, 0, 10, tzinfo=timezone.utc)
+        target = datetime(2026, 11, 26, 23, 45, tzinfo=timezone.utc)
+        self.assertEqual(ms._describe_interval(target, now), "in 24 hours")
+
+    def test_calendar_days_are_london_days(self):
+        # 23:30 UTC on 31 Jul is already 1 Aug in London (BST).
+        now = datetime(2026, 7, 31, 23, 30, tzinfo=timezone.utc)
+        target = datetime(2026, 8, 3, 12, 0, tzinfo=ms.LOCAL_TZ)
+        self.assertEqual(ms._describe_interval(target, now), "in 2 days")
+
+    def test_a_day_less_a_few_seconds_is_one_day(self):
+        self.assertEqual(self._in(days=1, seconds=-5), "in 1 day")
+
+    def test_under_a_day_is_in_hours_rounded_to_the_nearest(self):
+        self.assertEqual(self._in(hours=5, minutes=40), "in 6 hours")
+        self.assertEqual(self._in(hours=5, minutes=20), "in 5 hours")
+
+    def test_an_hour_less_a_few_seconds_is_one_hour(self):
+        self.assertEqual(self._in(hours=1, seconds=-5), "in 1 hour")
+
+    def test_under_an_hour_is_in_minutes_rounded_to_the_nearest(self):
+        self.assertEqual(self._in(minutes=30, seconds=-5), "in 30 minutes")
+        self.assertEqual(self._in(minutes=1), "in 1 minute")
+
+    def test_under_half_a_minute(self):
+        self.assertEqual(self._in(seconds=20), "in under a minute")
+
+    def test_past_or_now(self):
+        self.assertEqual(self._in(seconds=0), "now")
+        self.assertEqual(self._in(seconds=-30), "now")
+
+
 class ParseCommandTests(unittest.TestCase):
     NOW = datetime(2026, 9, 3, 12, 0, tzinfo=timezone.utc)  # a Thursday
 
@@ -479,13 +641,42 @@ class ParseCommandTests(unittest.TestCase):
         result = ms.parse_command("remove", self.NOW)
         self.assertEqual(result.remove_at, self.NOW)
 
+    def test_numeric_dates_are_day_first(self):
+        # Was read month-first: "11/12/26" came out as 12 Nov 2126.
+        result = ms.parse_command("remove 11/12/26", self.NOW)
+        self.assertEqual(result.remove_at.astimezone(ms.LOCAL_TZ).date(), date(2026, 12, 11))
+
     def test_remove_now_means_now(self):
         result = ms.parse_command("remove now", self.NOW)
         self.assertEqual(result.remove_at, self.NOW)
 
-    def test_remove_in_one_week(self):
+    def _local(self, *args):
+        return datetime(*args, tzinfo=ms.LOCAL_TZ).astimezone(timezone.utc)
+
+    def test_remove_in_one_week_means_the_end_of_that_day(self):
         result = ms.parse_command("remove in 1 week", self.NOW)
-        self.assertEqual(result.remove_at, self.NOW + timedelta(weeks=1))
+        self.assertEqual(result.remove_at, self._local(2026, 9, 10, 23, 59))
+
+    def test_remove_in_hours_keeps_the_exact_time(self):
+        result = ms.parse_command("remove in 2 hours", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW + timedelta(hours=2))
+
+    def test_remove_in_minutes_keeps_the_exact_time(self):
+        result = ms.parse_command("remove in 30 minutes", self.NOW)
+        self.assertEqual(result.remove_at, self.NOW + timedelta(minutes=30))
+
+    def test_remove_date_without_a_time_means_the_end_of_that_day(self):
+        result = ms.parse_command("remove 10 Sept", self.NOW)
+        self.assertEqual(result.remove_at, self._local(2026, 9, 10, 23, 59))
+
+    def test_remove_tomorrow_means_the_end_of_tomorrow(self):
+        result = ms.parse_command("remove tomorrow", self.NOW)
+        self.assertEqual(result.remove_at, self._local(2026, 9, 4, 23, 59))
+
+    def test_remove_past_date_is_not_understood(self):
+        result = ms.parse_command("remove yesterday", self.NOW)
+        self.assertIsNotNone(result)
+        self.assertIsNone(result.remove_at)
 
     def test_remove_next_thursday_resolves_to_the_future(self):
         result = ms.parse_command("remove thursday", self.NOW)
@@ -550,16 +741,15 @@ class ParseCommandTests(unittest.TestCase):
         result = ms.parse_command("remove 13 Nov 2026", self.EVENING)
         self.assertEqual(result.remove_at.date().isoformat(), "2026-11-13")
 
-    def test_phrase_that_resolves_to_this_moment_is_not_understood(self):
-        # A phrase only ever lands exactly on "now" when dateparser threw
-        # part of it away -- removing immediately on a garbled date is the
-        # outcome the remove_at=None branch exists to prevent. A bare
-        # "remove" / "remove now" is the deliberate way to say now.
+    def test_today_and_tonight_mean_the_end_of_today(self):
+        # These used to be "not understood": dateparser lands them exactly
+        # on now, and removing immediately was the wrong reading. With no
+        # time given they now mean 23:59, like any other day.
+        end_of_today = self.EVENING.astimezone(ms.LOCAL_TZ).replace(
+            hour=23, minute=59, second=0, microsecond=0).astimezone(timezone.utc)
         for phrase in ("remove today", "remove tonight"):
             with self.subTest(phrase=phrase):
-                result = ms.parse_command(phrase, self.EVENING)
-                self.assertIsNotNone(result)
-                self.assertIsNone(result.remove_at)
+                self.assertEqual(ms.parse_command(phrase, self.EVENING).remove_at, end_of_today)
 
     def test_unrelated_reply_does_not_match(self):
         self.assertIsNone(ms.parse_command("nice!", self.NOW))
@@ -581,6 +771,10 @@ class RemovalNoticeTests(unittest.TestCase):
         self.assertEqual(
             ms.build_removal_notice(self._entry(), ttl_days=7),
             'I\'ve removed "Old announcement" posted by <@U1> (expired after 7 days)')
+
+    def test_until_entry_says_it_reached_the_requested_date(self):
+        notice = ms.build_removal_notice(self._entry(remove_reason="until"), ttl_days=7)
+        self.assertTrue(notice.endswith("(reached the date asked for when it was posted)"), notice)
 
     def test_entry_without_author_id_falls_back_to_the_name(self):
         entry = self._entry()
@@ -1371,6 +1565,11 @@ class StateLockTests(unittest.TestCase):
         self.assertTrue(path.parent.exists())
 
 
+# "remove in 1 week" from PollSlackTests.now (2026-08-01 00:00 UTC): the end
+# of 8 Aug, 23:59 BST = 22:59 UTC.
+IN_ONE_WEEK_END_OF_DAY = "2026-08-08T22:59:00+00:00"
+
+
 class PollSlackTests(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = Path(tempfile.mkdtemp())
@@ -1414,6 +1613,84 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(entry["text"], "Some cake in the kitchen!")
         self.assertEqual(entry["local_files"], [str(self.source_dir / "slack-200.2.jpg")])
         self.assertIn("https://x/cake.jpg", api.downloaded)
+
+    def _ts(self):
+        return f"{self.now.timestamp():.6f}"
+
+    def _image_msg(self, text):
+        return {"ts": self._ts(), "user": "U1", "text": text, "files": [
+            {"id": "F1", "filetype": "png", "name": "x.png", "size": 100,
+             "url_private_download": "https://x/x.png", "url_private": "https://x/x-view.png"}]}
+
+    def _forward_with_note(self, note):
+        return {**copy.deepcopy(FORWARD_WITH_IMAGE_AND_NOTE), "ts": self._ts(), "text": note}
+
+    def _poll(self, msg):
+        api = FakeSlackAPI(messages=[msg], user_names={"U1": "Jane", "U_FWD": "Caroline"})
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        return state[msg["ts"]], api.posted_messages
+
+    UNTIL_11_DEC = "2026-12-11T23:59:00+00:00"  # GMT, so London 23:59 is 23:59 UTC
+
+    def test_image_with_only_show_until_is_shown_captionless_until_that_date(self):
+        entry, posted = self._poll(self._image_msg("show until 11 Dec"))
+        self.assertEqual(entry["status"], "active")
+        self.assertEqual(entry["text"], "")
+        self.assertEqual(entry["remove_at"], self.UNTIL_11_DEC)
+        self.assertEqual(entry["remove_reason"], "until")
+        self.assertIn("Will be removed 11 Dec 2026 23:59", posted[0]["text"])
+
+    def test_image_with_unparseable_until_keeps_it_as_a_caption_and_says_so(self):
+        entry, posted = self._poll(self._image_msg("until we meet again"))
+        self.assertEqual(entry["text"], "until we meet again")
+        self.assertEqual(entry["remove_reason"], "ttl")
+        self.assertIn("Couldn't understand", posted[0]["text"])
+        self.assertIn("until we meet again", posted[0]["text"])
+
+    def test_until_inside_a_longer_caption_is_just_caption(self):
+        entry, posted = self._poll(self._image_msg("Xmas party until 11 Dec"))
+        self.assertEqual(entry["text"], "Xmas party until 11 Dec")
+        self.assertEqual(entry["remove_reason"], "ttl")
+        self.assertNotIn("Couldn't understand", posted[0]["text"])
+
+    def test_text_only_until_is_not_shown_and_points_at_the_remove_reply(self):
+        entry, posted = self._poll({"ts": self._ts(), "user": "U1", "text": "until 11 Dec", "files": []})
+        self.assertEqual(entry["status"], "ignored")
+        self.assertEqual(posted[0]["text"], ms.misplaced_until_reply("U1", "11 Dec"))
+
+    def test_text_only_unparseable_until_is_shown_as_ordinary_text(self):
+        entry, _ = self._poll({"ts": self._ts(), "user": "U1", "text": "until we meet again", "files": []})
+        self.assertEqual(entry["status"], "active")
+        self.assertEqual(entry["text"], "until we meet again")
+
+    def test_forward_with_until_note_is_shown_until_that_date(self):
+        entry, posted = self._poll(self._forward_with_note("Show now until 11 Dec 26"))
+        self.assertEqual(entry["status"], "active")
+        self.assertEqual(entry["text"], "Some cake in the kitchen!")
+        self.assertEqual(entry["remove_at"], self.UNTIL_11_DEC)
+        self.assertEqual(entry["remove_reason"], "until")
+        self.assertIn("Will be removed 11 Dec 2026 23:59", posted[0]["text"])
+
+    def test_forward_with_unparseable_until_note_uses_the_default_and_says_so(self):
+        entry, posted = self._poll(self._forward_with_note("until Chrismas"))
+        self.assertEqual(entry["remove_reason"], "ttl")
+        self.assertEqual(entry["text"], "Some cake in the kitchen!")
+        self.assertIn("Couldn't understand", posted[0]["text"])
+
+    def test_forward_with_an_ordinary_note_is_unchanged(self):
+        entry, posted = self._poll(self._forward_with_note("Just checking"))
+        self.assertEqual(entry["remove_reason"], "ttl")
+        self.assertNotIn("Couldn't understand", posted[0]["text"])
+
+    def test_forwarded_text_that_is_only_until_is_still_shown(self):
+        # Only the poster's own text is read as an instruction -- forwarded
+        # content is always what they meant to show.
+        msg = copy.deepcopy(FORWARD_TEXT_ONLY)
+        msg["ts"] = self._ts()
+        msg["attachments"][0]["text"] = "until 11 Dec"
+        entry, _ = self._poll(msg)
+        self.assertEqual(entry["status"], "active")
+        self.assertEqual(entry["text"], "until 11 Dec")
 
     def test_new_message_stores_poster_user_id(self):
         api = FakeSlackAPI(
@@ -1965,7 +2242,7 @@ class PollSlackTests(unittest.TestCase):
         api = FakeSlackAPI(messages=[], replies_by_ts={"100.9": [{"text": "remove in 1 week", "user": "U2"}]})
         state = ms.poll_slack(self.cfg, existing, self.source_dir, self.now, api, audit_path=self.audit_path)
         self.assertEqual(state["100.9"]["status"], "active")
-        self.assertEqual(state["100.9"]["remove_at"], (self.now + timedelta(weeks=1)).isoformat(timespec="seconds"))
+        self.assertEqual(state["100.9"]["remove_at"], IN_ONE_WEEK_END_OF_DAY)
         self.assertEqual(state["100.9"]["remove_reason"], "command")
 
     def test_scheduled_removal_reply_confirms_the_date(self):
@@ -2359,7 +2636,7 @@ class PollSlackTests(unittest.TestCase):
         self.assertEqual(event["author"], "U2")
         self.assertEqual(event["kind"], "command")
         self.assertEqual(event["action"], "scheduled_removal")
-        self.assertIn((self.now + timedelta(weeks=1)).isoformat(timespec="seconds"), event["summary"])
+        self.assertIn(IN_ONE_WEEK_END_OF_DAY, event["summary"])
 
     # -- Finding 1: scheduled removals must be applied exactly once ---------
 
@@ -2382,7 +2659,7 @@ class PollSlackTests(unittest.TestCase):
         # (a) remove_at is not recomputed/pushed forward by the second tick
         self.assertEqual(state["100.9"]["remove_at"], remove_at_after_first)
         self.assertEqual(remove_at_after_first,
-                          (self.now + timedelta(weeks=1)).isoformat(timespec="seconds"))
+                          IN_ONE_WEEK_END_OF_DAY)
         self.assertEqual(state["100.9"]["status"], "active")
         # (b) only one Slack reply posted across both ticks
         replies = [p for p in api.posted_messages if p["thread_ts"] == "100.9"]

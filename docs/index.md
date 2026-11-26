@@ -32,7 +32,7 @@ Links: you can't click on the TV, so link don't make sense. You'll just see the 
 
 ## How long a message stays up
 
-Every message has an expiry date, set automatically when it's accepted (your bot's reply tells you exactly when). After that, it's removed on its own. You can also remove it sooner, or push the date back — see [Commands](commands.html).
+Every message has an expiry date, set automatically when it's accepted (your bot's reply tells you exactly when). After that, it's removed on its own. You can choose the date when you post, remove it sooner, or push the date back — see [Commands](commands.html).
 
 ## One thing to know
 

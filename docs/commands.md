@@ -28,16 +28,37 @@ Reply with `remove`.
 | --- | --- |
 | `remove` | Removed immediately. |
 | `remove now` | Same as above — "now" is optional. |
-| `remove in 1 week` | Scheduled to come down 7 days from now. |
-| `remove thursday` | Scheduled for the next Thursday. |
-| `remove 3 Sept` | Scheduled for that date. |
+| `remove tonight` | Scheduled for the end of today (23:59). |
+| `remove in 2 hours` | Scheduled for 2 hours from now. |
+| `remove in 1 week` | Scheduled for the end of the day, 7 days from now. |
+| `remove thursday` | Scheduled for the end of next Thursday. |
+| `remove 3 Sept` | Scheduled for the end of that day. |
 | `remove 3 Sept 10am` | Scheduled for that date and time. |
+
+A date with no time means the end of that day (23:59), so a post about something on the 3rd is still up on the 3rd. Dates are day first: `3/9` is 3 September.
 
 If a date/time phrase can't be understood (e.g. a typo), nothing is removed — the bot replies saying it didn't understand and restates the message's current removal date, so a garbled reply can't accidentally take something down.
 
 Times are always in UK local time, adjusting automatically for GMT/BST.
 
 Scheduling a removal doesn't take the message down early — it stays up until the new date arrives. The bot confirms the date in a thread reply either way, so you always have something to check back against — and that confirmation always includes how far off the date is, e.g. "14 Aug 2026 09:00 (in 13 days)".
+
+## Choosing how long a message stays up
+
+To set the removal date when you post, make the message's text **only** `until` and a date. Put it in the image's caption, or in the note when you forward a message:
+
+| Text | What happens |
+| --- | --- |
+| `until 11 Dec` | Up until the end of 11 Dec (23:59). |
+| `show until Friday` | Up until the end of Friday. |
+| `Show now until 11 Dec 26` | Up until the end of 11 Dec 2026. |
+| `until 11 Dec 5pm` | Up until 5pm on 11 Dec. |
+
+As with `remove`, a date with no time means the end of that day, and dates are day first: `11/12/26` is 11 December.
+
+The `until …` text itself isn't shown, so an image with this caption appears on its own. It only counts as the whole text: "Xmas party until 11 Dec" is an ordinary caption, shown as written, for the usual length of time.
+
+If the bot can't understand the date, or it's in the past, the message goes up for the usual length of time, the text is shown as an ordinary caption, and the bot's reply says it couldn't understand the date. `until 11 Dec` on its own, with no image, has nothing to show: the bot suggests replying `remove 11 Dec` in the thread of the post you meant instead.
 
 ## Seeing what's on the display
 
