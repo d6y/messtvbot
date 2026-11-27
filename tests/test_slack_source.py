@@ -872,6 +872,11 @@ class RemovalNoticeTests(unittest.TestCase):
         notice = ms.build_removal_notice(self._entry(remove_reason="until"), ttl_days=7)
         self.assertTrue(notice.endswith("(reached the date asked for when it was posted)"), notice)
 
+    def test_takeover_entry_says_the_takeover_ended(self):
+        # Live bug: a 5-minute takeover's notice said "expired after 7 days".
+        notice = ms.build_removal_notice(self._entry(remove_reason="takeover"), ttl_days=7)
+        self.assertTrue(notice.endswith("(the takeover ended)"), notice)
+
     def test_entry_without_author_id_falls_back_to_the_name(self):
         entry = self._entry()
         del entry["author_id"]

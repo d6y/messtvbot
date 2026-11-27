@@ -880,6 +880,8 @@ def build_removal_notice(entry: dict, ttl_days: int) -> str:
         reason = f'requested by {entry.get("remove_requested_by", entry["author"])}'
     elif entry.get("remove_reason") == "until":
         reason = "reached the date asked for when it was posted"
+    elif entry.get("remove_reason") == "takeover":
+        reason = "the takeover ended"
     else:
         reason = f"expired after {ttl_days} days"
     return f"I've removed {_describe_removed(entry)} posted by {author} ({reason})"
