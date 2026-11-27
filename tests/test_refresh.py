@@ -186,6 +186,38 @@ class BuildManifestTests(unittest.TestCase):
         path.write_bytes(b"x")
         return path
 
+    def _takeover_entry(self, ts, remove_at, posted_at="2026-08-01T00:00:00+00:00"):
+        img = self._make_image(f"slack-{ts}.png")
+        return {**_attachment_entry(local_files=[str(img)], ts=ts), "takeover": True,
+                "posted_at": posted_at, "remove_at": remove_at}
+
+    def test_manifest_takeover_is_none_without_one(self):
+        entry = _attachment_entry(local_files=[str(self._make_image("slack-100.1.png"))])
+        manifest = refresh.build_manifest([("100.1", entry)], {}, self.kiosk_dir, 8, 30)
+        self.assertIsNone(manifest["takeover"])
+
+    def test_manifest_takeover_points_at_the_takeover_entry(self):
+        normal = _attachment_entry(local_files=[str(self._make_image("slack-100.1.png"))])
+        takeover = self._takeover_entry("100.2", "2026-08-01T01:00:00+00:00")
+        manifest = refresh.build_manifest([("100.1", normal), ("100.2", takeover)], {},
+                                          self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["takeover"], {"ts": "100.2", "until": "2026-08-01T01:00:00+00:00"})
+        # The takeover's own item stays in items, so ?ts= review still finds it
+        # and the browser can fall back to the full list once it ends.
+        self.assertEqual([i["ts"] for i in manifest["items"]], ["100.1", "100.2"])
+
+    def test_manifest_has_no_takeover_once_entry_cancelled(self):
+        # A cancelled entry (e.g. after `remove now`) is not in active_entries.
+        normal = _attachment_entry(local_files=[str(self._make_image("slack-100.1.png"))])
+        manifest = refresh.build_manifest([("100.1", normal)], {}, self.kiosk_dir, 8, 30)
+        self.assertIsNone(manifest["takeover"])
+
+    def test_newest_takeover_wins_if_two_are_somehow_active(self):
+        older = self._takeover_entry("100.1", "2026-08-01T05:00:00+00:00", "2026-08-01T00:00:00+00:00")
+        newer = self._takeover_entry("100.2", "2026-08-01T02:00:00+00:00", "2026-08-01T00:10:00+00:00")
+        manifest = refresh.build_manifest([("100.1", older), ("100.2", newer)], {}, self.kiosk_dir, 8, 30)
+        self.assertEqual(manifest["takeover"]["ts"], "100.2")
+
     def test_multiple_images_without_caption_become_a_grid_of_image_regions(self):
         a = self._make_image("slack-100.5-0.jpg")
         b = self._make_image("slack-100.5-1.png")

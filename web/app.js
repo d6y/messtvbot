@@ -34,6 +34,17 @@
   let slideTimer = null;
   let slideMs = DEFAULT_SLIDE_MS;
   let lastManifestRaw = "";
+  let lastManifest = null;
+  // ts of the takeover currently in force, or null. A change either way
+  // restarts the slideshow so the switch is immediate.
+  let activeTakeoverTs = null;
+  let takeoverTimer = null;
+  // A takeover whose image failed to load: the full rotation is shown
+  // instead, rather than one stale slide for the rest of the takeover.
+  let brokenTakeoverTs = null;
+  // The item currently on screen (as JSON), so a one-item list -- always the
+  // case during a takeover -- isn't re-shown with a fade every slide.
+  let shownKey = null;
 
   function cacheBustedUrl(src) {
     // Prevent the browser from serving a stale cached image after a
@@ -244,6 +255,7 @@
       hideVideoLayer();
       setAuthorBadge(standaloneAuthor(item));
       currentIndex = index;
+      shownKey = JSON.stringify(item);
       return;
     }
 
@@ -267,6 +279,7 @@
       hideVideoLayer();
       setAuthorBadge(standaloneAuthor(item));
       currentIndex = index;
+      shownKey = JSON.stringify(item);
       return;
     }
 
@@ -295,6 +308,7 @@
       }
       setAuthorBadge(standaloneAuthor(item));
       currentIndex = index;
+      shownKey = JSON.stringify(item);
       return;
     }
 
@@ -324,6 +338,7 @@
       setAuthorBadge(standaloneAuthor(item));
       [frontLayer, backLayer] = [backLayer, frontLayer];
       currentIndex = index;
+      shownKey = JSON.stringify(item);
     } catch (err) {
       // Broken/missing image: skip it and try the next one shortly.
       // advance() computes the next slide from currentIndex -- without
@@ -332,6 +347,11 @@
       // bad image froze the whole slideshow on that slide indefinitely).
       console.warn("Mess TV Bot: failed to load", item.src, err);
       currentIndex = index;
+      if (item.ts === activeTakeoverTs && lastManifest) {
+        brokenTakeoverTs = item.ts;
+        applyManifest(lastManifest);
+        return;
+      }
       scheduleNext(300);
     }
   }
@@ -344,17 +364,54 @@
   function advance() {
     if (items.length === 0) return;
     const next = (currentIndex + 1) % items.length;
+    if (items.length === 1 && JSON.stringify(items[0]) === shownKey) {
+      // Already showing the only slide: nothing to transition to.
+      currentIndex = 0;
+      scheduleNext();
+      return;
+    }
     showSlide(next).then(() => scheduleNext());
   }
 
+  // While a takeover is in force (manifest.takeover set and the clock
+  // before its `until`), only that post's item(s) are shown. Enforced here,
+  // to the second, rather than waiting for the server's expiry sweep. If the
+  // takeover's item is missing (e.g. failed to render), show everything.
+  function takeoverInForce(allItems, takeover, nowMs) {
+    if (!takeover || takeover.ts === brokenTakeoverTs || !(nowMs < Date.parse(takeover.until))) return null;
+    return allItems.some((item) => item.ts === takeover.ts) ? takeover.ts : null;
+  }
+
+  function scheduleTakeoverEnd(takeover) {
+    clearTimeout(takeoverTimer);
+    takeoverTimer = null;
+    if (!takeover) return;
+    const msLeft = Date.parse(takeover.until) - Date.now();
+    if (msLeft > 0) {
+      takeoverTimer = setTimeout(() => applyManifest(lastManifest), msLeft + 50);
+    }
+  }
+
   function applyManifest(manifest) {
+    lastManifest = manifest;
     slideMs = (manifest.slide_seconds || DEFAULT_SLIDE_MS / 1000) * 1000;
     window.__kiosk_poll_seconds = manifest.poll_seconds || DEFAULT_POLL_MS / 1000;
     const allItems = Array.isArray(manifest.items) ? manifest.items : [];
     // In review mode, scope the whole slideshow (cycling included) down to
     // just this post's item(s) -- a multi-page PDF still cycles its pages,
     // but nothing else from the display ever shows on this page.
-    const newItems = reviewTs ? allItems.filter((item) => item.ts === reviewTs) : allItems;
+    // Review mode ignores any takeover -- it's already scoped to one post.
+    const takeoverTs = reviewTs ? null : takeoverInForce(allItems, manifest.takeover, Date.now());
+    const scopeTs = reviewTs || takeoverTs;
+    // Once a takeover has ended, its image is gone too -- don't let it join
+    // the rotation while the server's sweep (up to 5 min away) catches up.
+    const takeoverEnded = !reviewTs && manifest.takeover && !(Date.now() < Date.parse(manifest.takeover.until));
+    const newItems = scopeTs
+      ? allItems.filter((item) => item.ts === scopeTs)
+      : takeoverEnded ? allItems.filter((item) => item.ts !== manifest.takeover.ts) : allItems;
+    const takeoverChanged = takeoverTs !== activeTakeoverTs;
+    activeTakeoverTs = takeoverTs;
+    scheduleTakeoverEnd(takeoverTs ? manifest.takeover : null);
 
     if (newItems.length === 0) {
       items = [];
@@ -374,6 +431,7 @@
       setAuthorBadge(null);
       clearTimeout(slideTimer);
       currentIndex = -1;
+      shownKey = null;
       return;
     }
 
@@ -382,7 +440,9 @@
     const wasEmpty = items.length === 0;
     items = newItems;
 
-    if (wasEmpty) {
+    if (wasEmpty || takeoverChanged) {
+      // A takeover starting or ending switches the screen now, not at the
+      // end of the current slide.
       currentIndex = -1;
       advance();
     } else if (currentIndex >= items.length) {

@@ -409,11 +409,20 @@ def build_manifest(active_entries: list[tuple[str, dict]], rendered_pages: dict[
     if not show_author:
         items = [{k: v for k, v in item.items() if k != "author"} for item in items]
 
+    # At most one takeover is active (a new one replaces the old -- see
+    # settle_takeovers in slack_source.py); if somehow there are more, the
+    # newest wins. web/app.js enforces `until` itself, to the second, rather
+    # than waiting for the server sweep (every 5 min in Socket Mode).
+    takeovers = [entry for _ts, entry in active_entries if entry.get("takeover")]
+    takeover = ({"ts": takeovers[-1]["ts"], "until": takeovers[-1]["remove_at"]}
+                if takeovers else None)
+
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "slide_seconds": slide_seconds,
         "poll_seconds": poll_seconds,
         "items": items,
+        "takeover": takeover,
     }
 
 

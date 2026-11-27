@@ -77,6 +77,18 @@ class AdminServerTests(unittest.TestCase):
         self.assertEqual(body[0]["author"], "Jane")
         self.assertEqual(body[0]["remove_at"], "2026-12-31T00:00:00+00:00")
 
+    def test_get_entries_ordinary_entry_is_not_a_takeover(self):
+        status, body = self._get("/api/entries")
+        self.assertIs(body[0]["takeover"], False)
+
+    def test_get_entries_flags_a_takeover(self):
+        entry = {"status": "active", "kind": "attachment", "text": "", "author": "Jane",
+                 "posted_at": "2026-08-01T00:00:00+00:00", "remove_at": "2026-12-31T00:00:00+00:00",
+                 "remove_reason": "takeover", "local_files": [], "takeover": True}
+        ms.save_state({"100.9": entry}, self.state_path)
+        status, body = self._get("/api/entries")
+        self.assertIs(body[0]["takeover"], True)
+
     def test_get_entries_text_entry_has_no_thumbnail(self):
         status, body = self._get("/api/entries")
         self.assertEqual(status, 200)

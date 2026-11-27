@@ -333,6 +333,64 @@ def parse_until(text: str | None, now: datetime) -> UntilInstruction | None:
     return UntilInstruction(text=stripped, phrase=phrase, remove_at=_parse_date_phrase(phrase, now))
 
 
+# The whole message, any case, on one line: "take over" / "takeover" /
+# "take-over", optionally "for <duration>" or "until <date/time>", and an
+# optional trailing full stop or "!". Whole-message for the same reason as
+# UNTIL_RE: "Who'll take over the bar rota?" is a real caption.
+TAKEOVER_RE = re.compile(r"^take[ \t-]?over(?:[ \t]+(for|until)[ \t]+(\S[^\n]*?))?[.!]?$", re.IGNORECASE)
+TAKEOVER_DEFAULT = timedelta(hours=1)
+# "<number> <word starting m/h>" -- the whole duration -- read as minutes/hours.
+_TAKEOVER_UNIT_RE = re.compile(r"^(\d+)\s*([mh][a-z]*)$", re.IGNORECASE)
+_TAKEOVER_UNITS = {"m": "minutes", "h": "hours"}
+TAKEOVER_MAX = timedelta(hours=24)
+
+
+@dataclass
+class TakeoverInstruction:
+    text: str  # the whole message, stripped -- quoted back if not understood
+    phrase: str | None  # "for 2 hours" / "until 10pm" as typed; None for a bare "take over"
+    # UTC. None: a phrase was given but not understood (or is in the past) --
+    # the caller then treats the text as an ordinary caption, like `until`,
+    # so "Takeover for charity!" never hides the rotation.
+    remove_at: datetime | None
+    capped: bool  # True: the requested end was beyond TAKEOVER_MAX, so clamped
+    # False: the time couldn't be read but had a number in it ("for 10
+    # blorps"), so it's still a takeover, for TAKEOVER_DEFAULT.
+    understood: bool = True
+
+
+def parse_takeover(text: str | None, now: datetime) -> TakeoverInstruction | None:
+    """A TakeoverInstruction if `text` is, in its entirety, a takeover
+    request, else None. `now` is the moment durations count from -- the
+    caller passes the post's own time, so a takeover only seen later (bot
+    down, reconnecting) doesn't run long after the event."""
+    stripped = (text or "").strip()
+    match = TAKEOVER_RE.match(stripped)
+    if match is None:
+        return None
+    word, rest = match.group(1), match.group(2)
+    if word is None:
+        return TakeoverInstruction(stripped, None, now + TAKEOVER_DEFAULT, capped=False)
+    rest = rest.strip()
+    phrase = f"{word.lower()} {rest}"
+    if word.lower() == "for":
+        # dateparser understands "in 2 hours" but not "for 2 hours" -- nor a
+        # misspelt unit (real post: "take over for 10 mintes").
+        rest = _TAKEOVER_UNIT_RE.sub(lambda m: f"{m.group(1)} {_TAKEOVER_UNITS[m.group(2)[0].lower()]}", rest)
+        parsed = _parse_date_phrase(f"in {rest}", now)
+    else:
+        parsed = _parse_date_phrase(rest, now)
+    if parsed is None:
+        # A number means they meant a time, so still take over ("Takeover
+        # for charity!" has none, and stays an ordinary caption).
+        if re.search(r"\d", rest):
+            return TakeoverInstruction(stripped, phrase, now + TAKEOVER_DEFAULT, capped=False, understood=False)
+        return TakeoverInstruction(stripped, phrase, None, capped=False)
+    if parsed > now + TAKEOVER_MAX:
+        return TakeoverInstruction(stripped, phrase, now + TAKEOVER_MAX, capped=True)
+    return TakeoverInstruction(stripped, phrase, parsed, capped=False)
+
+
 def _describe_interval(target: datetime, now: datetime) -> str:
     """Human-friendly relative description of how far target is from now,
     e.g. "in 3 days", "in 1 hour" -- shown alongside an absolute date/time
@@ -410,6 +468,26 @@ def misplaced_until_reply(user_id: str | None, phrase: str) -> str:
     )
 
 
+TAKEOVER_REJECTED_REPLY = (
+    "Sorry, this post wasn't added -- a takeover needs exactly one image, "
+    "with `take over` (optionally `for 2 hours` or `until 10pm`) as its only text."
+)
+TAKEOVER_ALREADY_ENDED_REPLY = (
+    "Sorry, this takeover wasn't shown -- it had already ended by the time I saw it."
+)
+
+
+def takeover_replaced_reply(new_permalink: str | None) -> str:
+    """Reply in an old takeover's thread when a newer one replaces it."""
+    newer = f"<{new_permalink}|a newer takeover>" if new_permalink else "a newer takeover"
+    return f"Taken off the display: replaced by {newer}."
+
+
+def _is_single_image(msg: dict) -> bool:
+    attachments = extract_attachments(msg)
+    return len(attachments) == 1 and attachments[0]["filetype"] in IMAGE_FILETYPES
+
+
 def is_list_trigger(text: str) -> bool:
     """True for a new message that is nothing but 'list' or "what's on"
     (any case, optional trailing '?') -- a request for the list of what's
@@ -435,6 +513,9 @@ def build_help_text(cfg: SlackConfig, posted_at_dt: datetime) -> str:
         f"To remove at a different time: reply `remove now` or, for example, "
         f"`remove {example_remove_at:%-d %b}`, `remove tomorrow`, etc.\n\n"
         "To see what's on the display now: send `list` as a new message.\n\n"
+        "For a live event: post one image with the text `take over` (or "
+        "`take over for 2 hours`, `take over until 10pm`) to show only that image, "
+        "for 1 hour by default. A new takeover replaces the current one.\n\n"
         f"More help: <{DOCS_URL}|{DOCS_URL}>.\n\n"
         f"There's also an admin interface at {cfg.server_url}/admin.\n\n"
         f"If I'm broken, please contact `{cfg.admin_contact}`."
@@ -900,6 +981,10 @@ def build_list_entry(entry: dict, now: datetime, permalink: str | None,
 
     label = _describe_attachments(entry)
     line = f"{number}. {label} {details}"
+    heading = f"*{number}.*"
+    if entry.get("takeover"):
+        line = f"{number}. Taking over the display: {label} {details}"
+        heading = f"*{number}.* Taking over the display"
     file_id = _first_image_file_id(entry)
     if file_id is None:
         return line, [section(f"*{number}.* _{label}_"), context(details)]
@@ -909,7 +994,7 @@ def build_list_entry(entry: dict, now: datetime, permalink: str | None,
     # title: a title is plain text only, so it couldn't be bold like the rest.
     image = {"type": "image", "slack_file": {"id": file_id},
              "alt_text": f"Image posted by {entry['author']}"}
-    return line, [section(f"*{number}.*"), image, context(details + extra)]
+    return line, [section(heading), image, context(details + extra)]
 
 
 def build_list_messages(entries: list[dict], now: datetime, workspace_url: str,
@@ -990,7 +1075,15 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
     # as normal. Forwarded content itself is never read as one.
     until = parse_until(msg.get("text") if note is None else note, now)
     until_date = until.remove_at if until else None
-    hide_text = note is None and until_date is not None
+    # `take over ...` likewise only as an ordinary message's own whole text
+    # (forwards are out of scope). Never also an `until` -- the two
+    # regexes can't both match one message.
+    takeover = parse_takeover(msg.get("text"), posted_at_dt) if note is None else None
+    # A takeover phrase whose time wasn't understood is an ordinary caption.
+    takeover_not_understood = takeover if takeover and takeover.remove_at is None else None
+    if takeover_not_understood:
+        takeover = None
+    hide_text = note is None and (until_date is not None or takeover is not None)
 
     unsupported_reason = _unsupported_attachment_reason(msg, max_bytes=cfg.max_attachment_bytes)
     if unsupported_reason is not None:
@@ -1009,6 +1102,29 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         append_audit(audit_path, {
             "at": now.isoformat(timespec="seconds"), "ts": ts,
             "author": author_for_audit, "kind": "ignored", "action": "attachment_rejected",
+            "summary": (msg.get("text") or "")[:80],
+        })
+        state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+        return
+
+    if takeover is not None and not _is_single_image(msg):
+        # Clearly meant as a takeover, so not shown as an ordinary post.
+        log.info("Rejecting Slack message %s: takeover without exactly one image", ts)
+        _post_safe(api, cfg.channel, TAKEOVER_REJECTED_REPLY, thread_ts=ts)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts,
+            "author": author_for_audit, "kind": "ignored", "action": "takeover_rejected",
+            "summary": (msg.get("text") or "")[:80],
+        })
+        state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
+        return
+
+    if takeover is not None and takeover.remove_at <= now:
+        log.info("Not showing Slack message %s: takeover already ended", ts)
+        _post_safe(api, cfg.channel, TAKEOVER_ALREADY_ENDED_REPLY, thread_ts=ts)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts,
+            "author": author_for_audit, "kind": "ignored", "action": "takeover_ended",
             "summary": (msg.get("text") or "")[:80],
         })
         state[ts] = {"ts": ts, "status": "ignored", "posted_at": posted_at}
@@ -1082,6 +1198,10 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         "remove_at": (until_date or posted_at_dt + timedelta(days=cfg.ttl_days)).isoformat(timespec="seconds"),
         "remove_reason": "until" if until_date else "ttl",
     }
+    if takeover is not None:
+        entry["takeover"] = True
+        entry["remove_at"] = takeover.remove_at.isoformat(timespec="seconds")
+        entry["remove_reason"] = "takeover"
 
     entry["text"] = "" if hide_text else convert_emoji_shortcodes(
         resolve_mentions(html.unescape(msg.get("text", "")), api)
@@ -1122,7 +1242,15 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         "kind": kind, "action": "ingested" if entry["status"] == "active" else entry["status"],
         "summary": _describe_entry(entry),
     })
-    if entry["status"] == "active":
+    if entry["status"] == "active" and takeover is not None:
+        winner, replaced = settle_takeovers(cfg, state, now, api, audit_path)
+        # Not the winner: an even newer takeover is already active (seen
+        # first because history is newest-first), and settle_takeovers has
+        # already told this one's thread it was replaced.
+        if winner == ts:
+            _post_safe(api, cfg.channel, takeover_accepted_reply(cfg, ts, takeover, now, replaced > 0),
+                       thread_ts=ts)
+    elif entry["status"] == "active":
         remove_at_utc = datetime.fromisoformat(entry["remove_at"])
         remove_at_local = remove_at_utc.astimezone(LOCAL_TZ)
         interval = _describe_interval(remove_at_utc, now)
@@ -1137,6 +1265,9 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
             f"Will be removed {remove_at_local:%-d %b %Y %H:%M} ({interval})",
             f"To remove at a different time: reply `remove now` or, for example, `remove {example_remove_at_local:%-d %b}`, `remove tomorrow`, etc.",
         ]
+        if takeover_not_understood:
+            bullets.insert(1, f"Couldn't understand \u201c{_slack_escape(takeover_not_understood.text)}\u201d "
+                              "as a takeover time, so it's shown as an ordinary post")
         if until and until_date is None:
             usual = "1 day" if cfg.ttl_days == 1 else f"{cfg.ttl_days} days"
             bullets.insert(1, f"Couldn't understand \u201c{_slack_escape(until.text)}\u201d as a date, "
@@ -1146,6 +1277,55 @@ def ingest_message(cfg: SlackConfig, state: dict, source_dir: Path, msg: dict, n
         bullets.append(f"<{review_url}|See how it looks>")
         message = "Added to the Mess TV.\n" + "\n".join(f"• {b}" for b in bullets)
         _post_safe(api, cfg.channel, message, thread_ts=ts)
+
+
+def settle_takeovers(cfg: SlackConfig, state: dict, now: datetime,
+                     api: SlackAPI, audit_path: Path) -> tuple[str | None, int]:
+    """Only one takeover at a time: the newest-posted active one wins, and
+    every other is taken off the display with a reply in its thread.
+    Decided by ts, not by ingestion order -- conversations.history is
+    newest-first, so a poll ingests the older of two takeovers last.
+    Returns (winning ts or None, number replaced)."""
+    active = [(ts, e) for ts, e in state.items() if e.get("status") == "active" and e.get("takeover")]
+    if not active:
+        return None, 0
+    winner = max(active, key=lambda pair: float(pair[0]))[0]
+    old = [(ts, e) for ts, e in active if ts != winner]
+    if not old:
+        return winner, 0
+    try:
+        permalink = message_permalink(api.workspace_url(), cfg.channel, winner)
+    except SlackAPIError as exc:
+        log.error("Failed to look up the workspace URL, replying without a link: %s", exc)
+        permalink = None
+    for ts, entry in old:
+        entry["status"] = "cancelled"
+        entry["remove_reason"] = "replaced"
+        entry["remove_at"] = now.isoformat(timespec="seconds")
+        for f in entry.get("local_files", []):
+            Path(f).unlink(missing_ok=True)
+        append_audit(audit_path, {
+            "at": now.isoformat(timespec="seconds"), "ts": ts, "author": entry.get("author", "unknown"),
+            "kind": "command", "action": "takeover_replaced", "summary": f"replaced by {winner}",
+        })
+        _post_safe(api, cfg.channel, takeover_replaced_reply(permalink), thread_ts=ts)
+    return winner, len(old)
+
+
+def takeover_accepted_reply(cfg: SlackConfig, ts: str, takeover: TakeoverInstruction,
+                            now: datetime, replaced: bool) -> str:
+    remove_at_local = takeover.remove_at.astimezone(LOCAL_TZ)
+    bullets = [f"Until {remove_at_local:%-d %b %Y %H:%M} ({_describe_interval(takeover.remove_at, now)})"]
+    if not takeover.understood:
+        bullets.append(f"Couldn't understand \u201c{_slack_escape(takeover.text)}\u201d as a time, "
+                       "so taking over for 1 hour")
+    if takeover.capped:
+        bullets.append("Takeovers last at most 24 hours")
+    if replaced:
+        bullets.append("Replaced the previous takeover")
+    bullets.append("To end it at a different time: reply `remove now` or, for example, `remove 11pm`")
+    bullets.append(f"<{cfg.server_url}/index.html?ts={ts}|See how it looks>")
+    return "Taking over the Mess TV -- only this image will be shown.\n" + "\n".join(f"• {b}" for b in bullets)
 
 
 def apply_reply_command(cfg: SlackConfig, state: dict, parent_ts: str, reply: dict, now: datetime,

@@ -60,6 +60,25 @@ The `until …` text itself isn't shown, so an image with this caption appears o
 
 If the bot can't understand the date, or it's in the past, the message goes up for the usual length of time, the text is shown as an ordinary caption, and the bot's reply says it couldn't understand the date. `until 11 Dec` on its own, with no image, has nothing to show: the bot suggests replying `remove 11 Dec` in the thread of the post you meant instead.
 
+## Taking over the display
+
+For a live event, you can have the display show **only** your image for a while. Post one image with its text set to **only** `take over`:
+
+| Text | What happens |
+| --- | --- |
+| `take over` | Only this image is shown, for 1 hour. |
+| `take over for 2 hours` | Only this image is shown, for 2 hours. |
+| `take over until 10pm` | Only this image is shown until 10pm. |
+
+`takeover` and `take-over` work too. When the takeover ends, the display goes straight back to showing everything else, and the takeover image is gone.
+
+- **One image only.** A takeover with no image, several images or a PDF isn't added, and the bot replies to say why.
+- **One takeover at a time.** A new takeover replaces the current one straight away, and the bot replies in the old one's thread to say so.
+- **24 hours at most.** A longer time is cut to 24 hours. Small typos in the unit are fine (`for 10 mintes` is 10 minutes). If the bot still can't understand a time with a number in it, it takes over for 1 hour and its reply says so; with no number at all, the image goes up as an ordinary post with the text as its caption.
+- **To end it early or extend it,** reply in its thread with the usual `remove now` or `remove 11pm`.
+
+It only counts as the whole text: "Who'll take over the bar rota?" is an ordinary caption, and so is "Takeover for charity!" (not a time the bot understands). The time counts from when you posted, so if the bot only sees a takeover after it has already ended, it isn't shown.
+
 ## Seeing what's on the display
 
 Post `list` as a new message on its own (`what's on` works too) and the bot replies in that message's thread with a numbered list of everything currently on the display, oldest first. For each one you get:

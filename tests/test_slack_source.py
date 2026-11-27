@@ -394,6 +394,12 @@ class BuildHelpTextTests(unittest.TestCase):
         )
         self.posted_at_dt = datetime(2026, 8, 1, 12, 0, tzinfo=timezone.utc)
 
+    def test_explains_take_over(self):
+        text = ms.build_help_text(self.cfg, self.posted_at_dt)
+        self.assertIn("`take over`", text)
+        self.assertIn("`take over for 2 hours`", text)
+        self.assertIn("replaces", text)
+
     def test_mentions_mess_tv(self):
         text = ms.build_help_text(self.cfg, self.posted_at_dt)
         self.assertIn("Mess TV", text)
@@ -550,6 +556,96 @@ class ParseUntilTests(unittest.TestCase):
     def test_empty_and_none_text(self):
         self.assertIsNone(ms.parse_until("", self.NOW))
         self.assertIsNone(ms.parse_until(None, self.NOW))
+
+
+class TakeoverRepliesTests(unittest.TestCase):
+    def test_replaced_reply_links_to_the_new_takeover(self):
+        self.assertEqual(ms.takeover_replaced_reply("https://x/p1"),
+                         "Taken off the display: replaced by <https://x/p1|a newer takeover>.")
+
+    def test_replaced_reply_without_a_link(self):
+        self.assertEqual(ms.takeover_replaced_reply(None),
+                         "Taken off the display: replaced by a newer takeover.")
+
+
+class ParseTakeoverTests(unittest.TestCase):
+    NOW = datetime(2026, 11, 26, 16, 51, tzinfo=timezone.utc)  # a Thursday, GMT
+
+    def _at(self, *args):
+        return datetime(*args, tzinfo=ms.LOCAL_TZ).astimezone(timezone.utc)
+
+    def test_bare_take_over_is_one_hour(self):
+        r = ms.parse_takeover("take over", self.NOW)
+        self.assertEqual(r.remove_at, self.NOW + timedelta(hours=1))
+        self.assertFalse(r.capped)
+        self.assertIsNone(r.phrase)
+
+    def test_spellings_and_case(self):
+        for t in ["Take over", "TAKEOVER", "take-over", "takeover!", "Take over.", "  take over  "]:
+            self.assertIsNotNone(ms.parse_takeover(t, self.NOW), t)
+
+    def test_for_duration(self):
+        r = ms.parse_takeover("take over for 2 hours", self.NOW)
+        self.assertEqual(r.remove_at, self.NOW + timedelta(hours=2))
+        self.assertEqual(r.phrase, "for 2 hours")
+
+    def test_for_minutes(self):
+        self.assertEqual(ms.parse_takeover("takeover for 90 mins", self.NOW).remove_at,
+                         self.NOW + timedelta(minutes=90))
+
+    def test_until_time(self):
+        r = ms.parse_takeover("take over until 10pm", self.NOW)
+        self.assertEqual(r.remove_at, self._at(2026, 11, 26, 22, 0))
+        self.assertEqual(r.phrase, "until 10pm")
+
+    def test_until_tonight_means_2359(self):
+        self.assertEqual(ms.parse_takeover("take over until tonight", self.NOW).remove_at,
+                         self._at(2026, 11, 26, 23, 59))
+
+    def test_beyond_24_hours_is_capped(self):
+        r = ms.parse_takeover("take over until Saturday", self.NOW)
+        self.assertEqual(r.remove_at, self.NOW + timedelta(hours=24))
+        self.assertTrue(r.capped)
+
+    def test_unparseable_phrase_is_not_understood(self):
+        # Then it's treated as an ordinary caption ("Takeover for charity!").
+        r = ms.parse_takeover("take over for a bit", self.NOW)
+        self.assertIsNone(r.remove_at)
+        self.assertEqual(r.text, "take over for a bit")
+
+    def test_misspelt_minutes(self):
+        # Real post: "take over for 10 mintes".
+        r = ms.parse_takeover("take over for 10 mintes", self.NOW)
+        self.assertEqual(r.remove_at, self.NOW + timedelta(minutes=10))
+        self.assertTrue(r.understood)
+
+    def test_misspelt_hours(self):
+        self.assertEqual(ms.parse_takeover("take over for 2 hiurs", self.NOW).remove_at,
+                         self.NOW + timedelta(hours=2))
+
+    def test_unparseable_phrase_with_a_number_takes_over_for_the_default(self):
+        # A number means they meant a time, so it's a takeover -- just not
+        # one we could read.
+        r = ms.parse_takeover("take over for 10 blorps", self.NOW)
+        self.assertEqual(r.remove_at, self.NOW + timedelta(hours=1))
+        self.assertFalse(r.understood)
+
+    def test_past_time_takes_over_for_the_default(self):
+        # Has a number, so it was meant as a takeover (dateparser's None
+        # doesn't say whether a time was unreadable or in the past).
+        r = ms.parse_takeover("take over until 25 Nov 2026 10pm", self.NOW)
+        self.assertEqual(r.remove_at, self.NOW + timedelta(hours=1))
+        self.assertFalse(r.understood)
+
+    def test_until_an_earlier_time_of_day_means_tomorrow(self):
+        # Same "prefer the future" reading as `remove 9am`.
+        self.assertEqual(ms.parse_takeover("take over until 9am", self.NOW).remove_at,
+                         self._at(2026, 11, 27, 9, 0))
+
+    def test_must_be_the_whole_message(self):
+        for t in ["Who'll take over the bar rota?", "take over the world", "please take over",
+                  "take over\nfor 2 hours", "", None]:
+            self.assertIsNone(ms.parse_takeover(t, self.NOW), t)
 
 
 class MisplacedUntilReplyTests(unittest.TestCase):
@@ -1348,6 +1444,13 @@ class BuildListEntryTests(unittest.TestCase):
         self.now = datetime(2026, 8, 1, 9, 0, tzinfo=timezone.utc)
         self.link = "https://mess.slack.com/archives/C1/p1001"
 
+    def test_takeover_is_labelled(self):
+        entry = _list_entry(kind="attachment", text="", local_files=["/x/slack-100.1.png"],
+                            file_ids=["F1"], takeover=True)
+        line, blocks = ms.build_list_entry(entry, self.now, self.link, 1)
+        self.assertIn("Taking over the display", line)
+        self.assertEqual(blocks[0]["text"]["text"], "*1.* Taking over the display")
+
     def test_text_post_shows_the_text(self):
         line, blocks = ms.build_list_entry(_list_entry(), self.now, self.link, 1)
         self.assertEqual(blocks[0]["type"], "section")
@@ -1691,6 +1794,154 @@ class PollSlackTests(unittest.TestCase):
         entry, _ = self._poll(msg)
         self.assertEqual(entry["status"], "active")
         self.assertEqual(entry["text"], "until 11 Dec")
+
+    # -- take over ---------------------------------------------------------
+
+    def _files_msg(self, text, filetypes):
+        return {"ts": self._ts(), "user": "U1", "text": text, "files": [
+            {"id": f"F{i}", "filetype": ft, "name": f"x{i}.{ft}", "size": 100,
+             "url_private_download": f"https://x/x{i}.{ft}", "url_private": f"https://x/x{i}-view.{ft}"}
+            for i, ft in enumerate(filetypes)]}
+
+    def _audit_actions(self):
+        return [json.loads(line)["action"] for line in self.audit_path.read_text().splitlines()]
+
+    def test_take_over_image_is_shown_captionless_for_an_hour(self):
+        entry, posted = self._poll(self._image_msg("take over"))
+        self.assertEqual(entry["status"], "active")
+        self.assertTrue(entry["takeover"])
+        self.assertEqual(entry["text"], "")
+        self.assertEqual(entry["remove_reason"], "takeover")
+        self.assertEqual(entry["remove_at"], "2026-08-01T01:00:00+00:00")
+        self.assertIn("Taking over the Mess TV", posted[0]["text"])
+        self.assertIn("Until 1 Aug 2026 02:00 (in 1 hour)", posted[0]["text"])
+        self.assertIn("See how it looks", posted[0]["text"])
+        self.assertNotIn("Couldn't understand", posted[0]["text"])
+
+    def test_take_over_until_time(self):
+        entry, _ = self._poll(self._image_msg("take over until 10pm"))
+        self.assertEqual(entry["remove_at"], "2026-08-01T21:00:00+00:00")
+
+    def test_takeover_with_unparseable_time_is_an_ordinary_caption(self):
+        entry, posted = self._poll(self._image_msg("Takeover for charity!"))
+        self.assertNotIn("takeover", entry)
+        self.assertEqual(entry["text"], "Takeover for charity!")
+        self.assertEqual(entry["remove_reason"], "ttl")
+        self.assertIn("Added to the Mess TV", posted[0]["text"])
+        self.assertIn("Couldn't understand “Takeover for charity!”", posted[0]["text"])
+
+    def test_misspelt_takeover_time_is_still_a_takeover(self):
+        entry, posted = self._poll(self._image_msg("take over for 10 mintes"))
+        self.assertTrue(entry["takeover"])
+        self.assertEqual(entry["remove_at"], "2026-08-01T00:10:00+00:00")
+        self.assertNotIn("Couldn't understand", posted[0]["text"])
+
+    def test_unreadable_takeover_time_with_a_number_takes_over_for_an_hour(self):
+        entry, posted = self._poll(self._image_msg("take over for 10 blorps"))
+        self.assertTrue(entry["takeover"])
+        self.assertEqual(entry["remove_at"], "2026-08-01T01:00:00+00:00")
+        self.assertIn("Couldn't understand “take over for 10 blorps” as a time, so taking over for 1 hour",
+                      posted[0]["text"])
+
+    def test_text_only_takeover_with_unparseable_time_is_ordinary_text(self):
+        entry, _ = self._poll({"ts": self._ts(), "user": "U1", "text": "Takeover for charity!", "files": []})
+        self.assertEqual(entry["status"], "active")
+        self.assertEqual(entry["text"], "Takeover for charity!")
+
+    def _image_msg_at(self, text, ts):
+        return {**self._image_msg(text), "ts": f"{ts:.6f}"}
+
+    def test_backlogged_takeover_runs_from_when_it_was_posted(self):
+        msg = self._image_msg_at("take over", self.now.timestamp() - 30 * 60)
+        entry, _ = self._poll(msg)
+        self.assertTrue(entry["takeover"])
+        self.assertEqual(entry["remove_at"], "2026-08-01T00:30:00+00:00")
+
+    def test_backlogged_takeover_that_already_ended_is_not_shown(self):
+        msg = self._image_msg_at("take over", self.now.timestamp() - 2 * 3600)
+        entry, posted = self._poll(msg)
+        self.assertEqual(entry["status"], "ignored")
+        self.assertEqual(posted[0]["text"], ms.TAKEOVER_ALREADY_ENDED_REPLY)
+
+    def test_newer_takeover_wins_when_both_arrive_in_one_poll(self):
+        # conversations.history returns newest first, so the older one is
+        # ingested second -- it must not replace the newer one.
+        older = self._image_msg_at("take over", self.now.timestamp() - 60)
+        newer = self._image_msg_at("take over", self.now.timestamp() - 30)
+        api = FakeSlackAPI(messages=[newer, older], user_names={"U1": "Jane"})
+        state = ms.poll_slack(self.cfg, {}, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state[newer["ts"]]["status"], "active")
+        self.assertEqual(state[older["ts"]]["status"], "cancelled")
+        self.assertEqual(state[older["ts"]]["remove_reason"], "replaced")
+        older_thread = [p["text"] for p in api.posted_messages if p["thread_ts"] == older["ts"]]
+        self.assertEqual(older_thread, [ms.takeover_replaced_reply(
+            ms.message_permalink("https://mess.slack.com/", "C1", newer["ts"]))])
+
+    def test_capped_takeover_says_so(self):
+        entry, posted = self._poll(self._image_msg("take over until 5 Aug"))
+        self.assertEqual(entry["remove_at"], "2026-08-02T00:00:00+00:00")
+        self.assertIn("at most 24 hours", posted[0]["text"])
+
+    def test_text_only_takeover_is_rejected(self):
+        entry, posted = self._poll({"ts": self._ts(), "user": "U1", "text": "take over", "files": []})
+        self.assertEqual(entry["status"], "ignored")
+        self.assertEqual(posted[0]["text"], ms.TAKEOVER_REJECTED_REPLY)
+        self.assertIn("takeover_rejected", self._audit_actions())
+
+    def test_two_image_takeover_is_rejected(self):
+        entry, posted = self._poll(self._files_msg("take over", ["png", "jpg"]))
+        self.assertEqual(entry["status"], "ignored")
+        self.assertEqual(posted[0]["text"], ms.TAKEOVER_REJECTED_REPLY)
+
+    def test_pdf_takeover_is_rejected(self):
+        entry, posted = self._poll(self._files_msg("take over", ["pdf"]))
+        self.assertEqual(entry["status"], "ignored")
+        self.assertEqual(posted[0]["text"], ms.TAKEOVER_REJECTED_REPLY)
+
+    def test_heic_takeover_is_accepted(self):
+        entry, _ = self._poll(self._files_msg("takeover", ["heic"]))
+        self.assertTrue(entry["takeover"])
+
+    def test_ordinary_caption_mentioning_take_over_is_not_a_takeover(self):
+        entry, _ = self._poll(self._image_msg("Who'll take over the bar rota?"))
+        self.assertNotIn("takeover", entry)
+        self.assertEqual(entry["remove_reason"], "ttl")
+        self.assertEqual(entry["text"], "Who'll take over the bar rota?")
+
+    def test_new_takeover_replaces_the_old_one(self):
+        old_file = self.source_dir / "slack-100.0.png"
+        old_file.write_bytes(b"old")
+        state = {"100.0": {
+            "ts": "100.0", "posted_at": "2026-07-31T23:30:00+00:00", "status": "active",
+            "kind": "attachment", "text": "", "author": "Ben", "author_id": "U2",
+            "local_files": [str(old_file)], "file_ids": ["F0"], "takeover": True,
+            "remove_at": "2026-08-01T00:30:00+00:00", "remove_reason": "takeover",
+        }}
+        msg = self._image_msg("take over")
+        api = FakeSlackAPI(messages=[msg], user_names={"U1": "Jane"})
+        state = ms.poll_slack(self.cfg, state, self.source_dir, self.now, api, audit_path=self.audit_path)
+        old = state["100.0"]
+        self.assertEqual(old["status"], "cancelled")
+        self.assertEqual(old["remove_reason"], "replaced")
+        self.assertFalse(old_file.exists())
+        self.assertTrue(state[msg["ts"]]["takeover"])
+        old_thread = [p for p in api.posted_messages if p["thread_ts"] == "100.0"]
+        self.assertEqual(len(old_thread), 1)
+        self.assertEqual(old_thread[0]["text"], ms.takeover_replaced_reply(
+            ms.message_permalink("https://mess.slack.com/", "C1", msg["ts"])))
+        new_thread = [p for p in api.posted_messages if p["thread_ts"] == msg["ts"]]
+        self.assertIn("Replaced the previous takeover", new_thread[0]["text"])
+        self.assertIn("takeover_replaced", self._audit_actions())
+
+    def test_ordinary_post_does_not_replace_a_takeover(self):
+        state = {"100.0": {
+            "ts": "100.0", "posted_at": "2026-07-31T23:30:00+00:00", "status": "active",
+            "kind": "attachment", "text": "", "author": "Ben", "local_files": [],
+            "takeover": True, "remove_at": "2026-08-01T00:30:00+00:00", "remove_reason": "takeover",
+        }}
+        api = FakeSlackAPI(messages=[self._image_msg("Cake!")], user_names={"U1": "Jane"})
+        state = ms.poll_slack(self.cfg, state, self.source_dir, self.now, api, audit_path=self.audit_path)
+        self.assertEqual(state["100.0"]["status"], "active")
 
     def test_new_message_stores_poster_user_id(self):
         api = FakeSlackAPI(

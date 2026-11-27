@@ -138,6 +138,7 @@ def make_handler(kiosk_dir: Path, state_path: Path, audit_path: Path, cfg: refre
                         "posted_at": entry["posted_at"], "remove_at": entry.get("remove_at"),
                         "summary": ms._describe_entry(entry),
                         "thumb": _thumb_path(kiosk_dir, entry),
+                        "takeover": bool(entry.get("takeover")),
                     }
                     for ts, entry in ms.sorted_active_entries(state)
                 ]

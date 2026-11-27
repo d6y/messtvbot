@@ -51,7 +51,7 @@
       const author = document.createElement("td");
       author.textContent = entry.author;
       const summary = document.createElement("td");
-      summary.textContent = entry.summary;
+      summary.textContent = (entry.takeover ? "TAKEOVER · " : "") + entry.summary;
       const posted = document.createElement("td");
       posted.textContent = formatDate(entry.posted_at);
       const removeAt = document.createElement("td");
