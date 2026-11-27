@@ -266,8 +266,9 @@ def _to_utc(naive_local: datetime) -> datetime:
 
 
 _EXPLICIT_MIDNIGHT_RE = re.compile(r"\b(midnight|0?0[:.]00|12\s*am)\b", re.IGNORECASE)
-# "in 2 hours", "30 mins" -- a relative time of day, not just a day.
-_HOURS_OR_MINUTES_RE = re.compile(r"\d\s*(h|hrs?|hours?|m|mins?|minutes?)\b", re.IGNORECASE)
+# "in 2 hours", "30 mins", "30 seconds" -- a relative time of day, not just
+# a day. (Seconds were missing: "take over for 30 seconds" meant 23:59.)
+_HOURS_OR_MINUTES_RE = re.compile(r"\d\s*(h|hrs?|hours?|m|mins?|minutes?|s|secs?|seconds?)\b", re.IGNORECASE)
 
 
 def _parse_date_phrase(phrase: str, now: datetime) -> datetime | None:

@@ -613,6 +613,11 @@ class ParseTakeoverTests(unittest.TestCase):
         self.assertIsNone(r.remove_at)
         self.assertEqual(r.text, "take over for a bit")
 
+    def test_for_seconds(self):
+        # Live bug: "take over for 30 seconds" said "Until 23:59 (in 10 hours)".
+        self.assertEqual(ms.parse_takeover("take over for 30 seconds", self.NOW).remove_at,
+                         self.NOW + timedelta(seconds=30))
+
     def test_misspelt_minutes(self):
         # Real post: "take over for 10 mintes".
         r = ms.parse_takeover("take over for 10 mintes", self.NOW)
@@ -756,6 +761,12 @@ class ParseCommandTests(unittest.TestCase):
     def test_remove_in_hours_keeps_the_exact_time(self):
         result = ms.parse_command("remove in 2 hours", self.NOW)
         self.assertEqual(result.remove_at, self.NOW + timedelta(hours=2))
+
+    def test_remove_in_seconds_keeps_the_exact_time(self):
+        # Seconds used to count as "no time given", so this meant 23:59.
+        for phrase in ["remove in 30 seconds", "remove in 30 secs", "remove in 30s"]:
+            result = ms.parse_command(phrase, self.NOW)
+            self.assertEqual(result.remove_at, self.NOW + timedelta(seconds=30), phrase)
 
     def test_remove_in_minutes_keeps_the_exact_time(self):
         result = ms.parse_command("remove in 30 minutes", self.NOW)
